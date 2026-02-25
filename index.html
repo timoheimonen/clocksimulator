@@ -175,9 +175,12 @@
         ticksGroup.appendChild(tick);
       }
 
-      for (let h = 0; h < 12; h++) {
-        addTick(h * 30, 10, '2');
-        addTick(h * 30 + 15, 5, '1');
+      for (let i = 0; i < 60; i++) {
+        if (i % 5 === 0) {
+          addTick(i * 6, 10, '2');
+        } else {
+          addTick(i * 6, 5, '1');
+        }
       }
 
       for (let h = 1; h <= 12; h++) {
