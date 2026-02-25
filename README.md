@@ -47,7 +47,7 @@ All parameters are optional and can be combined:
 |-----------|--------|---------|-------------|
 | `embed`   | `true` | — | Activates embed mode (hides UI controls) |
 | `tz`      | IANA timezone | Local | Timezone, e.g. `Europe/Helsinki` |
-| `theme`   | `dark`, `light` | `dark` | Color theme |
+| `theme`   | `dark`, `light`, `transparent` | `dark` | Color theme |
 | `seconds` | `tick`, `smooth`, `hide` | `tick` | Second hand mode |
 | `border`  | `show`, `hide` | `show` | Clock border visibility |
 

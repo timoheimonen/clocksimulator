@@ -45,6 +45,11 @@
       --toggle-knob: #fff;
     }
 
+    body.transparent-mode {
+      --bg: transparent;
+      --clock-face: transparent;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -604,6 +609,7 @@
           <select id="embedTheme">
             <option value="dark">Dark</option>
             <option value="light">Light</option>
+            <option value="transparent">Transparent</option>
           </select>
         </div>
         <div class="embed-field">
@@ -685,6 +691,8 @@
       if (themeParam === 'light') {
         document.body.classList.add('light-mode');
         themeToggle.checked = true;
+      } else if (themeParam === 'transparent') {
+        document.body.classList.add('transparent-mode');
       }
 
       if (timezone) {
@@ -988,8 +996,9 @@
           embedPreview.width = Math.min(w, 120);
           embedPreview.height = Math.min(h, 120);
           embedPreview.style.borderRadius = isRound ? '50%' : '0';
+          var transparent = embedThemeSelect.value === 'transparent' ? ' allowtransparency="true"' : '';
           var code = '<iframe src="' + prodBase + qs + '"\n' +
-            '  width="' + w + '" height="' + h + '" frameborder="0"\n' +
+            '  width="' + w + '" height="' + h + '" frameborder="0"' + transparent + '\n' +
             '  style="border:none;' + radius + ' overflow:hidden;">\n' +
             '</iframe>';
           embedCodeEl.value = code;
