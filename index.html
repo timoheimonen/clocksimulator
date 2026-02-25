@@ -61,6 +61,8 @@
       overflow: hidden;
       transition: background 0.4s ease;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     body.cursor-hidden {
@@ -286,6 +288,11 @@
     .about-bubble.visible {
       opacity: 1;
       pointer-events: auto;
+    }
+
+    .about-bubble {
+      -webkit-user-select: text;
+      user-select: text;
     }
 
     body.light-mode .about-bubble {
