@@ -1,6 +1,8 @@
 {
+    "id": "/",
     "name": "Clocksimulator.com",
     "short_name": "Clocksimulator",
+    "description": "Online analog clock with timezone support, dark and light themes, and embeddable options.",
     "icons": [
       {
         "src": "/android-chrome-192x192.png",
