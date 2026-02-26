@@ -15,3 +15,8 @@
 - Auto-hiding controls and cursor for distraction-free viewing
 - Sun/moon day-night indicator for timezone clocks
 - Transparent theme option for embeds
+
+## 1.0.1 - 2026-02-26
+
+### Changed
+- Meta information changed.
