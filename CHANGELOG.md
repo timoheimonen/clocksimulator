@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.5 - 2026-02-26
+
+### Added
+- Embed link highlights briefly when the info menu is opened.
+
+### Fixed
+- Controls and cursor no longer auto-hide while the about bubble or embed panel is open.
+- Reduced unnecessary processing on mouse movement.
+
 ## 1.0.4 - 2026-02-26
 
 ### Changed

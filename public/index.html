@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.4">
+  <meta name="version" content="1.0.5">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -320,6 +320,15 @@
 
     .about-bubble a:hover {
       text-decoration-color: rgba(255, 255, 255, 0.7);
+    }
+
+    @keyframes embed-flash {
+      0%   { background: rgba(255,255,255,0.25); }
+      100% { background: transparent; }
+    }
+    #embedLink.flash {
+      animation: embed-flash 0.8s ease-out;
+      border-radius: 3px;
     }
 
     .clock-container {
@@ -850,6 +859,8 @@
       var aboutBubble = document.getElementById('aboutBubble');
       var hideTimer;
 
+      var embedOverlay = document.getElementById('embedOverlay');
+
       function closeAboutBubble() {
         aboutBubble.classList.remove('visible');
       }
@@ -858,6 +869,7 @@
         document.body.classList.remove('cursor-hidden');
         toggleWrapper.classList.add('visible');
         clearTimeout(hideTimer);
+        if (aboutBubble.classList.contains('visible') || embedOverlay.classList.contains('visible')) return;
         hideTimer = setTimeout(function () {
           toggleWrapper.classList.remove('visible');
           document.body.classList.add('cursor-hidden');
@@ -869,6 +881,11 @@
         e.stopPropagation();
         aboutBubble.classList.toggle('visible');
         clearTimeout(hideTimer);
+        if (aboutBubble.classList.contains('visible')) {
+          embedLink.classList.remove('flash');
+          void embedLink.offsetWidth;
+          embedLink.classList.add('flash');
+        }
       });
 
       document.addEventListener('click', function (e) {
@@ -878,7 +895,13 @@
       });
 
       if (!embedMode) {
-        document.addEventListener('mousemove', showToggle);
+        var lastMoveTime = 0;
+        document.addEventListener('mousemove', function () {
+          var now = Date.now();
+          if (now - lastMoveTime < 150) return;
+          lastMoveTime = now;
+          showToggle();
+        });
         window.addEventListener('focus', showToggle);
         window.addEventListener('blur', function () {
           clearTimeout(hideTimer);
@@ -999,8 +1022,6 @@
 
         setInterval(applyBurnInShift, 600000);
 
-        // Embed generator
-        var embedOverlay = document.getElementById('embedOverlay');
         var embedLink = document.getElementById('embedLink');
         var embedCloseBtn = document.getElementById('embedCloseBtn');
         var embedTzInput = document.getElementById('embedTz');
