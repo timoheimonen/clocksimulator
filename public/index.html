@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.6">
+  <meta name="version" content="1.0.7">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -717,6 +717,11 @@
         } catch (e) {}
       }
 
+      var tzFormatter = timezone ? new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone, hour: 'numeric', minute: 'numeric',
+        second: 'numeric', hour12: false
+      }) : null;
+
       var embedMode = params.get('embed') === 'true';
       var themeParam = params.get('theme');
       var secondsParam = params.get('seconds');
@@ -744,10 +749,7 @@
           return { hours: now.getHours(), minutes: now.getMinutes(),
                    seconds: now.getSeconds(), millis: now.getMilliseconds() };
         }
-        var parts = new Intl.DateTimeFormat('en-US', {
-          timeZone: timezone, hour: 'numeric', minute: 'numeric',
-          second: 'numeric', hour12: false
-        }).formatToParts(now);
+        var parts = tzFormatter.formatToParts(now);
         var get = function(type) {
           return parseInt(parts.find(function(p) { return p.type === type; }).value);
         };

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.7 - 2026-02-26
+
+### Changed
+- Improved timezone clock performance by caching the time formatter.
+
 ## 1.0.6 - 2026-02-26
 
 ### Fixed
