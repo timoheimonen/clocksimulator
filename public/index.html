@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.3">
+  <meta name="version" content="1.0.4">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -817,8 +817,8 @@
         let secondAngle;
         if (secondModeTick) {
           secondAngle = seconds * 6;
-          if (millis < 150) {
-            secondAngle += Math.exp(-millis / 30);
+          if (millis < 100) {
+            secondAngle += 0.5 * Math.exp(-millis / 25);
           }
         } else {
           secondAngle = (seconds + millis / 1000) * 6;
