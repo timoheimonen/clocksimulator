@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.1">
+  <meta name="version" content="1.0.2">
   <link rel="icon" id="favicon" type="image/png">
   <style>
     :root {
@@ -811,7 +811,15 @@
         const seconds = t.seconds;
         const millis = t.millis;
 
-        const secondAngle = secondModeTick ? seconds * 6 : (seconds + millis / 1000) * 6;
+        let secondAngle;
+        if (secondModeTick) {
+          secondAngle = seconds * 6;
+          if (millis < 150) {
+            secondAngle += Math.exp(-millis / 30);
+          }
+        } else {
+          secondAngle = (seconds + millis / 1000) * 6;
+        }
         const minuteAngle = (minutes + seconds / 60) * 6;
         const hourAngle = (hours + minutes / 60) * 30;
 
