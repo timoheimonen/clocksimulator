@@ -74,3 +74,7 @@ https://clocksimulator.com/?embed=true&tz=America/New_York&theme=dark&seconds=hi
 ## License
 
 MIT. See `LICENSE`.
+
+## Author
+
+Timo Heimonen <timo.heimonen@proton.me>
