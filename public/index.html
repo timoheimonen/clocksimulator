@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.13">
+  <meta name="version" content="1.0.14">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -257,6 +257,7 @@
     }
 
     .about-btn {
+      position: relative;
       width: 22px;
       height: 22px;
       padding: 0;
@@ -279,8 +280,36 @@
       display: block;
     }
 
+    .about-btn[data-tooltip]::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      left: 50%;
+      top: calc(100% + 6px);
+      transform: translateX(-50%);
+      background: rgba(30, 30, 30, 0.9);
+      color: #eee;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease 0.15s;
+    }
+
+    body.light-mode .about-btn[data-tooltip]::after {
+      background: rgba(50, 50, 50, 0.9);
+      color: #fff;
+    }
+
+    .about-btn[data-tooltip]:hover::after {
+      opacity: 1;
+    }
+
     .about-wrapper {
       position: relative;
+      display: flex;
+      align-items: center;
     }
 
     .about-bubble {
@@ -663,7 +692,7 @@
       </svg>
     </label>
     <div class="about-wrapper">
-      <button class="about-btn" id="aboutBtn" aria-label="About">
+      <button class="about-btn" id="aboutBtn" aria-label="About" data-tooltip="About">
         <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
           <circle cx="10" cy="6.5" r="1" fill="currentColor"/>

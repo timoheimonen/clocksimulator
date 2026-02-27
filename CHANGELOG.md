@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.14 - 2026-02-27
+
+### Fixed
+- Info button now shows a tooltip on hover.
+- Info button is now vertically centered with the toggle buttons.
+
 ## 1.0.13 - 2026-02-27
 
 ### Added
