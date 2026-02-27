@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.11 - 2026-02-27
+
+### Fixed
+- Fixed extra spacing in toggle controls caused by hidden checkbox elements.
+- Added keyboard focus trapping inside embed and help dialogs for better accessibility.
+- Embed preview now clips correctly when using round shape.
+- Favicon no longer triggers unnecessary network request on page load.
+- Timezone clock no longer crashes if time formatting fails unexpectedly.
+
+### Changed
+- Day/night indicator no longer requires a timezone parameter.
+
 ## 1.0.10 - 2026-02-27
 
 ### Fixed

@@ -62,7 +62,7 @@ All parameters are optional and can be combined:
 | `theme`    | `dark`, `light`, `transparent` | `dark` | Color theme |
 | `seconds`  | `tick`, `smooth`, `hide` | `tick` | Second hand mode |
 | `border`   | `show`, `hide` | `show` | Clock border visibility |
-| `daynight` | `show`, `hide` | `hide` | Sun/moon indicator for day/night (requires `tz`) |
+| `daynight` | `show`, `hide` | `hide` | Sun/moon indicator for day/night |
 
 ### Examples
 

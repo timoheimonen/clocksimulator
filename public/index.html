@@ -15,11 +15,11 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.10">
+  <meta name="version" content="1.0.11">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
-  <link rel="icon" id="favicon" type="image/png">
+  <link rel="icon" id="favicon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRU5ErkJggg==">
   <style>
     :root {
       --bg: #000000;
@@ -106,6 +106,7 @@
     }
 
     .toggle-label input {
+      position: absolute;
       opacity: 0;
       width: 0;
       height: 0;
@@ -802,7 +803,7 @@
           </select>
         </div>
         <div class="embed-field">
-          <label for="embedDayNight">Day/Night (requires tz)</label>
+          <label for="embedDayNight">Day/Night</label>
           <select id="embedDayNight">
             <option value="hide">Hide</option>
             <option value="show">Show</option>
@@ -913,10 +914,12 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
       var borderParam = params.get('border');
       var daynightParam = params.get('daynight');
       var numbersParam = params.get('numbers');
-      var showDayNight = daynightParam === 'show' && timezone;
+      var showDayNight = daynightParam === 'show';
 
       if (embedMode) {
         document.body.classList.add('embed-mode');
+        var fl = document.getElementById('favicon');
+        if (fl) fl.remove();
       }
       if (themeParam === 'light') {
         document.body.classList.add('light-mode');
@@ -931,16 +934,21 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
 
       function getTime() {
         var now = new Date();
-        if (!timezone) {
-          return { hours: now.getHours(), minutes: now.getMinutes(),
-                   seconds: now.getSeconds(), millis: now.getMilliseconds() };
+        var local = { hours: now.getHours(), minutes: now.getMinutes(),
+                      seconds: now.getSeconds(), millis: now.getMilliseconds() };
+        if (!timezone) return local;
+        try {
+          var parts = tzFormatter.formatToParts(now);
+          var get = function(type) {
+            var p = parts.find(function(p) { return p.type === type; });
+            return p ? parseInt(p.value, 10) : NaN;
+          };
+          var h = get('hour'), m = get('minute'), s = get('second');
+          if (isNaN(h) || isNaN(m) || isNaN(s)) return local;
+          return { hours: h, minutes: m, seconds: s, millis: now.getMilliseconds() };
+        } catch (e) {
+          return local;
         }
-        var parts = tzFormatter.formatToParts(now);
-        var get = function(type) {
-          return parseInt(parts.find(function(p) { return p.type === type; }).value, 10);
-        };
-        return { hours: get('hour'), minutes: get('minute'),
-                 seconds: get('second'), millis: now.getMilliseconds() };
       }
 
       function addTick(degrees, length, width) {
@@ -1057,6 +1065,36 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
       var embedOverlay = document.getElementById('embedOverlay');
       var helpOverlay = document.getElementById('helpOverlay');
       var embedLink = document.getElementById('embedLink');
+      var previousFocus = null;
+      var activeTrapHandler = null;
+
+      function trapFocus(overlay) {
+        var focusable = overlay.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (!focusable.length) return;
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        first.focus();
+        activeTrapHandler = function (e) {
+          if (e.key !== 'Tab') return;
+          if (e.shiftKey) {
+            if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+          } else {
+            if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+          }
+        };
+        overlay.addEventListener('keydown', activeTrapHandler);
+      }
+
+      function releaseTrap(overlay) {
+        if (activeTrapHandler) {
+          overlay.removeEventListener('keydown', activeTrapHandler);
+          activeTrapHandler = null;
+        }
+        if (previousFocus) {
+          previousFocus.focus();
+          previousFocus = null;
+        }
+      }
 
       function closeAboutBubble() {
         aboutBubble.classList.remove('visible');
@@ -1064,9 +1102,12 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
 
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
-          if (helpOverlay.classList.contains('visible')) helpOverlay.classList.remove('visible');
-          else if (embedOverlay.classList.contains('visible')) {
+          if (helpOverlay.classList.contains('visible')) {
+            helpOverlay.classList.remove('visible');
+            releaseTrap(helpOverlay);
+          } else if (embedOverlay.classList.contains('visible')) {
             embedOverlay.classList.remove('visible');
+            releaseTrap(embedOverlay);
             var ep = document.getElementById('embedPreview');
             if (ep) ep.src = 'about:blank';
           }
@@ -1282,6 +1323,7 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
           embedPreview.width = Math.min(w, 120);
           embedPreview.height = Math.min(h, 120);
           embedPreview.style.borderRadius = isRound ? '50%' : '0';
+          embedPreview.style.overflow = 'hidden';
           var transparent = embedThemeSelect.value === 'transparent' ? ' allowtransparency="true"' : '';
           var code = '<iframe src="' + prodBase + qs + '"\n' +
             '  width="' + w + '" height="' + h + '" frameborder="0"' + transparent + '\n' +
@@ -1299,13 +1341,16 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
           if (e) e.preventDefault();
           closeAboutBubble();
           clearTimeout(hideTimer);
+          previousFocus = document.activeElement;
           embedOverlay.classList.add('visible');
           updateEmbed();
+          trapFocus(embedOverlay);
         }
 
         function closeEmbedPanel() {
           embedOverlay.classList.remove('visible');
           embedPreview.src = 'about:blank';
+          releaseTrap(embedOverlay);
         }
 
         var helpLink = document.getElementById('helpLink');
@@ -1315,11 +1360,14 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
           if (e) e.preventDefault();
           closeAboutBubble();
           clearTimeout(hideTimer);
+          previousFocus = document.activeElement;
           helpOverlay.classList.add('visible');
+          trapFocus(helpOverlay);
         }
 
         function closeHelpPanel() {
           helpOverlay.classList.remove('visible');
+          releaseTrap(helpOverlay);
         }
 
         helpLink.addEventListener('click', openHelpPanel);
