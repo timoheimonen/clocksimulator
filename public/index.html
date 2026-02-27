@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.8">
+  <meta name="version" content="1.0.9">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -520,6 +520,153 @@
     .embed-copy-btn:hover {
       background: #2563eb;
     }
+
+    .help-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .help-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .help-panel {
+      background: #1a1a1a;
+      color: #eee;
+      border-radius: 12px;
+      padding: 20px 24px;
+      max-width: 520px;
+      width: 90vw;
+      max-height: 90vh;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    body.light-mode .help-panel {
+      background: #f5f5f5;
+      color: #222;
+    }
+
+    .help-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .help-panel-title {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .help-close-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      padding: 0;
+    }
+
+    .help-close-btn:hover {
+      opacity: 1;
+    }
+
+    .help-panel h3 {
+      font-size: 13px;
+      font-weight: 600;
+      margin: 14px 0 6px;
+    }
+
+    .help-panel h3:first-of-type {
+      margin-top: 0;
+    }
+
+    .help-panel h4 {
+      font-size: 12px;
+      font-weight: 600;
+      margin: 10px 0 4px;
+    }
+
+    .help-panel p {
+      margin: 0 0 6px;
+    }
+
+    .help-panel a {
+      color: inherit;
+      text-decoration: underline;
+      text-decoration-color: rgba(255, 255, 255, 0.35);
+      text-underline-offset: 2px;
+    }
+
+    .help-panel a:hover {
+      text-decoration-color: rgba(255, 255, 255, 0.7);
+    }
+
+    .help-panel code {
+      background: rgba(255, 255, 255, 0.12);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+    }
+
+    body.light-mode .help-panel code {
+      background: rgba(0, 0, 0, 0.08);
+    }
+
+    .help-panel pre {
+      background: rgba(0, 0, 0, 0.25);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 4px 0 8px;
+    }
+
+    body.light-mode .help-panel pre {
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    .help-panel table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 4px 0 8px;
+      font-size: 12px;
+    }
+
+    .help-panel th,
+    .help-panel td {
+      text-align: left;
+      padding: 8px;
+      border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+    }
+
+    .help-panel th {
+      opacity: 0.6;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
   </style>
 </head>
 <body>
@@ -569,13 +716,8 @@
       </svg>
     </button>
     <div class="about-bubble" id="aboutBubble">
-      <strong>Time zones</strong><br>
-      Add <code style="background:rgba(255,255,255,0.12);padding:1px 4px;border-radius:3px">?tz=</code> to the URL with an IANA timezone, e.g.<br>
-      <a href="?tz=America/New_York">?tz=America/New_York</a><br>
-      <a href="?tz=Europe/London">?tz=Europe/London</a><br>
-      <a href="?tz=Asia/Tokyo">?tz=Asia/Tokyo</a><br>
-      <br>
       <a href="#" id="embedLink">Embed this clock &rarr;</a><br>
+      <a href="#" id="helpLink">How to use &rarr;</a><br>
       <br>
       Made by Timo Heimonen<br>
       <a href="mailto:timo.heimonen@proton.me">timo.heimonen@proton.me</a><br>
@@ -692,6 +834,45 @@
         <textarea class="embed-code" id="embedCode" readonly rows="3"></textarea>
       </div>
       <button class="embed-copy-btn" id="embedCopyBtn">Copy code</button>
+    </div>
+  </div>
+
+  <div class="help-overlay" id="helpOverlay">
+    <div class="help-panel">
+      <div class="help-panel-header">
+        <span class="help-panel-title">How to use</span>
+        <button class="help-close-btn" id="helpCloseBtn" aria-label="Close">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <h3>Controls</h3>
+      <table>
+        <tr><td><strong>Theme</strong> (moon/sun icon)</td><td>Switch between dark and light mode</td></tr>
+        <tr><td><strong>Keep screen on</strong> (monitor icon)</td><td>Prevent the display from sleeping</td></tr>
+        <tr><td><strong>Tick seconds</strong> (stopwatch icon)</td><td>Switch between ticking and smooth second hand</td></tr>
+        <tr><td><strong>Info</strong> (&#9432; button)</td><td>Show embed link, this help, and contact info</td></tr>
+      </table>
+      <h3>Timezones</h3>
+      <p>Add <code>?tz=</code> to the URL with any <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener">IANA timezone</a>:</p>
+      <pre>clocksimulator.com/?tz=America/New_York
+clocksimulator.com/?tz=Europe/London
+clocksimulator.com/?tz=Asia/Tokyo</pre>
+      <h3>Embedding</h3>
+      <p>Embed the clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel (<strong>&#9432;</strong> &rarr; <strong>Embed this clock</strong>) to configure and copy the code.</p>
+      <h4>URL parameters</h4>
+      <table>
+        <tr><th>Parameter</th><th>Values</th><th>Default</th></tr>
+        <tr><td><code>embed</code></td><td><code>true</code></td><td>&mdash;</td></tr>
+        <tr><td><code>tz</code></td><td>Any IANA timezone</td><td>Local time</td></tr>
+        <tr><td><code>theme</code></td><td><code>dark</code>, <code>light</code>, <code>transparent</code></td><td><code>dark</code></td></tr>
+        <tr><td><code>seconds</code></td><td><code>tick</code>, <code>smooth</code>, <code>hide</code></td><td><code>tick</code></td></tr>
+        <tr><td><code>border</code></td><td><code>show</code>, <code>hide</code></td><td><code>show</code></td></tr>
+        <tr><td><code>daynight</code></td><td><code>show</code>, <code>hide</code></td><td><code>hide</code></td></tr>
+        <tr><td><code>numbers</code></td><td><code>show</code>, <code>hide</code></td><td><code>show</code></td></tr>
+      </table>
     </div>
   </div>
 
@@ -874,6 +1055,7 @@
       var hideTimer;
 
       var embedOverlay = document.getElementById('embedOverlay');
+      var helpOverlay = document.getElementById('helpOverlay');
 
       function closeAboutBubble() {
         aboutBubble.classList.remove('visible');
@@ -883,7 +1065,7 @@
         document.body.classList.remove('cursor-hidden');
         toggleWrapper.classList.add('visible');
         clearTimeout(hideTimer);
-        if (aboutBubble.classList.contains('visible') || embedOverlay.classList.contains('visible')) return;
+        if (aboutBubble.classList.contains('visible') || embedOverlay.classList.contains('visible') || helpOverlay.classList.contains('visible')) return;
         hideTimer = setTimeout(function () {
           toggleWrapper.classList.remove('visible');
           document.body.classList.add('cursor-hidden');
@@ -1109,6 +1291,26 @@
           embedOverlay.classList.remove('visible');
           embedPreview.src = 'about:blank';
         }
+
+        var helpLink = document.getElementById('helpLink');
+        var helpCloseBtn = document.getElementById('helpCloseBtn');
+
+        function openHelpPanel(e) {
+          if (e) e.preventDefault();
+          closeAboutBubble();
+          clearTimeout(hideTimer);
+          helpOverlay.classList.add('visible');
+        }
+
+        function closeHelpPanel() {
+          helpOverlay.classList.remove('visible');
+        }
+
+        helpLink.addEventListener('click', openHelpPanel);
+        helpCloseBtn.addEventListener('click', closeHelpPanel);
+        helpOverlay.addEventListener('click', function (e) {
+          if (e.target === helpOverlay) closeHelpPanel();
+        });
 
         embedLink.addEventListener('click', openEmbedPanel);
         embedCloseBtn.addEventListener('click', closeEmbedPanel);

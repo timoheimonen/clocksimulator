@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.9 - 2026-02-27
+
+### Added
+- "How to use" help panel accessible from the info menu.
+
 ## 1.0.8 - 2026-02-27
 
 ### Added
