@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.15 - 2026-02-27
+
+### Added
+- Added a Save settings toggle in the About menu. Users can choose to save their settings locally in the browser. The following data is stored: {"theme":"dark/light","wakeLock":false/true,"secondModeTick":false/true}. This supports the author’s goal of keeping the site clean and lightweight while still allowing users to persist preferences. Local storage is disabled when URL parameters are present or in embedded mode.
+
+### Fixed
+- About bubble now follows dark/light mode instead of always appearing dark.
+- Tooltips are disabled on toggle buttons and the info button while the about bubble is open.
+
 ## 1.0.14 - 2026-02-27
 
 ### Fixed

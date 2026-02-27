@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.14">
+  <meta name="version" content="1.0.15">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -230,6 +230,37 @@
       opacity: 1;
     }
 
+    .save-settings-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: auto;
+    }
+
+    .save-settings-toggle .toggle-slider {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .save-settings-toggle input:checked ~ .toggle-slider {
+      background: #3a7d55;
+    }
+
+    body.light-mode .save-settings-toggle input:checked ~ .toggle-slider {
+      background: #2f6a47;
+    }
+
+    .save-settings-toggle:has(input:disabled) {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .save-settings-toggle:has(input:disabled) .toggle-slider {
+      pointer-events: none;
+    }
+
     .toggle-label[data-tooltip]::after {
       content: attr(data-tooltip);
       position: absolute;
@@ -306,6 +337,16 @@
       opacity: 1;
     }
 
+    body.about-bubble-open .toggle-label[data-tooltip]:hover::after,
+    body.about-bubble-open .about-btn[data-tooltip]:hover::after {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.about-bubble-open .about-bubble .toggle-label[data-tooltip]:hover::after {
+      opacity: 1;
+    }
+
     .about-wrapper {
       position: relative;
       display: flex;
@@ -338,8 +379,8 @@
     }
 
     body.light-mode .about-bubble {
-      background: rgba(50, 50, 50, 0.92);
-      color: #fff;
+      background: rgba(240, 240, 240, 0.95);
+      color: #222;
     }
 
     .about-bubble a {
@@ -351,6 +392,14 @@
 
     .about-bubble a:hover {
       text-decoration-color: rgba(255, 255, 255, 0.7);
+    }
+
+    body.light-mode .about-bubble a {
+      text-decoration-color: rgba(0, 0, 0, 0.35);
+    }
+
+    body.light-mode .about-bubble a:hover {
+      text-decoration-color: rgba(0, 0, 0, 0.7);
     }
 
     @keyframes embed-flash {
@@ -703,6 +752,13 @@
         <a href="#" id="embedLink">Embed this clock &rarr;</a><br>
         <a href="#" id="helpLink">How to use &rarr;</a><br>
         <br>
+        <label class="toggle-label save-settings-toggle" id="saveSettingsLabel"
+               aria-label="Save settings" data-tooltip="Save settings to local storage.">
+          <input type="checkbox" id="saveSettingsToggle">
+          <span class="toggle-slider"></span>
+          <span>Save settings</span>
+        </label><br>
+        <br>
         Made by Timo Heimonen<br>
         <a href="mailto:timo.heimonen@proton.me">timo.heimonen@proton.me</a><br>
         <a href="https://github.com/timoheimonen/clocksimulator" target="_blank" rel="noopener">GitHub</a>
@@ -884,6 +940,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       const themeToggle = document.getElementById('themeToggle');
       const sunIcon = document.getElementById('sunIcon');
       const moonIcon = document.getElementById('moonIcon');
+      const saveSettingsToggle = document.getElementById('saveSettingsToggle');
 
       const CX = 100, CY = 100, R = 85;
 
@@ -910,6 +967,21 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       const numbersParam = params.get('numbers');
       const showDayNight = daynightParam === 'show';
 
+      let savedSettings = null;
+      if (!params.toString()) {
+        try {
+          savedSettings = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
+        } catch (e) {}
+      }
+      if (savedSettings) {
+        saveSettingsToggle.checked = true;
+      }
+
+      if (params.toString()) {
+        saveSettingsToggle.disabled = true;
+        saveSettingsLabel.dataset.tooltip = 'Not available when URL parameters are active';
+      }
+
       if (embedMode) {
         document.body.classList.add('embed-mode');
         const fl = document.getElementById('favicon');
@@ -920,6 +992,10 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         themeToggle.checked = true;
       } else if (themeParam === 'transparent') {
         document.body.classList.add('transparent-mode');
+      }
+      if (savedSettings && savedSettings.theme === 'light') {
+        document.body.classList.add('light-mode');
+        themeToggle.checked = true;
       }
 
       if (timezone) {
@@ -1004,12 +1080,27 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         document.querySelector('.second-mode-toggle').style.display = 'none';
       }
 
+      if (savedSettings) {
+        secondModeTick = savedSettings.secondModeTick;
+        secondModeToggle.checked = savedSettings.secondModeTick;
+      }
+
       if (borderParam === 'hide') {
         document.getElementById('clockBorder').setAttribute('stroke', 'none');
       }
 
+      function saveSettings() {
+        if (!saveSettingsToggle.checked) return;
+        localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
+          theme: document.body.classList.contains('light-mode') ? 'light' : 'dark',
+          wakeLock: document.getElementById('wakeLockToggle').checked,
+          secondModeTick: secondModeTick
+        }));
+      }
+
       secondModeToggle.addEventListener('change', function () {
         secondModeTick = this.checked;
+        saveSettings();
       });
 
       function updateClock() {
@@ -1056,6 +1147,15 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       themeToggle.addEventListener('change', function () {
         document.body.classList.remove('transparent-mode');
         document.body.classList.toggle('light-mode', this.checked);
+        saveSettings();
+      });
+
+      saveSettingsToggle.addEventListener('change', function () {
+        if (this.checked) {
+          saveSettings();
+        } else {
+          localStorage.removeItem('clocksimulator-user-settings');
+        }
       });
 
       const toggleWrapper = document.querySelector('.toggle-wrapper');
@@ -1099,6 +1199,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
 
       function closeAboutBubble() {
         aboutBubble.classList.remove('visible');
+        document.body.classList.remove('about-bubble-open');
       }
 
       document.addEventListener('keydown', function (e) {
@@ -1131,6 +1232,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       aboutBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         aboutBubble.classList.toggle('visible');
+        document.body.classList.toggle('about-bubble-open', aboutBubble.classList.contains('visible'));
         clearTimeout(hideTimer);
         if (aboutBubble.classList.contains('visible')) {
           embedLink.classList.remove('flash');
@@ -1246,6 +1348,11 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
             });
           }
 
+          if (savedSettings && savedSettings.wakeLock) {
+            wakeLockEnabled = true;
+            requestWakeLock();
+          }
+
           wakeLockToggle.addEventListener('change', function () {
             wakeLockEnabled = this.checked;
             if (wakeLockEnabled) {
@@ -1254,6 +1361,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
               wakeLockSentinel.release();
               wakeLockSentinel = null;
             }
+            saveSettings();
           });
 
           document.addEventListener('visibilitychange', function () {
