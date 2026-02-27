@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.0.12 - 2026-02-27
+
+### Changed
+- Keep screen on now defaults to off.
+- Clock animation now pauses when the browser tab is hidden to reduce unnecessary processing.
+- Modernized all variable declarations to use const/let for consistency.
+- Clock border element now uses a dedicated ID instead of a fragile CSS selector.
+- Consolidated duplicate CSS for embed and help panels into shared styles.
+- Embed timezone field now validates input and shows a warning for invalid timezones.
+- Service worker registration now handles errors silently.
+- Help panel tables now use proper thead/tbody structure for better accessibility.
+
+### Fixed
+- Embed code now links to the correct URL.
+- Generated embed code no longer includes a deprecated HTML attribute.
+- About menu is no longer incorrectly announced as a dialog by screen readers.
+- Embed preview and embed code field are now properly labeled for screen readers.
+- About menu now opens directly below the info button instead of at the left edge of the screen.
+
 ## 1.0.11 - 2026-02-27
 
 ### Fixed

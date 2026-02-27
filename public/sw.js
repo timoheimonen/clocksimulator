@@ -1,4 +1,4 @@
-var CACHE_NAME = 'clocksimulator-v1.0.11';
+var CACHE_NAME = 'clocksimulator-v1.0.12';
 var ASSETS = [
   '/',
   '/manifest.json',
