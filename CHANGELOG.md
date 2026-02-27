@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.8 - 2026-02-27
+
+### Added
+- Option to hide clock face numbers in URL parameter.
+
 ## 1.0.7 - 2026-02-26
 
 ### Changed

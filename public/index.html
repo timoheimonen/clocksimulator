@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.7">
+  <meta name="version" content="1.0.8">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -670,6 +670,13 @@
           </select>
         </div>
         <div class="embed-field">
+          <label for="embedNumbers">Numbers</label>
+          <select id="embedNumbers">
+            <option value="show">Show</option>
+            <option value="hide">Hide</option>
+          </select>
+        </div>
+        <div class="embed-field">
           <label for="embedWidth">Width (px)</label>
           <input type="number" id="embedWidth" value="200" min="50" max="1000">
         </div>
@@ -727,6 +734,7 @@
       var secondsParam = params.get('seconds');
       var borderParam = params.get('border');
       var daynightParam = params.get('daynight');
+      var numbersParam = params.get('numbers');
       var showDayNight = daynightParam === 'show' && timezone;
 
       if (embedMode) {
@@ -797,6 +805,10 @@
         text.setAttribute('font-weight', '500');
         text.textContent = h;
         numbersGroup.appendChild(text);
+      }
+
+      if (numbersParam === 'hide') {
+        numbersGroup.style.display = 'none';
       }
 
       var secondModeTick = true;
@@ -1035,6 +1047,7 @@
         var embedBorderSelect = document.getElementById('embedBorder');
         var embedShapeSelect = document.getElementById('embedShape');
         var embedDayNightSelect = document.getElementById('embedDayNight');
+        var embedNumbersSelect = document.getElementById('embedNumbers');
         var embedWidthInput = document.getElementById('embedWidth');
         var embedHeightInput = document.getElementById('embedHeight');
         var embedPreview = document.getElementById('embedPreview');
@@ -1056,6 +1069,8 @@
           if (border !== 'show') p.push('border=' + border);
           var daynight = embedDayNightSelect.value;
           if (daynight === 'show') p.push('daynight=show');
+          var numbers = embedNumbersSelect.value;
+          if (numbers === 'hide') p.push('numbers=hide');
           return '?' + p.join('&');
         }
 
@@ -1107,6 +1122,7 @@
         embedBorderSelect.addEventListener('change', updateEmbed);
         embedShapeSelect.addEventListener('change', updateEmbed);
         embedDayNightSelect.addEventListener('change', updateEmbed);
+        embedNumbersSelect.addEventListener('change', updateEmbed);
         embedWidthInput.addEventListener('input', updateEmbedDebounced);
         embedHeightInput.addEventListener('input', updateEmbedDebounced);
 
