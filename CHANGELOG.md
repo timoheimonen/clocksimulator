@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.0.10 - 2026-02-27
+
+### Fixed
+- Clipboard copy now handles permission errors gracefully.
+- Second hand toggle no longer shown when seconds are hidden via URL.
+- Favicon updates now sync to the minute boundary.
+- Escape key now closes help and embed panels.
+- Theme toggle no longer conflicts with transparent mode.
+- Improved timezone hour parsing reliability.
+
 ## 1.0.9 - 2026-02-27
 
 ### Added

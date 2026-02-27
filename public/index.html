@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.9">
+  <meta name="version" content="1.0.10">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -294,16 +294,13 @@
       transition: opacity 0.2s ease;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
+      -webkit-user-select: text;
+      user-select: text;
     }
 
     .about-bubble.visible {
       opacity: 1;
       pointer-events: auto;
-    }
-
-    .about-bubble {
-      -webkit-user-select: text;
-      user-select: text;
     }
 
     body.light-mode .about-bubble {
@@ -758,10 +755,10 @@
     </svg>
   </div>
 
-  <div class="embed-overlay" id="embedOverlay">
+  <div class="embed-overlay" id="embedOverlay" role="dialog" aria-modal="true" aria-labelledby="embedPanelTitle">
     <div class="embed-panel">
       <div class="embed-panel-header">
-        <span class="embed-panel-title">Embed this clock</span>
+        <span class="embed-panel-title" id="embedPanelTitle">Embed this clock</span>
         <button class="embed-close-btn" id="embedCloseBtn" aria-label="Close">
           <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
             <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -837,10 +834,10 @@
     </div>
   </div>
 
-  <div class="help-overlay" id="helpOverlay">
+  <div class="help-overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpPanelTitle">
     <div class="help-panel">
       <div class="help-panel-header">
-        <span class="help-panel-title">How to use</span>
+        <span class="help-panel-title" id="helpPanelTitle">How to use</span>
         <button class="help-close-btn" id="helpCloseBtn" aria-label="Close">
           <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
             <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -907,7 +904,7 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
 
       var tzFormatter = timezone ? new Intl.DateTimeFormat('en-US', {
         timeZone: timezone, hour: 'numeric', minute: 'numeric',
-        second: 'numeric', hour12: false
+        second: 'numeric', hourCycle: 'h23'
       }) : null;
 
       var embedMode = params.get('embed') === 'true';
@@ -940,7 +937,7 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
         }
         var parts = tzFormatter.formatToParts(now);
         var get = function(type) {
-          return parseInt(parts.find(function(p) { return p.type === type; }).value);
+          return parseInt(parts.find(function(p) { return p.type === type; }).value, 10);
         };
         return { hours: get('hour'), minutes: get('minute'),
                  seconds: get('second'), millis: now.getMilliseconds() };
@@ -1001,6 +998,8 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
         secondModeToggle.checked = false;
       } else if (secondsParam === 'hide') {
         secondHand.style.display = 'none';
+        secondModeToggle.checked = false;
+        document.querySelector('.second-mode-toggle').style.display = 'none';
       }
 
       if (borderParam === 'hide') {
@@ -1046,6 +1045,7 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
       requestAnimationFrame(updateClock);
 
       themeToggle.addEventListener('change', function () {
+        document.body.classList.remove('transparent-mode');
         document.body.classList.toggle('light-mode', this.checked);
       });
 
@@ -1056,10 +1056,23 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
 
       var embedOverlay = document.getElementById('embedOverlay');
       var helpOverlay = document.getElementById('helpOverlay');
+      var embedLink = document.getElementById('embedLink');
 
       function closeAboutBubble() {
         aboutBubble.classList.remove('visible');
       }
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          if (helpOverlay.classList.contains('visible')) helpOverlay.classList.remove('visible');
+          else if (embedOverlay.classList.contains('visible')) {
+            embedOverlay.classList.remove('visible');
+            var ep = document.getElementById('embedPreview');
+            if (ep) ep.src = 'about:blank';
+          }
+          else closeAboutBubble();
+        }
+      });
 
       function showToggle() {
         document.body.classList.remove('cursor-hidden');
@@ -1160,7 +1173,11 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
         }
 
         updateFavicon();
-        setInterval(updateFavicon, 60000);
+        var msToNextMinute = 60000 - (Date.now() % 60000);
+        setTimeout(function () {
+          updateFavicon();
+          setInterval(updateFavicon, 60000);
+        }, msToNextMinute);
 
         if ('wakeLock' in navigator) {
           var wakeLockSentinel = null;
@@ -1221,7 +1238,6 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
 
         setInterval(applyBurnInShift, 600000);
 
-        var embedLink = document.getElementById('embedLink');
         var embedCloseBtn = document.getElementById('embedCloseBtn');
         var embedTzInput = document.getElementById('embedTz');
         var embedThemeSelect = document.getElementById('embedTheme');
@@ -1333,7 +1349,7 @@ clocksimulator.com/?tz=Asia/Tokyo</pre>
             var original = embedCopyBtn.textContent;
             embedCopyBtn.textContent = 'Copied!';
             setTimeout(function () { embedCopyBtn.textContent = original; }, 1500);
-          });
+          }).catch(function () {});
         });
       }
     })();
