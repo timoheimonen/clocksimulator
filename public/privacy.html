@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy - clocksimulator.com</title>
+  <meta name="description" content="Privacy policy for clocksimulator.com: no ads, no analytics, optional local settings storage only.">
+  <link rel="canonical" href="https://www.clocksimulator.com/privacy.html">
+  <style>
+    :root {
+      --bg: #0f1115;
+      --fg: rgba(255, 255, 255, 0.92);
+      --muted: rgba(255, 255, 255, 0.7);
+      --card: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.12);
+      --link: rgba(255, 255, 255, 0.92);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f7f7f8;
+        --fg: rgba(0, 0, 0, 0.92);
+        --muted: rgba(0, 0, 0, 0.7);
+        --card: rgba(0, 0, 0, 0.04);
+        --border: rgba(0, 0, 0, 0.12);
+        --link: rgba(0, 0, 0, 0.92);
+      }
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-size: 24px;
+      letter-spacing: -0.2px;
+      margin: 0;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 16px;
+      margin: 12px 0;
+    }
+    h2 {
+      font-size: 16px;
+      margin: 0 0 8px;
+    }
+    p { margin: 8px 0; }
+    ul { margin: 8px 0 8px 18px; }
+    a {
+      color: var(--link);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      text-decoration-color: rgba(128, 128, 128, 0.55);
+    }
+    code {
+      font-family: var(--mono);
+      font-size: 0.95em;
+      background: rgba(128, 128, 128, 0.15);
+      padding: 1px 5px;
+      border-radius: 6px;
+    }
+    .home {
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Privacy Policy</h1>
+      <div class="meta">Effective date: 2026-02-27</div>
+    </header>
+
+    <div class="home">
+      <a href="https://www.clocksimulator.com/">← Back to clocksimulator</a>
+    </div>
+
+    <section>
+      <p>clocksimulator is a minimalist clock website. <strong>We do not run ads, we do not use analytics, and we do not sell personal data.</strong></p>
+    </section>
+
+    <section>
+      <h2>Summary</h2>
+      <ul>
+        <li><strong>No trackers / analytics</strong>: We do not use third-party analytics scripts, tracking pixels, or advertising beacons.</li>
+        <li><strong>No accounts</strong>: There is no login and no user profile.</li>
+        <li><strong>Optional local storage</strong>: If you choose to enable <strong>Save settings</strong>, your preferences can be stored locally in your browser.</li>
+        <li><strong>Offline/PWA support</strong>: A service worker may cache a small set of static assets for offline use.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>What information we collect</h2>
+      <p><strong>We do not intentionally collect personal information</strong> (such as your name, email address, or precise location) through the clocksimulator app itself.</p>
+    </section>
+
+    <section>
+      <h2>Local device storage (optional)</h2>
+      <p>The app includes an opt-in toggle <strong>Save settings</strong> (About menu). If you enable it, the site stores your preferences <strong>locally in your browser</strong> using Local Storage under this key:</p>
+      <ul>
+        <li><code>clocksimulator-user-settings</code></li>
+      </ul>
+      <p>Stored fields:</p>
+      <ul>
+        <li><code>theme</code> (<code>"dark"</code> or <code>"light"</code>)</li>
+        <li><code>wakeLock</code> (<code>true</code> or <code>false</code>)</li>
+        <li><code>secondModeTick</code> (<code>true</code> or <code>false</code>)</li>
+      </ul>
+      <p><strong>Opting out / removing saved settings</strong></p>
+      <ul>
+        <li>Turn off <strong>Save settings</strong> to remove the saved item from Local Storage.</li>
+        <li>You can also clear site data in your browser settings.</li>
+      </ul>
+      <p><strong>When URL parameters are active</strong></p>
+      <p>When you use URL parameters (for example <code>?tz=...</code> or <code>?embed=true</code>), the <strong>Save settings</strong> toggle is disabled and the site will not load settings from Local Storage. This helps keep embeds and parameterized URLs predictable.</p>
+    </section>
+
+    <section>
+      <h2>Service worker / offline cache (PWA)</h2>
+      <p>If your browser supports it, the site registers a service worker for offline/PWA behavior. The service worker uses the browser’s Cache Storage to cache a small set of static assets (such as <code>/</code>, <code>manifest.json</code>, and icons) and may cache fetched assets to improve offline use and load speed.</p>
+      <p>This cache contains <strong>site files</strong>, not your personal content.</p>
+    </section>
+
+    <section>
+      <h2>Hosting/provider logs</h2>
+      <p>Like most websites, clocksimulator is served through a hosting provider (for example Cloudflare). The provider may process <strong>standard server/edge request data</strong> (such as IP address, user-agent, request path, timestamps, and similar operational metadata) in order to deliver the site, protect it from abuse, and operate the service.</p>
+      <p>We do not add trackers on top of that, and we do not use these logs for advertising or selling data.</p>
+    </section>
+
+    <section>
+      <h2>Open source verification</h2>
+      <p>The project is open source, and you can verify the behavior described above in:</p>
+      <ul>
+        <li><code>public/index.html</code> (UI + Local Storage usage)</li>
+        <li><code>public/sw.js</code> (service worker + caching)</li>
+      </ul>
+      <p>Repository: <a href="https://github.com/timoheimonen/clocksimulator" target="_blank" rel="noopener">github.com/timoheimonen/clocksimulator</a></p>
+    </section>
+
+    <section>
+      <h2>Contact</h2>
+      <p>If you have privacy questions, contact:</p>
+      <ul>
+        <li>Timo Heimonen — <a href="mailto:timo.heimonen@proton.me">timo.heimonen@proton.me</a></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
+
