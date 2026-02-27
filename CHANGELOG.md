@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.16 - 2026-02-27
+
+### Fixed
+- About bubble now stays fully within the screen on small devices by aligning it with the left edge of the controls.
+
 ## 1.0.15 - 2026-02-27
 
 ### Added
