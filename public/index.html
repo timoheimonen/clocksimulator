@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.17">
+  <meta name="version" content="1.0.18">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -880,6 +880,13 @@
           </select>
         </div>
         <div class="embed-field">
+          <label for="embedShadows">Shadows</label>
+          <select id="embedShadows">
+            <option value="true">Show</option>
+            <option value="false">Hide</option>
+          </select>
+        </div>
+        <div class="embed-field">
           <label for="embedWidth">Width (px)</label>
           <input type="number" id="embedWidth" value="200" min="50" max="1000">
         </div>
@@ -941,6 +948,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         <tr><td><code>border</code></td><td><code>show</code>, <code>hide</code></td><td><code>show</code></td></tr>
         <tr><td><code>daynight</code></td><td><code>show</code>, <code>hide</code></td><td><code>hide</code></td></tr>
         <tr><td><code>numbers</code></td><td><code>show</code>, <code>hide</code></td><td><code>show</code></td></tr>
+        <tr><td><code>shadows</code></td><td><code>true</code>, <code>false</code></td><td><code>true</code></td></tr>
         </tbody>
       </table>
     </div>
@@ -991,6 +999,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       const borderParam = params.get('border');
       const daynightParam = params.get('daynight');
       const numbersParam = params.get('numbers');
+      const shadowsParam = params.get('shadows');
       const showDayNight = daynightParam === 'show';
 
       let savedSettings = null;
@@ -1115,6 +1124,12 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         document.getElementById('clockBorder').setAttribute('stroke', 'none');
       }
 
+      if (shadowsParam === 'false') {
+        [hourHandShadow, minuteHandShadow, secondHandShadow, centerDotShadow].forEach(function(el) {
+          el.style.display = 'none';
+        });
+      }
+
       function saveSettings() {
         if (!saveSettingsToggle.checked) return;
         localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
@@ -1152,17 +1167,19 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
         secondHand.setAttribute('transform', 'rotate(' + secondAngle + ' 100 100)');
 
-        var lightRad = hourAngle * Math.PI / 180;
-        var sdx = -Math.sin(lightRad);
-        var sdy = Math.cos(lightRad);
-        hourHandShadow.setAttribute('transform',
-          'translate(' + (0.8 * sdx) + ',' + (0.8 * sdy) + ') rotate(' + hourAngle + ' 100 100)');
-        minuteHandShadow.setAttribute('transform',
-          'translate(' + (1.2 * sdx) + ',' + (1.2 * sdy) + ') rotate(' + minuteAngle + ' 100 100)');
-        secondHandShadow.setAttribute('transform',
-          'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ') rotate(' + secondAngle + ' 100 100)');
-        centerDotShadow.setAttribute('transform',
-          'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ')');
+        if (shadowsParam !== 'false') {
+          var lightRad = hourAngle * Math.PI / 180;
+          var sdx = -Math.sin(lightRad);
+          var sdy = Math.cos(lightRad);
+          hourHandShadow.setAttribute('transform',
+            'translate(' + (0.8 * sdx) + ',' + (0.8 * sdy) + ') rotate(' + hourAngle + ' 100 100)');
+          minuteHandShadow.setAttribute('transform',
+            'translate(' + (1.2 * sdx) + ',' + (1.2 * sdy) + ') rotate(' + minuteAngle + ' 100 100)');
+          secondHandShadow.setAttribute('transform',
+            'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ') rotate(' + secondAngle + ' 100 100)');
+          centerDotShadow.setAttribute('transform',
+            'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ')');
+        }
 
         if (showDayNight) {
           const isDay = t.hours >= 6 && t.hours < 18;
@@ -1432,6 +1449,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         const embedShapeSelect = document.getElementById('embedShape');
         const embedDayNightSelect = document.getElementById('embedDayNight');
         const embedNumbersSelect = document.getElementById('embedNumbers');
+        const embedShadowsSelect = document.getElementById('embedShadows');
         const embedWidthInput = document.getElementById('embedWidth');
         const embedHeightInput = document.getElementById('embedHeight');
         const embedPreview = document.getElementById('embedPreview');
@@ -1466,6 +1484,8 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
           if (daynight === 'show') p.push('daynight=show');
           const numbers = embedNumbersSelect.value;
           if (numbers === 'hide') p.push('numbers=hide');
+          const shadows = embedShadowsSelect.value;
+          if (shadows === 'false') p.push('shadows=false');
           return '?' + p.join('&');
         }
 
@@ -1545,6 +1565,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         embedShapeSelect.addEventListener('change', updateEmbed);
         embedDayNightSelect.addEventListener('change', updateEmbed);
         embedNumbersSelect.addEventListener('change', updateEmbed);
+        embedShadowsSelect.addEventListener('change', updateEmbed);
         embedWidthInput.addEventListener('input', updateEmbedDebounced);
         embedHeightInput.addEventListener('input', updateEmbedDebounced);
 

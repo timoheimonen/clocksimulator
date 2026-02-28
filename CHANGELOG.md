@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.18 - 2026-02-28
+
+### Added
+- URL parameter shadows=true/false to show or hide clock hand shadows (default is true). Also added as a Shadows option in the embed overlay panel.
+
 ## 1.0.17 - 2026-02-28
 
 ### Added
