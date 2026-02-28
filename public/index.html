@@ -15,7 +15,7 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.16">
+  <meta name="version" content="1.0.17">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -770,6 +770,18 @@
     <svg viewBox="0 0 200 200" id="clock">
       <circle id="clockBorder" cx="100" cy="100" r="95" fill="var(--clock-face)" stroke="var(--clock-border)" stroke-width="2.5"/>
 
+      <defs>
+        <filter id="shadowBlur1" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
+          <feGaussianBlur stdDeviation="0.6"/>
+        </filter>
+        <filter id="shadowBlur2" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
+          <feGaussianBlur stdDeviation="0.8"/>
+        </filter>
+        <filter id="shadowBlur3" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
+          <feGaussianBlur stdDeviation="1.0"/>
+        </filter>
+      </defs>
+
       <g id="ticks"></g>
       <g id="numbers"></g>
 
@@ -788,10 +800,16 @@
         <path d="M103.5 48.5a5 5 0 1 1-4.5 8 4 4 0 0 0 4.5-8Z" fill="var(--number)" opacity="0.55"/>
       </g>
 
+      <path id="hourHandShadow" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
+            fill="#000" stroke="none" opacity="0.15" filter="url(#shadowBlur1)"/>
       <path id="hourHand" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
             fill="var(--hour-hand)" stroke="var(--hour-hand)" stroke-width="0.8" stroke-linejoin="round"/>
+      <path id="minuteHandShadow" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
+            fill="#000" stroke="none" opacity="0.2" filter="url(#shadowBlur2)"/>
       <path id="minuteHand" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
             fill="var(--minute-hand)" stroke="var(--minute-hand)" stroke-width="0.8" stroke-linejoin="round"/>
+      <line id="secondHandShadow" x1="100" y1="115" x2="100" y2="22"
+            stroke="#000" stroke-width="1.2" stroke-linecap="round" opacity="0.25" filter="url(#shadowBlur3)"/>
       <line id="secondHand" x1="100" y1="115" x2="100" y2="22"
             stroke="var(--second-hand)" stroke-width="1.2" stroke-linecap="round"/>
 
@@ -939,6 +957,9 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       const hourHand = document.getElementById('hourHand');
       const minuteHand = document.getElementById('minuteHand');
       const secondHand = document.getElementById('secondHand');
+      const hourHandShadow = document.getElementById('hourHandShadow');
+      const minuteHandShadow = document.getElementById('minuteHandShadow');
+      const secondHandShadow = document.getElementById('secondHandShadow');
       const themeToggle = document.getElementById('themeToggle');
       const sunIcon = document.getElementById('sunIcon');
       const moonIcon = document.getElementById('moonIcon');
@@ -1127,6 +1148,16 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
         minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
         secondHand.setAttribute('transform', 'rotate(' + secondAngle + ' 100 100)');
+
+        var lightRad = hourAngle * Math.PI / 180;
+        var sdx = -Math.sin(lightRad);
+        var sdy = Math.cos(lightRad);
+        hourHandShadow.setAttribute('transform',
+          'translate(' + (0.8 * sdx) + ',' + (0.8 * sdy) + ') rotate(' + hourAngle + ' 100 100)');
+        minuteHandShadow.setAttribute('transform',
+          'translate(' + (1.2 * sdx) + ',' + (1.2 * sdy) + ') rotate(' + minuteAngle + ' 100 100)');
+        secondHandShadow.setAttribute('transform',
+          'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ') rotate(' + secondAngle + ' 100 100)');
 
         if (showDayNight) {
           const isDay = t.hours >= 6 && t.hours < 18;

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.17 - 2026-02-28
+
+### Added
+- Dynamic soft shadows with time-based direction logic.
+
 ## 1.0.16 - 2026-02-27
 
 ### Fixed
