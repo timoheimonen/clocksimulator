@@ -813,6 +813,8 @@
       <line id="secondHand" x1="100" y1="115" x2="100" y2="22"
             stroke="var(--second-hand)" stroke-width="1.2" stroke-linecap="round"/>
 
+      <circle id="centerDotShadow" cx="100" cy="100" r="3.5"
+              fill="#000" opacity="0.25" filter="url(#shadowBlur3)"/>
       <circle cx="100" cy="100" r="3.5" fill="var(--center-dot)"/>
     </svg>
   </div>
@@ -960,6 +962,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       const hourHandShadow = document.getElementById('hourHandShadow');
       const minuteHandShadow = document.getElementById('minuteHandShadow');
       const secondHandShadow = document.getElementById('secondHandShadow');
+      const centerDotShadow = document.getElementById('centerDotShadow');
       const themeToggle = document.getElementById('themeToggle');
       const sunIcon = document.getElementById('sunIcon');
       const moonIcon = document.getElementById('moonIcon');
@@ -1158,6 +1161,8 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
           'translate(' + (1.2 * sdx) + ',' + (1.2 * sdy) + ') rotate(' + minuteAngle + ' 100 100)');
         secondHandShadow.setAttribute('transform',
           'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ') rotate(' + secondAngle + ' 100 100)');
+        centerDotShadow.setAttribute('transform',
+          'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ')');
 
         if (showDayNight) {
           const isDay = t.hours >= 6 && t.hours < 18;
