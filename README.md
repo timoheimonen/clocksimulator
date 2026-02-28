@@ -6,11 +6,6 @@
 A clean, fullscreen analog clock simulator built with plain HTML, CSS, and JavaScript.
 This is a minimalist, old-school web page with no trackers, no cookies, and no extra bloat. Just a pure analog clock, nothing more.
 
-## Privacy
-
-- Repo policy: [`PRIVACY.md`](PRIVACY.md)
-- Live site page: [`www.clocksimulator.com/privacy.html`](https://www.clocksimulator.com/privacy.html)
-
 ## Timezone support
 
 By default the clock shows your local time. To display a different timezone, add the `tz` query parameter with any valid [IANA timezone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones):
@@ -66,11 +61,13 @@ All parameters are optional and can be combined:
 | Parameter  | Values | Default | Description |
 |------------|--------|---------|-------------|
 | `embed`    | `true` | — | Activates embed mode (hides UI controls) |
-| `tz`       | IANA timezone | Local | Timezone, e.g. `Europe/Helsinki` |
+| `tz`       | Any IANA timezone | Local time | Timezone, e.g. `Europe/Helsinki` |
 | `theme`    | `dark`, `light`, `transparent` | `dark` | Color theme |
 | `seconds`  | `tick`, `smooth`, `hide` | `tick` | Second hand mode |
 | `border`   | `show`, `hide` | `show` | Clock border visibility |
 | `daynight` | `show`, `hide` | `hide` | Sun/moon indicator for day/night |
+| `numbers`  | `show`, `hide` | `show` | Clock numbers visibility |
+| `shadows`  | `true`, `false` | `true` | Hand and center dot shadows |
 
 ### Examples
 
@@ -79,6 +76,11 @@ https://www.clocksimulator.com/?embed=true&tz=Asia/Tokyo&theme=light
 https://www.clocksimulator.com/?embed=true&seconds=smooth&border=hide
 https://www.clocksimulator.com/?embed=true&tz=America/New_York&theme=dark&seconds=hide
 ```
+
+## Privacy
+
+- Repo policy: [`PRIVACY.md`](PRIVACY.md)
+- Live site page: [`www.clocksimulator.com/privacy.html`](https://www.clocksimulator.com/privacy.html)
 
 ## License
 
