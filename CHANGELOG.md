@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.19 - 2026-03-01
+
+### Added
+- Help overlay now includes a short section explaining screen burn-in protection and how dark mode benefits OLED displays.
+
 ## 1.0.18 - 2026-02-28
 
 ### Added
