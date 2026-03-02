@@ -3,7 +3,7 @@
 ## 1.1.0 - 2026-03-02
 
 ### Added
-- Multi-clock dashboard: show multiple clocks at once by separating timezones with commas in the URL. The grid layout is calculated automatically. Use the optional rows parameter to control the number of rows. Each clock displays its timezone label and supports all existing options such as theme, seconds, shadows, and day/night indicator.
+- Multi-clock dashboard: show multiple clocks at once by separating timezones with commas in the URL. The grid layout is calculated automatically. Use the optional rows parameter to control the number of rows. Each clock displays its timezone label and supports all existing options such as theme, seconds, shadows, and day/night indicator. In dashboard mode, shadows and the second hand tick momentum are automatically disabled for better performance.
 
 ### Fixed
 - Second hand shadow no longer visible when seconds are hidden via URL parameter.
