@@ -1,4 +1,4 @@
-var CACHE_NAME = 'clocksimulator-v1.1.1';
+var CACHE_NAME = 'clocksimulator-v1.1.2';
 var ASSETS = [
   '/',
   '/privacy.html',

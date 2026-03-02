@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2 - 2026-03-02
+
+### Fixed
+- Second-hand tick animation now stays consistent in timezone view, including embedded clocks.
+
 ## 1.1.1 - 2026-03-02
 
 ### Added
