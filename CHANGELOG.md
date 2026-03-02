@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.20 - 2026-03-02
+
+### Added
+- Sustainable section added to help window.
+
 ## 1.0.19 - 2026-03-01
 
 ### Added
