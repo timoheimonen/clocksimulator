@@ -1066,11 +1066,6 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
       const dashboardMode = validTimezones.length > 1;
       const timezone = validTimezones.length >= 1 ? validTimezones[0] : null;
 
-      const tzFormatter = timezone ? new Intl.DateTimeFormat('en-US', {
-        timeZone: timezone, hour: 'numeric', minute: 'numeric',
-        second: 'numeric', hourCycle: 'h23'
-      }) : null;
-
       const embedMode = params.get('embed') === 'true';
       const themeParam = params.get('theme');
       const secondsParam = params.get('seconds');
@@ -1118,23 +1113,29 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
         document.title = 'clocksimulator.com - ' + timezone;
       }
 
+      function computeTzOffset(tz) {
+        var now = new Date();
+        var tzTime = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+        return tzTime.getTime() - now.getTime();
+      }
+
+      var tzOffset = timezone ? computeTzOffset(timezone) : 0;
+      var lastOffsetCalc = Date.now();
+
       function getTime() {
-        const now = new Date();
-        const local = { hours: now.getHours(), minutes: now.getMinutes(),
-                      seconds: now.getSeconds(), millis: now.getMilliseconds() };
-        if (!timezone) return local;
-        try {
-          const parts = tzFormatter.formatToParts(now);
-          const get = function(type) {
-            const p = parts.find(function(p) { return p.type === type; });
-            return p ? parseInt(p.value, 10) : NaN;
-          };
-          const h = get('hour'), m = get('minute'), s = get('second');
-          if (isNaN(h) || isNaN(m) || isNaN(s)) return local;
-          return { hours: h, minutes: m, seconds: s, millis: now.getMilliseconds() };
-        } catch (e) {
-          return local;
+        var now = new Date();
+        var nowMs = now.getTime();
+        if (timezone) {
+          if (nowMs - lastOffsetCalc > 60000) {
+            tzOffset = computeTzOffset(timezone);
+            lastOffsetCalc = nowMs;
+          }
+          var adj = new Date(nowMs + tzOffset);
+          return { hours: adj.getHours(), minutes: adj.getMinutes(),
+                   seconds: adj.getSeconds(), millis: now.getMilliseconds() };
         }
+        return { hours: now.getHours(), minutes: now.getMinutes(),
+                 seconds: now.getSeconds(), millis: now.getMilliseconds() };
       }
 
       function addTick(degrees, length, width) {
@@ -1261,41 +1262,34 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
           }
           cell.appendChild(svgClone);
 
+          svgClone.querySelectorAll('.hour-hand-shadow, .minute-hand-shadow, .second-hand-shadow, .center-dot-shadow').forEach(function(el) {
+            el.style.display = 'none';
+          });
+
           const label = document.createElement('div');
           label.className = 'clock-label';
           label.textContent = tz.split('/').pop().replace(/_/g, ' ');
           cell.appendChild(label);
 
-          const formatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: tz, hour: 'numeric', minute: 'numeric',
-            second: 'numeric', hourCycle: 'h23'
-          });
+          var offset = computeTzOffset(tz);
+          var lastCalc = Date.now();
 
           return {
             el: cell,
             hourHand: svgClone.querySelector('.hour-hand'),
             minuteHand: svgClone.querySelector('.minute-hand'),
             secondHand: svgClone.querySelector('.second-hand'),
-            hourHandShadow: svgClone.querySelector('.hour-hand-shadow'),
-            minuteHandShadow: svgClone.querySelector('.minute-hand-shadow'),
-            secondHandShadow: svgClone.querySelector('.second-hand-shadow'),
-            centerDotShadow: svgClone.querySelector('.center-dot-shadow'),
             sunIcon: svgClone.querySelector('.sun-icon'),
             moonIcon: svgClone.querySelector('.moon-icon'),
             getTime: function (now) {
-              try {
-                const parts = formatter.formatToParts(now);
-                const getPart = function (type) {
-                  const p = parts.find(function (pp) { return pp.type === type; });
-                  return p ? parseInt(p.value, 10) : NaN;
-                };
-                const h = getPart('hour'), m = getPart('minute'), s = getPart('second');
-                if (isNaN(h) || isNaN(m) || isNaN(s)) throw 0;
-                return { hours: h, minutes: m, seconds: s, millis: now.getMilliseconds() };
-              } catch (e) {
-                return { hours: now.getHours(), minutes: now.getMinutes(),
-                         seconds: now.getSeconds(), millis: now.getMilliseconds() };
+              var nowMs = now.getTime();
+              if (nowMs - lastCalc > 60000) {
+                offset = computeTzOffset(tz);
+                lastCalc = nowMs;
               }
+              var adj = new Date(nowMs + offset);
+              return { hours: adj.getHours(), minutes: adj.getMinutes(),
+                       seconds: adj.getSeconds(), millis: now.getMilliseconds() };
             }
           };
         };
@@ -1327,9 +1321,6 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
             if (!secondsHidden) {
               if (secondModeTick) {
                 secondAngle = seconds * 6;
-                if (millis < 100) {
-                  secondAngle += 0.5 * Math.exp(-millis / 25);
-                }
               } else {
                 secondAngle = (seconds + millis / 1000) * 6;
               }
@@ -1338,22 +1329,6 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
 
             c.hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
             c.minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
-
-            if (shadowsParam !== 'false') {
-              const lightRad = hourAngle * Math.PI / 180;
-              const sdx = -Math.sin(lightRad);
-              const sdy = Math.cos(lightRad);
-              c.hourHandShadow.setAttribute('transform',
-                'translate(' + (0.8 * sdx) + ',' + (0.8 * sdy) + ') rotate(' + hourAngle + ' 100 100)');
-              c.minuteHandShadow.setAttribute('transform',
-                'translate(' + (1.2 * sdx) + ',' + (1.2 * sdy) + ') rotate(' + minuteAngle + ' 100 100)');
-              if (!secondsHidden) {
-                c.secondHandShadow.setAttribute('transform',
-                  'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ') rotate(' + secondAngle + ' 100 100)');
-              }
-              c.centerDotShadow.setAttribute('transform',
-                'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ')');
-            }
 
             if (showDayNight) {
               const isDay = t.hours >= 6 && t.hours < 18;
