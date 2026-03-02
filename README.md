@@ -21,6 +21,18 @@ https://www.clocksimulator.com/?tz=UTC
 
 If the value is invalid or omitted, the clock falls back to your local timezone.
 
+## Multi-clock dashboard
+
+Show multiple clocks at once by separating timezones with commas:
+
+```
+https://www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
+https://www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&rows=2
+```
+
+The grid layout is calculated automatically. Use the optional `rows` parameter to control the number of rows.
+Original feature request by "Hacker News" user "elteto".
+
 ## Embed
 
 You can embed the clock on any website using an iframe. Click the **info button** on [www.clocksimulator.com](https://www.clocksimulator.com) and select **Embed this clock** to open the generator with a live preview and copy-ready code.
@@ -63,13 +75,15 @@ All parameters are optional and can be combined:
 | Parameter  | Values | Default | Description |
 |------------|--------|---------|-------------|
 | `embed`    | `true` | — | Activates embed mode (hides UI controls) |
-| `tz`       | Any IANA timezone | Local time | Timezone, e.g. `Europe/Helsinki` |
+| `tz`       | IANA timezone(s), comma-separated | Local time | Timezone(s), e.g. `Europe/Helsinki` or `UTC,Europe/Helsinki,America/New_York` |
+| `rows`     | Number | Auto | Number of grid rows for multi-clock dashboard |
 | `theme`    | `dark`, `light`, `transparent` | `dark` | Color theme |
 | `seconds`  | `tick`, `smooth`, `hide` | `tick` | Second hand mode |
 | `border`   | `show`, `hide` | `show` | Clock border visibility |
 | `daynight` | `show`, `hide` | `hide` | Sun/moon indicator for day/night |
 | `numbers`  | `show`, `hide` | `show` | Clock numbers visibility |
 | `shadows`  | `true`, `false` | `true` | Hand and center dot shadows |
+| `burnin`   | `true`, `false` | `true` | Screen burn-in protection (pixel shift) |
 
 ### Examples
 

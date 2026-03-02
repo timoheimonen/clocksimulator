@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.0 - 2026-03-02
+
+### Added
+- Multi-clock dashboard: show multiple clocks at once by separating timezones with commas in the URL. The grid layout is calculated automatically. Use the optional rows parameter to control the number of rows. Each clock displays its timezone label and supports all existing options such as theme, seconds, shadows, and day/night indicator.
+
+### Fixed
+- Second hand shadow no longer visible when seconds are hidden via URL parameter.
+- Reduced unnecessary processing when seconds are hidden.
+- Save settings tooltip now displays correctly when URL parameters are active.
+
 ## 1.0.20 - 2026-03-02
 
 ### Added

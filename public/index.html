@@ -38,7 +38,7 @@ SOFTWARE.
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, open-source, and fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.0.20">
+  <meta name="version" content="1.1.0">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -454,6 +454,47 @@ SOFTWARE.
       transition: none;
     }
 
+    .clock-grid {
+      display: grid;
+      gap: 2vmin;
+      padding: 2vmin;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      height: var(--app-height, 100dvh);
+      transition: transform 10s ease-in-out;
+    }
+
+    body.embed-mode .clock-grid {
+      transition: none;
+    }
+
+    .clock-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .clock-cell svg {
+      display: block;
+      flex: 1 1 0;
+      min-height: 0;
+      max-width: 100%;
+    }
+
+    .clock-label {
+      color: var(--number);
+      font-size: clamp(10px, 1.5vmin, 16px);
+      text-align: center;
+      padding-top: 0.5vmin;
+      opacity: 0.7;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
     .embed-overlay {
       position: fixed;
       inset: 0;
@@ -791,7 +832,7 @@ SOFTWARE.
 
   <div class="clock-container">
     <svg viewBox="0 0 200 200" id="clock">
-      <circle id="clockBorder" cx="100" cy="100" r="95" fill="var(--clock-face)" stroke="var(--clock-border)" stroke-width="2.5"/>
+      <circle id="clockBorder" class="clock-border" cx="100" cy="100" r="95" fill="var(--clock-face)" stroke="var(--clock-border)" stroke-width="2.5"/>
 
       <defs>
         <filter id="shadowBlur1" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
@@ -805,10 +846,10 @@ SOFTWARE.
         </filter>
       </defs>
 
-      <g id="ticks"></g>
-      <g id="numbers"></g>
+      <g id="ticks" class="ticks"></g>
+      <g id="numbers" class="numbers"></g>
 
-      <g id="sunIcon" display="none">
+      <g id="sunIcon" class="sun-icon" display="none">
         <circle cx="100" cy="52" r="4" fill="var(--number)" opacity="0.55"/>
         <line x1="100" y1="45.5" x2="100" y2="47" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
         <line x1="100" y1="57" x2="100" y2="58.5" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
@@ -819,24 +860,24 @@ SOFTWARE.
         <line x1="95.4" y1="56.6" x2="96.4" y2="55.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
         <line x1="103.6" y1="48.4" x2="104.6" y2="47.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
       </g>
-      <g id="moonIcon" display="none">
+      <g id="moonIcon" class="moon-icon" display="none">
         <path d="M103.5 48.5a5 5 0 1 1-4.5 8 4 4 0 0 0 4.5-8Z" fill="var(--number)" opacity="0.55"/>
       </g>
 
-      <path id="hourHandShadow" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
+      <path id="hourHandShadow" class="hour-hand-shadow" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
             fill="#000" stroke="none" opacity="0.15" filter="url(#shadowBlur1)"/>
-      <path id="hourHand" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
+      <path id="hourHand" class="hour-hand" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
             fill="var(--hour-hand)" stroke="var(--hour-hand)" stroke-width="0.8" stroke-linejoin="round"/>
-      <path id="minuteHandShadow" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
+      <path id="minuteHandShadow" class="minute-hand-shadow" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
             fill="#000" stroke="none" opacity="0.2" filter="url(#shadowBlur2)"/>
-      <path id="minuteHand" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
+      <path id="minuteHand" class="minute-hand" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
             fill="var(--minute-hand)" stroke="var(--minute-hand)" stroke-width="0.8" stroke-linejoin="round"/>
-      <line id="secondHandShadow" x1="100" y1="115" x2="100" y2="22"
+      <line id="secondHandShadow" class="second-hand-shadow" x1="100" y1="115" x2="100" y2="22"
             stroke="#000" stroke-width="1.2" stroke-linecap="round" opacity="0.25" filter="url(#shadowBlur3)"/>
-      <line id="secondHand" x1="100" y1="115" x2="100" y2="22"
+      <line id="secondHand" class="second-hand" x1="100" y1="115" x2="100" y2="22"
             stroke="var(--second-hand)" stroke-width="1.2" stroke-linecap="round"/>
 
-      <circle id="centerDotShadow" cx="100" cy="100" r="3.5"
+      <circle id="centerDotShadow" class="center-dot-shadow" cx="100" cy="100" r="3.5"
               fill="#000" opacity="0.25" filter="url(#shadowBlur3)"/>
       <circle cx="100" cy="100" r="3.5" fill="var(--center-dot)"/>
     </svg>
@@ -950,7 +991,7 @@ SOFTWARE.
         </tbody>
       </table>
       <h3>Screen burn-in protection</h3>
-      <p>To protect OLED and AMOLED displays, the clock subtly shifts its position every 10 minutes in a slow circular pattern. Dark Mode further reduces the risk of burn-in. Protection does not apply in embedded mode.</p>
+      <p>To protect OLED and AMOLED displays, the clock subtly shifts its position every 10 minutes in a slow circular pattern. Dark Mode further reduces the risk of burn-in. Protection does not apply in embedded mode. Use <code>?burnin=false</code> to disable.</p>
       <h3>Install as app (PWA)</h3>
       <p>This site works as a Progressive Web App. You can install it on your phone or computer for a full-screen clock and offline use. Use your browser&rsquo;s menu (e.g. &ldquo;Add to Home Screen&rdquo; or &ldquo;Install app&rdquo;) to install.</p>
       <h3>Timezones</h3>
@@ -958,6 +999,10 @@ SOFTWARE.
       <pre>www.clocksimulator.com/?tz=America/New_York
 www.clocksimulator.com/?tz=Europe/London
 www.clocksimulator.com/?tz=Asia/Tokyo</pre>
+      <h3>Multi-clock dashboard</h3>
+      <p>Show multiple clocks at once by separating timezones with commas. This automatically enables <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:</p>
+      <pre>www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
+www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2 (dashboardMode)</pre>
       <h3>Embedding</h3>
       <p>Embed the clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel (<strong>&#9432;</strong> &rarr; <strong>Embed this clock</strong>) to configure and copy the code.</p>
       <h3>Privacy</h3>
@@ -969,7 +1014,8 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         <thead><tr><th>Parameter</th><th>Values</th><th>Default</th></tr></thead>
         <tbody>
         <tr><td><code>embed</code></td><td><code>true</code></td><td>&mdash;</td></tr>
-        <tr><td><code>tz</code></td><td>Any IANA timezone</td><td>Local time</td></tr>
+        <tr><td><code>tz</code></td><td>IANA timezone(s), comma-separated</td><td>Local time</td></tr>
+        <tr><td><code>rows</code></td><td>Number (e.g. <code>2</code>, <code>3</code>)</td><td>Auto</td></tr>
         <tr><td><code>theme</code></td><td><code>dark</code>, <code>light</code>, <code>transparent</code></td><td><code>dark</code></td></tr>
         <tr><td><code>seconds</code></td><td><code>tick</code>, <code>smooth</code>, <code>hide</code></td><td><code>tick</code></td></tr>
         <tr><td><code>border</code></td><td><code>show</code>, <code>hide</code></td><td><code>show</code></td></tr>
@@ -1002,18 +1048,22 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       const sunIcon = document.getElementById('sunIcon');
       const moonIcon = document.getElementById('moonIcon');
       const saveSettingsToggle = document.getElementById('saveSettingsToggle');
+      const saveSettingsLabel = document.getElementById('saveSettingsLabel');
 
       const CX = 100, CY = 100, R = 85;
 
       const params = new URLSearchParams(window.location.search);
       const tzParam = params.get('tz');
-      let timezone = null;
-      if (tzParam) {
+      const tzList = tzParam ? tzParam.split(',').filter(Boolean) : [];
+      const validTimezones = [];
+      for (let i = 0; i < tzList.length; i++) {
         try {
-          new Intl.DateTimeFormat(undefined, { timeZone: tzParam });
-          timezone = tzParam;
+          new Intl.DateTimeFormat(undefined, { timeZone: tzList[i] });
+          validTimezones.push(tzList[i]);
         } catch (e) {}
       }
+      const dashboardMode = validTimezones.length > 1;
+      const timezone = validTimezones.length >= 1 ? validTimezones[0] : null;
 
       const tzFormatter = timezone ? new Intl.DateTimeFormat('en-US', {
         timeZone: timezone, hour: 'numeric', minute: 'numeric',
@@ -1027,6 +1077,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       const daynightParam = params.get('daynight');
       const numbersParam = params.get('numbers');
       const shadowsParam = params.get('shadows');
+      const burninParam = params.get('burnin');
       const showDayNight = daynightParam === 'show';
 
       let savedSettings = null;
@@ -1060,7 +1111,9 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         themeToggle.checked = true;
       }
 
-      if (timezone) {
+      if (dashboardMode) {
+        document.title = 'clocksimulator.com - Dashboard';
+      } else if (timezone) {
         document.title = 'clocksimulator.com - ' + timezone;
       }
 
@@ -1132,12 +1185,14 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       let secondModeTick = true;
       const secondModeToggle = document.getElementById('secondModeToggle');
       secondModeToggle.checked = true;
+      const secondsHidden = secondsParam === 'hide';
 
       if (secondsParam === 'smooth') {
         secondModeTick = false;
         secondModeToggle.checked = false;
       } else if (secondsParam === 'hide') {
         secondHand.style.display = 'none';
+        secondHandShadow.style.display = 'none';
         secondModeToggle.checked = false;
         document.querySelector('.second-mode-toggle').style.display = 'none';
       }
@@ -1171,47 +1226,187 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
         saveSettings();
       });
 
-      function updateClock() {
-        const t = getTime();
-        const hours = t.hours % 12;
-        const minutes = t.minutes;
-        const seconds = t.seconds;
-        const millis = t.millis;
+      const clocks = [];
+      if (dashboardMode) {
+        const clockContainer = document.querySelector('.clock-container');
+        const templateSvg = document.getElementById('clock');
 
-        let secondAngle;
-        if (secondModeTick) {
-          secondAngle = seconds * 6;
-          if (millis < 100) {
-            secondAngle += 0.5 * Math.exp(-millis / 25);
+        const sharedDefs = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        sharedDefs.setAttribute('width', '0');
+        sharedDefs.setAttribute('height', '0');
+        sharedDefs.style.position = 'absolute';
+        sharedDefs.appendChild(templateSvg.querySelector('defs'));
+        document.body.insertBefore(sharedDefs, document.body.firstChild);
+
+        clockContainer.style.display = 'none';
+
+        const clockGrid = document.createElement('div');
+        clockGrid.className = 'clock-grid';
+        const n = validTimezones.length;
+        const gridRowsVal = parseInt(params.get('rows')) || 0;
+        const cols = gridRowsVal ? Math.ceil(n / gridRowsVal) : Math.ceil(Math.sqrt(n));
+        const gridRows = gridRowsVal || Math.ceil(n / cols);
+        clockGrid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
+        clockGrid.style.gridTemplateRows = 'repeat(' + gridRows + ', 1fr)';
+
+        const createClock = function (tz) {
+          const cell = document.createElement('div');
+          cell.className = 'clock-cell';
+
+          const svgClone = templateSvg.cloneNode(true);
+          const idEls = svgClone.querySelectorAll('[id]');
+          for (let j = 0; j < idEls.length; j++) {
+            idEls[j].removeAttribute('id');
+          }
+          cell.appendChild(svgClone);
+
+          const label = document.createElement('div');
+          label.className = 'clock-label';
+          label.textContent = tz.split('/').pop().replace(/_/g, ' ');
+          cell.appendChild(label);
+
+          const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: tz, hour: 'numeric', minute: 'numeric',
+            second: 'numeric', hourCycle: 'h23'
+          });
+
+          return {
+            el: cell,
+            hourHand: svgClone.querySelector('.hour-hand'),
+            minuteHand: svgClone.querySelector('.minute-hand'),
+            secondHand: svgClone.querySelector('.second-hand'),
+            hourHandShadow: svgClone.querySelector('.hour-hand-shadow'),
+            minuteHandShadow: svgClone.querySelector('.minute-hand-shadow'),
+            secondHandShadow: svgClone.querySelector('.second-hand-shadow'),
+            centerDotShadow: svgClone.querySelector('.center-dot-shadow'),
+            sunIcon: svgClone.querySelector('.sun-icon'),
+            moonIcon: svgClone.querySelector('.moon-icon'),
+            getTime: function (now) {
+              try {
+                const parts = formatter.formatToParts(now);
+                const getPart = function (type) {
+                  const p = parts.find(function (pp) { return pp.type === type; });
+                  return p ? parseInt(p.value, 10) : NaN;
+                };
+                const h = getPart('hour'), m = getPart('minute'), s = getPart('second');
+                if (isNaN(h) || isNaN(m) || isNaN(s)) throw 0;
+                return { hours: h, minutes: m, seconds: s, millis: now.getMilliseconds() };
+              } catch (e) {
+                return { hours: now.getHours(), minutes: now.getMinutes(),
+                         seconds: now.getSeconds(), millis: now.getMilliseconds() };
+              }
+            }
+          };
+        };
+
+        for (let ci = 0; ci < validTimezones.length; ci++) {
+          const clock = createClock(validTimezones[ci]);
+          clocks.push(clock);
+          clockGrid.appendChild(clock.el);
+        }
+
+        document.body.insertBefore(clockGrid, document.querySelector('.embed-overlay'));
+      }
+
+      function updateClock() {
+        if (dashboardMode) {
+          const now = new Date();
+          for (let i = 0; i < clocks.length; i++) {
+            const c = clocks[i];
+            const t = c.getTime(now);
+            const hours = t.hours % 12;
+            const minutes = t.minutes;
+            const seconds = t.seconds;
+            const millis = t.millis;
+
+            const minuteAngle = (minutes + seconds / 60) * 6;
+            const hourAngle = (hours + minutes / 60) * 30;
+
+            let secondAngle;
+            if (!secondsHidden) {
+              if (secondModeTick) {
+                secondAngle = seconds * 6;
+                if (millis < 100) {
+                  secondAngle += 0.5 * Math.exp(-millis / 25);
+                }
+              } else {
+                secondAngle = (seconds + millis / 1000) * 6;
+              }
+              c.secondHand.setAttribute('transform', 'rotate(' + secondAngle + ' 100 100)');
+            }
+
+            c.hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
+            c.minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
+
+            if (shadowsParam !== 'false') {
+              const lightRad = hourAngle * Math.PI / 180;
+              const sdx = -Math.sin(lightRad);
+              const sdy = Math.cos(lightRad);
+              c.hourHandShadow.setAttribute('transform',
+                'translate(' + (0.8 * sdx) + ',' + (0.8 * sdy) + ') rotate(' + hourAngle + ' 100 100)');
+              c.minuteHandShadow.setAttribute('transform',
+                'translate(' + (1.2 * sdx) + ',' + (1.2 * sdy) + ') rotate(' + minuteAngle + ' 100 100)');
+              if (!secondsHidden) {
+                c.secondHandShadow.setAttribute('transform',
+                  'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ') rotate(' + secondAngle + ' 100 100)');
+              }
+              c.centerDotShadow.setAttribute('transform',
+                'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ')');
+            }
+
+            if (showDayNight) {
+              const isDay = t.hours >= 6 && t.hours < 18;
+              c.sunIcon.setAttribute('display', isDay ? 'inline' : 'none');
+              c.moonIcon.setAttribute('display', isDay ? 'none' : 'inline');
+            }
           }
         } else {
-          secondAngle = (seconds + millis / 1000) * 6;
-        }
-        const minuteAngle = (minutes + seconds / 60) * 6;
-        const hourAngle = (hours + minutes / 60) * 30;
+          const t = getTime();
+          const hours = t.hours % 12;
+          const minutes = t.minutes;
+          const seconds = t.seconds;
+          const millis = t.millis;
 
-        hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
-        minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
-        secondHand.setAttribute('transform', 'rotate(' + secondAngle + ' 100 100)');
+          const minuteAngle = (minutes + seconds / 60) * 6;
+          const hourAngle = (hours + minutes / 60) * 30;
 
-        if (shadowsParam !== 'false') {
-          var lightRad = hourAngle * Math.PI / 180;
-          var sdx = -Math.sin(lightRad);
-          var sdy = Math.cos(lightRad);
-          hourHandShadow.setAttribute('transform',
-            'translate(' + (0.8 * sdx) + ',' + (0.8 * sdy) + ') rotate(' + hourAngle + ' 100 100)');
-          minuteHandShadow.setAttribute('transform',
-            'translate(' + (1.2 * sdx) + ',' + (1.2 * sdy) + ') rotate(' + minuteAngle + ' 100 100)');
-          secondHandShadow.setAttribute('transform',
-            'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ') rotate(' + secondAngle + ' 100 100)');
-          centerDotShadow.setAttribute('transform',
-            'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ')');
-        }
+          let secondAngle;
+          if (!secondsHidden) {
+            if (secondModeTick) {
+              secondAngle = seconds * 6;
+              if (millis < 100) {
+                secondAngle += 0.5 * Math.exp(-millis / 25);
+              }
+            } else {
+              secondAngle = (seconds + millis / 1000) * 6;
+            }
+            secondHand.setAttribute('transform', 'rotate(' + secondAngle + ' 100 100)');
+          }
 
-        if (showDayNight) {
-          const isDay = t.hours >= 6 && t.hours < 18;
-          sunIcon.setAttribute('display', isDay ? 'inline' : 'none');
-          moonIcon.setAttribute('display', isDay ? 'none' : 'inline');
+          hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
+          minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
+
+          if (shadowsParam !== 'false') {
+            const lightRad = hourAngle * Math.PI / 180;
+            const sdx = -Math.sin(lightRad);
+            const sdy = Math.cos(lightRad);
+            hourHandShadow.setAttribute('transform',
+              'translate(' + (0.8 * sdx) + ',' + (0.8 * sdy) + ') rotate(' + hourAngle + ' 100 100)');
+            minuteHandShadow.setAttribute('transform',
+              'translate(' + (1.2 * sdx) + ',' + (1.2 * sdy) + ') rotate(' + minuteAngle + ' 100 100)');
+            if (!secondsHidden) {
+              secondHandShadow.setAttribute('transform',
+                'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ') rotate(' + secondAngle + ' 100 100)');
+            }
+            centerDotShadow.setAttribute('transform',
+              'translate(' + (1.8 * sdx) + ',' + (1.8 * sdy) + ')');
+          }
+
+          if (showDayNight) {
+            const isDay = t.hours >= 6 && t.hours < 18;
+            sunIcon.setAttribute('display', isDay ? 'inline' : 'none');
+            moonIcon.setAttribute('display', isDay ? 'none' : 'inline');
+          }
         }
 
         if (!document.hidden) {
@@ -1453,20 +1648,24 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
           });
         }
 
-        const container = document.querySelector('.clock-container');
-        let burnInStep = 0;
-        const burnInRadius = 6;
-        const burnInPositions = 8;
+        const burninEnabled = burninParam !== 'false' && !embedMode;
 
-        function applyBurnInShift() {
-          const angle = (burnInStep % burnInPositions) * (2 * Math.PI / burnInPositions);
-          const dx = Math.round(Math.cos(angle) * burnInRadius * 10) / 10;
-          const dy = Math.round(Math.sin(angle) * burnInRadius * 10) / 10;
-          container.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
-          burnInStep++;
+        if (burninEnabled) {
+          const container = dashboardMode ? document.querySelector('.clock-grid') : document.querySelector('.clock-container');
+          let burnInStep = 0;
+          const burnInRadius = 6;
+          const burnInPositions = 8;
+
+          function applyBurnInShift() {
+            const angle = (burnInStep % burnInPositions) * (2 * Math.PI / burnInPositions);
+            const dx = Math.round(Math.cos(angle) * burnInRadius * 10) / 10;
+            const dy = Math.round(Math.sin(angle) * burnInRadius * 10) / 10;
+            container.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+            burnInStep++;
+          }
+
+          setInterval(applyBurnInShift, 600000);
         }
-
-        setInterval(applyBurnInShift, 600000);
 
         const embedCloseBtn = document.getElementById('embedCloseBtn');
         const embedTzInput = document.getElementById('embedTz');
@@ -1488,14 +1687,24 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
 
         function buildEmbedParams() {
           const p = ['embed=true'];
-          const tz = embedTzInput.value.trim();
-          if (tz) {
-            try {
-              new Intl.DateTimeFormat(undefined, { timeZone: tz });
+          const tzInputRaw = embedTzInput.value.trim();
+          if (tzInputRaw) {
+            const tzList = tzInputRaw.split(',').filter(Boolean);
+            let allValid = true;
+            for (let i = 0; i < tzList.length; i++) {
+              try {
+                new Intl.DateTimeFormat(undefined, { timeZone: tzList[i].trim() });
+              } catch (e) {
+                allValid = false;
+                break;
+              }
+            }
+            if (allValid && tzList.length > 0) {
               embedTzInput.setCustomValidity('');
-              p.push('tz=' + encodeURIComponent(tz));
-            } catch (e) {
-              embedTzInput.setCustomValidity('Invalid timezone');
+              const cleanTz = tzList.map(function (t) { return t.trim(); }).join(',');
+              p.push('tz=' + encodeURIComponent(cleanTz));
+            } else {
+              embedTzInput.setCustomValidity('Invalid timezone(s)');
               embedTzInput.reportValidity();
             }
           } else {
