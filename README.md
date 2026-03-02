@@ -31,7 +31,9 @@ https://www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tok
 ```
 
 The grid layout is calculated automatically. Use the optional `rows` parameter to control the number of rows.
-Original feature request by "Hacker News" user "elteto".
+You can also build it visually: click the **info button** on [www.clocksimulator.com](https://www.clocksimulator.com) and select **Build dashboard** to open the dashboard builder with live preview and a copy-ready link.
+
+Feature of easy url with multiple timezones requested by "Hacker News" user "elteto".
 
 ## Embed
 

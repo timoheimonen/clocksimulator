@@ -38,7 +38,7 @@ SOFTWARE.
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, open-source, and fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.1.0">
+  <meta name="version" content="1.1.1">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -664,6 +664,129 @@ SOFTWARE.
       background: #2563eb;
     }
 
+    .dashboard-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .dashboard-overlay.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .dashboard-tz-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .dashboard-tz-input-row input {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid rgba(128, 128, 128, 0.3);
+      border-radius: 6px;
+      background: rgba(128, 128, 128, 0.1);
+      color: inherit;
+      font-size: 13px;
+      font-family: inherit;
+    }
+
+    .dashboard-tz-input-row input:focus {
+      outline: none;
+      border-color: rgba(128, 128, 128, 0.6);
+    }
+
+    .dashboard-add-btn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      background: #3b82f6;
+      color: #fff;
+      font-size: 12px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .dashboard-add-btn:hover {
+      background: #2563eb;
+    }
+
+    .tz-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+      min-height: 28px;
+    }
+
+    .tz-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px 4px 10px;
+      border-radius: 14px;
+      background: rgba(128, 128, 128, 0.2);
+      font-size: 12px;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .tz-chip-remove {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(128, 128, 128, 0.3);
+      color: inherit;
+      font-size: 11px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.2s;
+    }
+
+    .tz-chip-remove:hover {
+      background: rgba(220, 60, 60, 0.6);
+    }
+
+    .dashboard-preview-wrap iframe {
+      border-radius: 6px;
+    }
+
+    .dashboard-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dashboard-open-btn {
+      background: #22c55e;
+    }
+
+    .dashboard-open-btn:hover {
+      background: #16a34a;
+    }
+
+    .tz-chips-empty {
+      font-size: 12px;
+      opacity: 0.4;
+      padding: 4px 0;
+    }
+
     .help-overlay {
       position: fixed;
       inset: 0;
@@ -813,6 +936,7 @@ SOFTWARE.
       </button>
       <div class="about-bubble" id="aboutBubble">
         <a href="#" id="embedLink">Embed this clock &rarr;</a><br>
+        <a href="#" id="dashboardLink">Build dashboard &rarr;</a><br>
         <a href="#" id="helpLink">How to use &rarr;</a><br>
         <br>
         <label class="toggle-label save-settings-toggle" id="saveSettingsLabel"
@@ -969,6 +1093,83 @@ SOFTWARE.
     </div>
   </div>
 
+  <div class="dashboard-overlay" id="dashboardOverlay" role="dialog" aria-modal="true" aria-labelledby="dashboardPanelTitle">
+    <div class="modal-panel dashboard-panel">
+      <div class="modal-panel-header">
+        <span class="modal-panel-title" id="dashboardPanelTitle">Build dashboard</span>
+        <button class="modal-panel-close" id="dashboardCloseBtn" aria-label="Close">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+      <div class="dashboard-tz-input-row">
+        <input type="text" id="dashboardTzInput" placeholder="e.g. Europe/Helsinki">
+        <button class="dashboard-add-btn" id="dashboardAddBtn">Add</button>
+      </div>
+      <div class="tz-chips" id="tzChips"></div>
+      <div class="embed-controls">
+        <div class="embed-field">
+          <label for="dashboardRows">Rows</label>
+          <select id="dashboardRows">
+            <option value="0">Auto</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+        <div class="embed-field">
+          <label for="dashboardTheme">Theme</label>
+          <select id="dashboardTheme">
+            <option value="dark">Dark</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+        <div class="embed-field">
+          <label for="dashboardSeconds">Second hand</label>
+          <select id="dashboardSeconds">
+            <option value="tick">Tick</option>
+            <option value="smooth">Smooth</option>
+            <option value="hide">Hidden</option>
+          </select>
+        </div>
+        <div class="embed-field">
+          <label for="dashboardNumbers">Numbers</label>
+          <select id="dashboardNumbers">
+            <option value="show">Show</option>
+            <option value="hide">Hide</option>
+          </select>
+        </div>
+        <div class="embed-field">
+          <label for="dashboardDayNight">Day/night</label>
+          <select id="dashboardDayNight">
+            <option value="hide">Hide</option>
+            <option value="show">Show</option>
+          </select>
+        </div>
+        <div class="embed-field">
+          <label for="dashboardBorder">Border</label>
+          <select id="dashboardBorder">
+            <option value="show">Show</option>
+            <option value="hide">Hide</option>
+          </select>
+        </div>
+      </div>
+      <div class="embed-preview-wrap dashboard-preview-wrap">
+        <iframe id="dashboardPreview" width="280" height="160" title="Dashboard preview"></iframe>
+      </div>
+      <div class="embed-code-wrap">
+        <textarea class="embed-code" id="dashboardUrl" readonly rows="2" aria-label="Dashboard URL"></textarea>
+      </div>
+      <div class="dashboard-actions">
+        <button class="embed-copy-btn" id="dashboardCopyBtn">Copy link</button>
+        <button class="embed-copy-btn dashboard-open-btn" id="dashboardOpenBtn">Open dashboard</button>
+      </div>
+    </div>
+  </div>
+
   <div class="help-overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpPanelTitle">
     <div class="modal-panel help-panel">
       <div class="modal-panel-header">
@@ -1003,6 +1204,7 @@ www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       <p>Show multiple clocks at once by separating timezones with commas. This automatically enables <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:</p>
       <pre>www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
 www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2 (dashboardMode)</pre>
+      <p>You can also use the dashboard builder (<strong>&#9432;</strong> &rarr; <strong>Build dashboard</strong>) to visually add timezones and configure the grid.</p>
       <h3>Embedding</h3>
       <p>Embed the clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel (<strong>&#9432;</strong> &rarr; <strong>Embed this clock</strong>) to configure and copy the code.</p>
       <h3>Privacy</h3>
@@ -1417,8 +1619,10 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
       let hideTimer;
 
       const embedOverlay = document.getElementById('embedOverlay');
+      const dashboardOverlay = document.getElementById('dashboardOverlay');
       const helpOverlay = document.getElementById('helpOverlay');
       const embedLink = document.getElementById('embedLink');
+      const dashboardLink = document.getElementById('dashboardLink');
       let previousFocus = null;
       let activeTrapHandler = null;
 
@@ -1460,6 +1664,11 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
           if (helpOverlay.classList.contains('visible')) {
             helpOverlay.classList.remove('visible');
             releaseTrap(helpOverlay);
+          } else if (dashboardOverlay.classList.contains('visible')) {
+            dashboardOverlay.classList.remove('visible');
+            releaseTrap(dashboardOverlay);
+            var dp = document.getElementById('dashboardPreview');
+            if (dp) dp.src = 'about:blank';
           } else if (embedOverlay.classList.contains('visible')) {
             embedOverlay.classList.remove('visible');
             releaseTrap(embedOverlay);
@@ -1474,7 +1683,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
         document.body.classList.remove('cursor-hidden');
         toggleWrapper.classList.add('visible');
         clearTimeout(hideTimer);
-        if (aboutBubble.classList.contains('visible') || embedOverlay.classList.contains('visible') || helpOverlay.classList.contains('visible')) return;
+        if (aboutBubble.classList.contains('visible') || embedOverlay.classList.contains('visible') || dashboardOverlay.classList.contains('visible') || helpOverlay.classList.contains('visible')) return;
         hideTimer = setTimeout(function () {
           toggleWrapper.classList.remove('visible');
           document.body.classList.add('cursor-hidden');
@@ -1787,6 +1996,163 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
             embedCopyBtn.textContent = 'Copied!';
             setTimeout(function () { embedCopyBtn.textContent = original; }, 1500);
           }).catch(function () {});
+        });
+
+        const dashboardCloseBtn = document.getElementById('dashboardCloseBtn');
+        const dashboardTzInput = document.getElementById('dashboardTzInput');
+        const dashboardAddBtn = document.getElementById('dashboardAddBtn');
+        const tzChipsEl = document.getElementById('tzChips');
+        const dashboardRowsSelect = document.getElementById('dashboardRows');
+        const dashboardThemeSelect = document.getElementById('dashboardTheme');
+        const dashboardSecondsSelect = document.getElementById('dashboardSeconds');
+        const dashboardNumbersSelect = document.getElementById('dashboardNumbers');
+        const dashboardDayNightSelect = document.getElementById('dashboardDayNight');
+        const dashboardBorderSelect = document.getElementById('dashboardBorder');
+        const dashboardPreview = document.getElementById('dashboardPreview');
+        const dashboardUrlEl = document.getElementById('dashboardUrl');
+        const dashboardCopyBtn = document.getElementById('dashboardCopyBtn');
+        const dashboardOpenBtn = document.getElementById('dashboardOpenBtn');
+        const dashboardTimezones = [];
+        let dashboardDebounceTimer;
+
+        function renderTzChips() {
+          tzChipsEl.innerHTML = '';
+          if (dashboardTimezones.length === 0) {
+            const hint = document.createElement('span');
+            hint.className = 'tz-chips-empty';
+            hint.textContent = 'Add at least two timezones';
+            tzChipsEl.appendChild(hint);
+            return;
+          }
+          for (let i = 0; i < dashboardTimezones.length; i++) {
+            const chip = document.createElement('span');
+            chip.className = 'tz-chip';
+            chip.textContent = dashboardTimezones[i];
+            const btn = document.createElement('button');
+            btn.className = 'tz-chip-remove';
+            btn.setAttribute('aria-label', 'Remove ' + dashboardTimezones[i]);
+            btn.textContent = '\u00d7';
+            btn.dataset.idx = i;
+            btn.addEventListener('click', function () {
+              dashboardTimezones.splice(parseInt(this.dataset.idx), 1);
+              renderTzChips();
+              updateDashboardPreview();
+            });
+            chip.appendChild(btn);
+            tzChipsEl.appendChild(chip);
+          }
+          if (dashboardTimezones.length === 1) {
+            const hint = document.createElement('span');
+            hint.className = 'tz-chips-empty';
+            hint.textContent = 'Add one more timezone';
+            tzChipsEl.appendChild(hint);
+          }
+        }
+
+        function addTimezone() {
+          const raw = dashboardTzInput.value.trim();
+          if (!raw) return;
+          let canonical;
+          try {
+            canonical = new Intl.DateTimeFormat(undefined, { timeZone: raw }).resolvedOptions().timeZone;
+          } catch (e) {
+            dashboardTzInput.setCustomValidity('Invalid timezone');
+            dashboardTzInput.reportValidity();
+            return;
+          }
+          dashboardTzInput.setCustomValidity('');
+          if (dashboardTimezones.indexOf(canonical) !== -1) {
+            dashboardTzInput.value = '';
+            return;
+          }
+          dashboardTimezones.push(canonical);
+          dashboardTzInput.value = '';
+          renderTzChips();
+          updateDashboardPreview();
+        }
+
+        function buildDashboardParams() {
+          if (dashboardTimezones.length < 2) return '';
+          const p = ['tz=' + encodeURIComponent(dashboardTimezones.join(','))];
+          const rows = dashboardRowsSelect.value;
+          if (rows !== '0') p.push('rows=' + rows);
+          const theme = dashboardThemeSelect.value;
+          if (theme !== 'dark') p.push('theme=' + theme);
+          const seconds = dashboardSecondsSelect.value;
+          if (seconds !== 'tick') p.push('seconds=' + seconds);
+          const numbers = dashboardNumbersSelect.value;
+          if (numbers === 'hide') p.push('numbers=hide');
+          const daynight = dashboardDayNightSelect.value;
+          if (daynight === 'show') p.push('daynight=show');
+          const border = dashboardBorderSelect.value;
+          if (border === 'hide') p.push('border=hide');
+          return '?' + p.join('&');
+        }
+
+        function updateDashboardPreview() {
+          const qs = buildDashboardParams();
+          if (qs) {
+            dashboardUrlEl.value = prodBase + qs;
+            dashboardPreview.src = localBase + qs + '&embed=true';
+          } else {
+            dashboardUrlEl.value = '';
+            dashboardPreview.src = 'about:blank';
+          }
+        }
+
+        function debouncedDashboardPreview() {
+          clearTimeout(dashboardDebounceTimer);
+          dashboardDebounceTimer = setTimeout(updateDashboardPreview, 300);
+        }
+
+        function openDashboardPanel(e) {
+          if (e) e.preventDefault();
+          closeAboutBubble();
+          clearTimeout(hideTimer);
+          previousFocus = document.activeElement;
+          dashboardOverlay.classList.add('visible');
+          renderTzChips();
+          updateDashboardPreview();
+          trapFocus(dashboardOverlay);
+        }
+
+        function closeDashboardPanel() {
+          dashboardOverlay.classList.remove('visible');
+          dashboardPreview.src = 'about:blank';
+          releaseTrap(dashboardOverlay);
+        }
+
+        dashboardLink.addEventListener('click', openDashboardPanel);
+        dashboardCloseBtn.addEventListener('click', closeDashboardPanel);
+        dashboardOverlay.addEventListener('click', function (e) {
+          if (e.target === dashboardOverlay) closeDashboardPanel();
+        });
+
+        dashboardAddBtn.addEventListener('click', addTimezone);
+        dashboardTzInput.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); addTimezone(); }
+        });
+
+        dashboardRowsSelect.addEventListener('change', debouncedDashboardPreview);
+        dashboardThemeSelect.addEventListener('change', debouncedDashboardPreview);
+        dashboardSecondsSelect.addEventListener('change', debouncedDashboardPreview);
+        dashboardNumbersSelect.addEventListener('change', debouncedDashboardPreview);
+        dashboardDayNightSelect.addEventListener('change', debouncedDashboardPreview);
+        dashboardBorderSelect.addEventListener('change', debouncedDashboardPreview);
+
+        dashboardCopyBtn.addEventListener('click', function () {
+          const url = dashboardUrlEl.value;
+          if (!url) return;
+          navigator.clipboard.writeText(url).then(function () {
+            const original = dashboardCopyBtn.textContent;
+            dashboardCopyBtn.textContent = 'Copied!';
+            setTimeout(function () { dashboardCopyBtn.textContent = original; }, 1500);
+          }).catch(function () {});
+        });
+
+        dashboardOpenBtn.addEventListener('click', function () {
+          const url = dashboardUrlEl.value;
+          if (url) window.open(url, '_blank');
         });
       }
     })();

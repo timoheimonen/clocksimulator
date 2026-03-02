@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1 - 2026-03-02
+
+### Added
+- Dashboard builder added to the info menu (Info -> Build dashboard). It opens a modal matching the embed panel style, lets users add and remove multiple IANA timezones, configure rows and visual options, and generates a ready-to-use dashboard link with live preview.
+
 ## 1.1.0 - 2026-03-02
 
 ### Added
