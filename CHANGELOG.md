@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.5 2026-03-03
+
+### Added
+- Terms of service document.
+
+### Changed
+- Rearranged privacy, TOS and github links in Info-window. 
+
 ## 1.1.4 2026-03-03
 
 ### Added
