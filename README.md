@@ -6,7 +6,10 @@
 A clean, fullscreen analog clock simulator built with plain HTML, CSS, and JavaScript.
 This is a minimalist, old-school web page with no trackers, no cookies, and no extra bloat. Just a pure analog clock, nothing more.
 
-
+<p align="center">
+  <img src="screenshots/Clocksimulator_dark.png" width="320" alt="Clocksimulator dark theme" />
+  <img src="screenshots/Clocksimulator_Dashboard_dark.png" width="320" alt="Clocksimulator dashboard dark theme" />
+</p>
 
 ## Timezone support
 
