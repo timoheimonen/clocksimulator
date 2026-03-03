@@ -38,7 +38,7 @@ SOFTWARE.
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="ClockSimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description" content="A clean, open-source, and fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.1.3">
+  <meta name="version" content="1.1.4">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -664,6 +664,34 @@ SOFTWARE.
       background: #2563eb;
     }
 
+    .overlay-actions-row,
+    .dashboard-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .overlay-sustainability {
+      margin-left: auto;
+      max-width: 260px;
+      font-size: 11px;
+      line-height: 1.35;
+      opacity: 0.72;
+      text-align: right;
+    }
+
+    .overlay-sustainability a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      opacity: 0.9;
+    }
+
+    .overlay-sustainability a:hover {
+      opacity: 1;
+    }
+
     .dashboard-overlay {
       position: fixed;
       inset: 0;
@@ -768,17 +796,21 @@ SOFTWARE.
       border-radius: 6px;
     }
 
-    .dashboard-actions {
-      display: flex;
-      gap: 8px;
-    }
-
     .dashboard-open-btn {
       background: #22c55e;
     }
 
     .dashboard-open-btn:hover {
       background: #16a34a;
+    }
+
+    @media (max-width: 560px) {
+      .overlay-sustainability {
+        margin-left: 0;
+        max-width: none;
+        text-align: left;
+        flex-basis: 100%;
+      }
     }
 
     .tz-chips-empty {
@@ -1089,7 +1121,10 @@ SOFTWARE.
       <div class="embed-code-wrap">
         <textarea class="embed-code" id="embedCode" readonly rows="3" aria-label="Embed code"></textarea>
       </div>
-      <button class="embed-copy-btn" id="embedCopyBtn">Copy code</button>
+      <div class="overlay-actions-row">
+        <button class="embed-copy-btn" id="embedCopyBtn">Copy code</button>
+        <p class="overlay-sustainability">A+ carbon rating (&lt;0.01g CO2/visit). <a href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">Report</a>.</p>
+      </div>
     </div>
   </div>
 
@@ -1166,6 +1201,7 @@ SOFTWARE.
       <div class="dashboard-actions">
         <button class="embed-copy-btn" id="dashboardCopyBtn">Copy link</button>
         <button class="embed-copy-btn dashboard-open-btn" id="dashboardOpenBtn">Open dashboard</button>
+        <p class="overlay-sustainability">A+ carbon rating (&lt;0.01g CO2/visit). <a href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">Report</a>.</p>
       </div>
     </div>
   </div>

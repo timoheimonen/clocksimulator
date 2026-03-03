@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.4 2026-03-03
+
+### Added
+- Small carbon rating texts and links to embedded- and dashboard-overlays.
+
 ## 1.1.3 - 2026-03-03
 
 ### Fixed
