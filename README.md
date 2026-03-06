@@ -110,3 +110,5 @@ MIT. See `LICENSE`.
 ## Author
 
 Timo Heimonen <timo.heimonen@proton.me>
+
+> "I built this clock for anyone who needs it, as a hobby project: I wrote the code, bought the domain for 10 years, and put it online. It’s a clock for everyone to use and enjoy, but it’s not something you can pay me for."
