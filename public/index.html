@@ -23,26 +23,32 @@ SOFTWARE.
 -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>clocksimulator.com - Minimalist & Distraction-Free Analog Clock</title>
-  <meta name="description" content="A clean, sustainable, open-source, and fullscreen analog clock simulator. No ads, no tracking, just a beautiful clock.">
-  <meta name="keywords" content="clock simulator, analog clock, online clock, distraction-free clock, fullscreen clock, no ads clock, open source, sustainable">
+  <meta name="description"
+    content="A clean, sustainable, open-source, and fullscreen analog clock simulator. No ads, no tracking, just a beautiful clock.">
+  <meta name="keywords"
+    content="clock simulator, analog clock, online clock, distraction-free clock, fullscreen clock, no ads clock, open source, sustainable">
   <link rel="canonical" href="https://www.clocksimulator.com/">
   <meta property="og:title" content="clocksimulator.com - Minimalist & Distraction-Free Analog Clock">
-  <meta property="og:description" content="Minimalist analog clock. Distraction-free, open source, and privacy-focused.">
+  <meta property="og:description"
+    content="Minimalist analog clock. Distraction-free, open source, and privacy-focused.">
   <meta property="og:url" content="https://www.clocksimulator.com/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="clocksimulator.com">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="clocksimulator.com - Minimalist & Distraction-Free Analog Clock">
-  <meta name="twitter:description" content="A clean, sustainable, open-source, and fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.1.5">
+  <meta name="twitter:description"
+    content="A clean, sustainable, open-source, and fullscreen analog clock simulator. View the current time with rendered clock.">
+  <meta name="version" content="1.1.6">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
-  <link rel="icon" id="favicon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRU5ErkJggg==">
+  <link rel="icon" id="favicon" type="image/png"
+    href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRU5ErkJggg==">
   <style>
     :root {
       --bg: #000000;
@@ -155,7 +161,7 @@ SOFTWARE.
       transition: transform 0.3s ease;
     }
 
-    .toggle-label input:checked ~ .toggle-slider::before {
+    .toggle-label input:checked~.toggle-slider::before {
       transform: translateX(18px);
     }
 
@@ -193,11 +199,11 @@ SOFTWARE.
       opacity: 0;
     }
 
-    .theme-toggle input:checked ~ .theme-icon-moon {
+    .theme-toggle input:checked~.theme-icon-moon {
       opacity: 0;
     }
 
-    .theme-toggle input:checked ~ .theme-icon-sun {
+    .theme-toggle input:checked~.theme-icon-sun {
       opacity: 1;
     }
 
@@ -223,7 +229,7 @@ SOFTWARE.
       transition: opacity 0.3s ease;
     }
 
-    .wake-lock-toggle input:checked ~ .wake-lock-icon {
+    .wake-lock-toggle input:checked~.wake-lock-icon {
       opacity: 1;
     }
 
@@ -249,7 +255,7 @@ SOFTWARE.
       transition: opacity 0.3s ease;
     }
 
-    .second-mode-toggle input:checked ~ .second-mode-icon {
+    .second-mode-toggle input:checked~.second-mode-icon {
       opacity: 1;
     }
 
@@ -267,11 +273,11 @@ SOFTWARE.
       flex-shrink: 0;
     }
 
-    .save-settings-toggle input:checked ~ .toggle-slider {
+    .save-settings-toggle input:checked~.toggle-slider {
       background: #3a7d55;
     }
 
-    body.light-mode .save-settings-toggle input:checked ~ .toggle-slider {
+    body.light-mode .save-settings-toggle input:checked~.toggle-slider {
       background: #2f6a47;
     }
 
@@ -425,9 +431,15 @@ SOFTWARE.
     }
 
     @keyframes embed-flash {
-      0%   { background: rgba(255,255,255,0.25); }
-      100% { background: transparent; }
+      0% {
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      100% {
+        background: transparent;
+      }
     }
+
     #embedLink.flash {
       animation: embed-flash 0.8s ease-out;
       border-radius: 3px;
@@ -919,51 +931,57 @@ SOFTWARE.
     }
   </style>
 </head>
+
 <body>
   <div class="toggle-wrapper">
     <label class="toggle-label theme-toggle" aria-label="Toggle light mode" data-tooltip="Toggle light mode">
       <input type="checkbox" id="themeToggle">
       <svg class="theme-icon theme-icon-moon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M17 11.5A7.5 7.5 0 0 1 8.5 3a7.65 7.65 0 0 1 .2-1.5A8 8 0 1 0 18.5 11.3a7.65 7.65 0 0 1-1.5.2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17 11.5A7.5 7.5 0 0 1 8.5 3a7.65 7.65 0 0 1 .2-1.5A8 8 0 1 0 18.5 11.3a7.65 7.65 0 0 1-1.5.2Z"
+          stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
       <svg class="theme-icon theme-icon-sun" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.5"/>
-        <line x1="10" y1="2" x2="10" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="10" y1="16" x2="10" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="2" y1="10" x2="4" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="16" y1="10" x2="18" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="4.34" y1="4.34" x2="5.76" y2="5.76" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="14.24" y1="14.24" x2="15.66" y2="15.66" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="4.34" y1="15.66" x2="5.76" y2="14.24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="14.24" y1="5.76" x2="15.66" y2="4.34" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.5" />
+        <line x1="10" y1="2" x2="10" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="10" y1="16" x2="10" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="2" y1="10" x2="4" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="16" y1="10" x2="18" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="4.34" y1="4.34" x2="5.76" y2="5.76" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="14.24" y1="14.24" x2="15.66" y2="15.66" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" />
+        <line x1="4.34" y1="15.66" x2="5.76" y2="14.24" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" />
+        <line x1="14.24" y1="5.76" x2="15.66" y2="4.34" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" />
       </svg>
       <span class="toggle-slider"></span>
     </label>
-    <label class="toggle-label wake-lock-toggle" id="wakeLockLabel" aria-label="Keep screen on" data-tooltip="Keep screen on" hidden>
+    <label class="toggle-label wake-lock-toggle" id="wakeLockLabel" aria-label="Keep screen on"
+      data-tooltip="Keep screen on" hidden>
       <input type="checkbox" id="wakeLockToggle">
       <span class="toggle-slider"></span>
       <svg class="wake-lock-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="3" width="16" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
-        <line x1="10" y1="14" x2="10" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="6" y1="17" x2="14" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="2" y="3" width="16" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+        <line x1="10" y1="14" x2="10" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="6" y1="17" x2="14" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
       </svg>
     </label>
     <label class="toggle-label second-mode-toggle" aria-label="Tick seconds" data-tooltip="Tick seconds">
       <input type="checkbox" id="secondModeToggle">
       <span class="toggle-slider"></span>
       <svg class="second-mode-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="10" cy="11" r="7.5" stroke="currentColor" stroke-width="1.5"/>
-        <line x1="10" y1="3.5" x2="10" y2="1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="10" y1="11" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <line x1="15" y1="5" x2="16.5" y2="3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="10" cy="11" r="7.5" stroke="currentColor" stroke-width="1.5" />
+        <line x1="10" y1="3.5" x2="10" y2="1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="10" y1="11" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <line x1="15" y1="5" x2="16.5" y2="3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
       </svg>
     </label>
     <div class="about-wrapper">
       <button class="about-btn" id="aboutBtn" aria-label="About" data-tooltip="About">
         <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5"/>
-          <circle cx="10" cy="6.5" r="1" fill="currentColor"/>
-          <line x1="10" y1="9.5" x2="10" y2="14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
+          <circle cx="10" cy="6.5" r="1" fill="currentColor" />
+          <line x1="10" y1="9.5" x2="10" y2="14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
         </svg>
       </button>
       <div class="about-bubble" id="aboutBubble">
@@ -971,8 +989,8 @@ SOFTWARE.
         <a href="#" id="dashboardLink">Build dashboard &rarr;</a><br>
         <a href="#" id="helpLink">How to use &rarr;</a><br>
         <br>
-        <label class="toggle-label save-settings-toggle" id="saveSettingsLabel"
-               aria-label="Save settings" data-tooltip="Save settings to local storage.">
+        <label class="toggle-label save-settings-toggle" id="saveSettingsLabel" aria-label="Save settings"
+          data-tooltip="Save settings to local storage.">
           <input type="checkbox" id="saveSettingsToggle">
           <span class="toggle-slider"></span>
           <span>Save settings</span>
@@ -980,7 +998,8 @@ SOFTWARE.
         <br>
         Made by Timo Heimonen<br>
         <a href="mailto:timo.heimonen@proton.me">timo.heimonen@proton.me</a><br>
-        <a href="https://www.clocksimulator.com/privacy.html">Privacy</a> &middot; <a href="https://www.clocksimulator.com/TOS.html">Terms</a> &middot; 
+        <a href="https://www.clocksimulator.com/privacy.html">Privacy</a> &middot; <a
+          href="https://www.clocksimulator.com/TOS.html">Terms</a> &middot;
         <a href="https://github.com/timoheimonen/clocksimulator" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
@@ -988,17 +1007,18 @@ SOFTWARE.
 
   <div class="clock-container">
     <svg viewBox="0 0 200 200" id="clock">
-      <circle id="clockBorder" class="clock-border" cx="100" cy="100" r="95" fill="var(--clock-face)" stroke="var(--clock-border)" stroke-width="2.5"/>
+      <circle id="clockBorder" class="clock-border" cx="100" cy="100" r="95" fill="var(--clock-face)"
+        stroke="var(--clock-border)" stroke-width="2.5" />
 
       <defs>
         <filter id="shadowBlur1" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
-          <feGaussianBlur stdDeviation="0.6"/>
+          <feGaussianBlur stdDeviation="0.6" />
         </filter>
         <filter id="shadowBlur2" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
-          <feGaussianBlur stdDeviation="0.8"/>
+          <feGaussianBlur stdDeviation="0.8" />
         </filter>
         <filter id="shadowBlur3" filterUnits="userSpaceOnUse" x="0" y="0" width="200" height="200">
-          <feGaussianBlur stdDeviation="1.0"/>
+          <feGaussianBlur stdDeviation="1.0" />
         </filter>
       </defs>
 
@@ -1006,36 +1026,44 @@ SOFTWARE.
       <g id="numbers" class="numbers"></g>
 
       <g id="sunIcon" class="sun-icon" display="none">
-        <circle cx="100" cy="52" r="4" fill="var(--number)" opacity="0.55"/>
-        <line x1="100" y1="45.5" x2="100" y2="47" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
-        <line x1="100" y1="57" x2="100" y2="58.5" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
-        <line x1="93.5" y1="52" x2="95" y2="52" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
-        <line x1="105" y1="52" x2="106.5" y2="52" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
-        <line x1="95.4" y1="47.4" x2="96.4" y2="48.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
-        <line x1="103.6" y1="55.6" x2="104.6" y2="56.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
-        <line x1="95.4" y1="56.6" x2="96.4" y2="55.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
-        <line x1="103.6" y1="48.4" x2="104.6" y2="47.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round" opacity="0.55"/>
+        <circle cx="100" cy="52" r="4" fill="var(--number)" opacity="0.55" />
+        <line x1="100" y1="45.5" x2="100" y2="47" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+          opacity="0.55" />
+        <line x1="100" y1="57" x2="100" y2="58.5" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+          opacity="0.55" />
+        <line x1="93.5" y1="52" x2="95" y2="52" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+          opacity="0.55" />
+        <line x1="105" y1="52" x2="106.5" y2="52" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+          opacity="0.55" />
+        <line x1="95.4" y1="47.4" x2="96.4" y2="48.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+          opacity="0.55" />
+        <line x1="103.6" y1="55.6" x2="104.6" y2="56.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+          opacity="0.55" />
+        <line x1="95.4" y1="56.6" x2="96.4" y2="55.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+          opacity="0.55" />
+        <line x1="103.6" y1="48.4" x2="104.6" y2="47.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+          opacity="0.55" />
       </g>
       <g id="moonIcon" class="moon-icon" display="none">
-        <path d="M103.5 48.5a5 5 0 1 1-4.5 8 4 4 0 0 0 4.5-8Z" fill="var(--number)" opacity="0.55"/>
+        <path d="M103.5 48.5a5 5 0 1 1-4.5 8 4 4 0 0 0 4.5-8Z" fill="var(--number)" opacity="0.55" />
       </g>
 
       <path id="hourHandShadow" class="hour-hand-shadow" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
-            fill="#000" stroke="none" opacity="0.15" filter="url(#shadowBlur1)"/>
+        fill="#000" stroke="none" opacity="0.15" filter="url(#shadowBlur1)" />
       <path id="hourHand" class="hour-hand" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
-            fill="var(--hour-hand)" stroke="var(--hour-hand)" stroke-width="0.8" stroke-linejoin="round"/>
+        fill="var(--hour-hand)" stroke="var(--hour-hand)" stroke-width="0.8" stroke-linejoin="round" />
       <path id="minuteHandShadow" class="minute-hand-shadow" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
-            fill="#000" stroke="none" opacity="0.2" filter="url(#shadowBlur2)"/>
+        fill="#000" stroke="none" opacity="0.2" filter="url(#shadowBlur2)" />
       <path id="minuteHand" class="minute-hand" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
-            fill="var(--minute-hand)" stroke="var(--minute-hand)" stroke-width="0.8" stroke-linejoin="round"/>
-      <line id="secondHandShadow" class="second-hand-shadow" x1="100" y1="115" x2="100" y2="22"
-            stroke="#000" stroke-width="1.2" stroke-linecap="round" opacity="0.25" filter="url(#shadowBlur3)"/>
-      <line id="secondHand" class="second-hand" x1="100" y1="115" x2="100" y2="22"
-            stroke="var(--second-hand)" stroke-width="1.2" stroke-linecap="round"/>
+        fill="var(--minute-hand)" stroke="var(--minute-hand)" stroke-width="0.8" stroke-linejoin="round" />
+      <line id="secondHandShadow" class="second-hand-shadow" x1="100" y1="115" x2="100" y2="22" stroke="#000"
+        stroke-width="1.2" stroke-linecap="round" opacity="0.25" filter="url(#shadowBlur3)" />
+      <line id="secondHand" class="second-hand" x1="100" y1="115" x2="100" y2="22" stroke="var(--second-hand)"
+        stroke-width="1.2" stroke-linecap="round" />
 
-      <circle id="centerDotShadow" class="center-dot-shadow" cx="100" cy="100" r="3.5"
-              fill="#000" opacity="0.25" filter="url(#shadowBlur3)"/>
-      <circle cx="100" cy="100" r="3.5" fill="var(--center-dot)"/>
+      <circle id="centerDotShadow" class="center-dot-shadow" cx="100" cy="100" r="3.5" fill="#000" opacity="0.25"
+        filter="url(#shadowBlur3)" />
+      <circle cx="100" cy="100" r="3.5" fill="var(--center-dot)" />
     </svg>
   </div>
 
@@ -1045,8 +1073,8 @@ SOFTWARE.
         <span class="modal-panel-title" id="embedPanelTitle">Embed this clock</span>
         <button class="modal-panel-close" id="embedCloseBtn" aria-label="Close">
           <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
         </button>
       </div>
@@ -1123,19 +1151,22 @@ SOFTWARE.
       </div>
       <div class="overlay-actions-row">
         <button class="embed-copy-btn" id="embedCopyBtn">Copy code</button>
-        <p class="overlay-sustainability">A+ carbon rating (&lt;0.01g CO2/visit). <a href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">Report</a>.</p>
+        <p class="overlay-sustainability">A+ carbon rating (&lt;0.01g CO2/visit). <a
+            href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">Report</a>.
+        </p>
       </div>
     </div>
   </div>
 
-  <div class="dashboard-overlay" id="dashboardOverlay" role="dialog" aria-modal="true" aria-labelledby="dashboardPanelTitle">
+  <div class="dashboard-overlay" id="dashboardOverlay" role="dialog" aria-modal="true"
+    aria-labelledby="dashboardPanelTitle">
     <div class="modal-panel dashboard-panel">
       <div class="modal-panel-header">
         <span class="modal-panel-title" id="dashboardPanelTitle">Build dashboard</span>
         <button class="modal-panel-close" id="dashboardCloseBtn" aria-label="Close">
           <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
         </button>
       </div>
@@ -1201,7 +1232,9 @@ SOFTWARE.
       <div class="dashboard-actions">
         <button class="embed-copy-btn" id="dashboardCopyBtn">Copy link</button>
         <button class="embed-copy-btn dashboard-open-btn" id="dashboardOpenBtn">Open dashboard</button>
-        <p class="overlay-sustainability">A+ carbon rating (&lt;0.01g CO2/visit). <a href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">Report</a>.</p>
+        <p class="overlay-sustainability">A+ carbon rating (&lt;0.01g CO2/visit). <a
+            href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">Report</a>.
+        </p>
       </div>
     </div>
   </div>
@@ -1212,55 +1245,130 @@ SOFTWARE.
         <span class="modal-panel-title" id="helpPanelTitle">How to use</span>
         <button class="modal-panel-close" id="helpCloseBtn" aria-label="Close">
           <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
         </button>
       </div>
       <h3>Controls</h3>
       <table>
-        <thead><tr><th>Control</th><th>Description</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Control</th>
+            <th>Description</th>
+          </tr>
+        </thead>
         <tbody>
-        <tr><td><strong>Theme</strong> (moon/sun icon)</td><td>Switch between dark and light mode</td></tr>
-        <tr><td><strong>Keep screen on</strong> (monitor icon)</td><td>Prevent the display from sleeping</td></tr>
-        <tr><td><strong>Tick seconds</strong> (stopwatch icon)</td><td>Switch between ticking and smooth second hand</td></tr>
-        <tr><td><strong>Info</strong> (&#9432; button)</td><td>Show embed link, this help, and contact info</td></tr>
+          <tr>
+            <td><strong>Theme</strong> (moon/sun icon)</td>
+            <td>Switch between dark and light mode</td>
+          </tr>
+          <tr>
+            <td><strong>Keep screen on</strong> (monitor icon)</td>
+            <td>Prevent the display from sleeping</td>
+          </tr>
+          <tr>
+            <td><strong>Tick seconds</strong> (stopwatch icon)</td>
+            <td>Switch between ticking and smooth second hand</td>
+          </tr>
+          <tr>
+            <td><strong>Info</strong> (&#9432; button)</td>
+            <td>Show embed link, this help, and contact info</td>
+          </tr>
         </tbody>
       </table>
       <h3>Screen burn-in protection</h3>
-      <p>To protect OLED and AMOLED displays, the clock subtly shifts its position every 10 minutes in a slow circular pattern. Dark Mode further reduces the risk of burn-in. Protection does not apply in embedded mode. Use <code>?burnin=false</code> to disable.</p>
+      <p>To protect OLED and AMOLED displays, the clock subtly shifts its position every 10 minutes in a slow circular
+        pattern. Dark Mode further reduces the risk of burn-in. Protection does not apply in embedded mode. Use
+        <code>?burnin=false</code> to disable.</p>
       <h3>Install as app (PWA)</h3>
-      <p>This site works as a Progressive Web App. You can install it on your phone or computer for a full-screen clock and offline use. Use your browser&rsquo;s menu (e.g. &ldquo;Add to Home Screen&rdquo; or &ldquo;Install app&rdquo;) to install.</p>
+      <p>This site works as a Progressive Web App. You can install it on your phone or computer for a full-screen clock
+        and offline use. Use your browser&rsquo;s menu (e.g. &ldquo;Add to Home Screen&rdquo; or &ldquo;Install
+        app&rdquo;) to install.</p>
       <h3>Timezones</h3>
-      <p>Add <code>?tz=</code> to the URL with any <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener">IANA timezone</a>:</p>
+      <p>Add <code>?tz=</code> to the URL with any <a
+          href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener">IANA
+          timezone</a>:</p>
       <pre>www.clocksimulator.com/?tz=America/New_York
 www.clocksimulator.com/?tz=Europe/London
 www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       <h3>Multi-clock dashboard</h3>
-      <p>Show multiple clocks at once by separating timezones with commas. This automatically enables <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:</p>
+      <p>Show multiple clocks at once by separating timezones with commas. This automatically enables
+        <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:</p>
       <pre>www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
 www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2 (dashboardMode)</pre>
-      <p>You can also use the dashboard builder (<strong>&#9432;</strong> &rarr; <strong>Build dashboard</strong>) to visually add timezones and configure the grid.</p>
+      <p>You can also use the dashboard builder (<strong>&#9432;</strong> &rarr; <strong>Build dashboard</strong>) to
+        visually add timezones and configure the grid.</p>
       <h3>Embedding</h3>
-      <p>Embed the clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel (<strong>&#9432;</strong> &rarr; <strong>Embed this clock</strong>) to configure and copy the code.</p>
+      <p>Embed the clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel
+        (<strong>&#9432;</strong> &rarr; <strong>Embed this clock</strong>) to configure and copy the code.</p>
       <h3>Privacy</h3>
-      <p>Read the privacy policy at <a href="/privacy.html">/privacy.html</a> and the terms of service at <a href="/TOS.html">/TOS.html</a>.</p>
+      <p>Read the privacy policy at <a href="/privacy.html">/privacy.html</a> and the terms of service at <a
+          href="/TOS.html">/TOS.html</a>.</p>
       <h3>Sustainability</h3>
-      <p>This web app runs on sustainable energy and achieves an <strong>A+ carbon rating</strong> (&lt;0.01g CO2 per visit). <a href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">View the carbon report</a>.</p>
+      <p>This web app runs on sustainable energy and achieves an <strong>A+ carbon rating</strong> (&lt;0.01g CO2 per
+        visit). <a href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">View
+          the carbon report</a>.</p>
       <h4>URL parameters</h4>
       <table>
-        <thead><tr><th>Parameter</th><th>Values</th><th>Default</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Values</th>
+            <th>Default</th>
+          </tr>
+        </thead>
         <tbody>
-        <tr><td><code>embed</code></td><td><code>true</code></td><td>&mdash;</td></tr>
-        <tr><td><code>tz</code></td><td>IANA timezone(s), comma-separated</td><td>Local time</td></tr>
-        <tr><td><code>rows</code></td><td>Number (e.g. <code>2</code>, <code>3</code>)</td><td>Auto</td></tr>
-        <tr><td><code>theme</code></td><td><code>dark</code>, <code>light</code>, <code>transparent</code></td><td><code>dark</code></td></tr>
-        <tr><td><code>seconds</code></td><td><code>tick</code>, <code>smooth</code>, <code>hide</code></td><td><code>tick</code></td></tr>
-        <tr><td><code>border</code></td><td><code>show</code>, <code>hide</code></td><td><code>show</code></td></tr>
-        <tr><td><code>daynight</code></td><td><code>show</code>, <code>hide</code></td><td><code>hide</code></td></tr>
-        <tr><td><code>numbers</code></td><td><code>show</code>, <code>hide</code></td><td><code>show</code></td></tr>
-        <tr><td><code>shadows</code></td><td><code>true</code>, <code>false</code></td><td><code>true</code></td></tr>
-        <tr><td><code>burnin</code></td><td><code>true</code>, <code>false</code></td><td><code>true</code></td></tr>
+          <tr>
+            <td><code>embed</code></td>
+            <td><code>true</code></td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td><code>tz</code></td>
+            <td>IANA timezone(s), comma-separated</td>
+            <td>Local time</td>
+          </tr>
+          <tr>
+            <td><code>rows</code></td>
+            <td>Number (e.g. <code>2</code>, <code>3</code>)</td>
+            <td>Auto</td>
+          </tr>
+          <tr>
+            <td><code>theme</code></td>
+            <td><code>dark</code>, <code>light</code>, <code>transparent</code></td>
+            <td><code>dark</code></td>
+          </tr>
+          <tr>
+            <td><code>seconds</code></td>
+            <td><code>tick</code>, <code>smooth</code>, <code>hide</code></td>
+            <td><code>tick</code></td>
+          </tr>
+          <tr>
+            <td><code>border</code></td>
+            <td><code>show</code>, <code>hide</code></td>
+            <td><code>show</code></td>
+          </tr>
+          <tr>
+            <td><code>daynight</code></td>
+            <td><code>show</code>, <code>hide</code></td>
+            <td><code>hide</code></td>
+          </tr>
+          <tr>
+            <td><code>numbers</code></td>
+            <td><code>show</code>, <code>hide</code></td>
+            <td><code>show</code></td>
+          </tr>
+          <tr>
+            <td><code>shadows</code></td>
+            <td><code>true</code>, <code>false</code></td>
+            <td><code>true</code></td>
+          </tr>
+          <tr>
+            <td><code>burnin</code></td>
+            <td><code>true</code>, <code>false</code></td>
+            <td><code>true</code></td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1299,7 +1407,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
         try {
           new Intl.DateTimeFormat(undefined, { timeZone: tzList[i] });
           validTimezones.push(tzList[i]);
-        } catch (e) {}
+        } catch (e) { }
       }
       const dashboardMode = validTimezones.length > 1;
       const timezone = validTimezones.length >= 1 ? validTimezones[0] : null;
@@ -1318,7 +1426,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
       if (!params.toString()) {
         try {
           savedSettings = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
-        } catch (e) {}
+        } catch (e) { }
       }
       if (savedSettings) {
         saveSettingsToggle.checked = true;
@@ -1353,16 +1461,23 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
 
       function computeTzOffset(tz) {
         var now = new Date();
-        var parts = new Intl.DateTimeFormat('en-US', {
-          timeZone: tz, hour12: false,
-          year: 'numeric', month: 'numeric', day: 'numeric',
-          hour: 'numeric', minute: 'numeric', second: 'numeric'
-        }).formatToParts(now);
+        var fmt = {
+          hour12: false, year: 'numeric', month: 'numeric',
+          day: 'numeric', hour: 'numeric', minute: 'numeric',
+          second: 'numeric'
+        };
+        var parts = new Intl.DateTimeFormat('en-US',
+          Object.assign({ timeZone: tz }, fmt)).formatToParts(now);
         var p = {};
-        parts.forEach(function(part) { p[part.type] = parseInt(part.value, 10); });
-        var tzTime = new Date(p.year, p.month - 1, p.day,
+        parts.forEach(function (part) { p[part.type] = parseInt(part.value, 10); });
+        var tzTimeUtc = Date.UTC(p.year, p.month - 1, p.day,
           p.hour === 24 ? 0 : p.hour, p.minute, p.second);
-        return Math.round((tzTime.getTime() - now.getTime()) / 1000) * 1000;
+        var localParts = new Intl.DateTimeFormat('en-US', fmt).formatToParts(now);
+        var lp = {};
+        localParts.forEach(function (part) { lp[part.type] = parseInt(part.value, 10); });
+        var localTimeUtc = Date.UTC(lp.year, lp.month - 1, lp.day,
+          lp.hour === 24 ? 0 : lp.hour, lp.minute, lp.second);
+        return Math.round((tzTimeUtc - localTimeUtc) / 1000) * 1000;
       }
 
       var tzOffset = timezone ? computeTzOffset(timezone) : 0;
@@ -1377,11 +1492,15 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
             lastOffsetCalc = nowMs;
           }
           var adj = new Date(nowMs + tzOffset);
-          return { hours: adj.getHours(), minutes: adj.getMinutes(),
-                   seconds: adj.getSeconds(), millis: now.getMilliseconds() };
+          return {
+            hours: adj.getHours(), minutes: adj.getMinutes(),
+            seconds: adj.getSeconds(), millis: now.getMilliseconds()
+          };
         }
-        return { hours: now.getHours(), minutes: now.getMinutes(),
-                 seconds: now.getSeconds(), millis: now.getMilliseconds() };
+        return {
+          hours: now.getHours(), minutes: now.getMinutes(),
+          seconds: now.getSeconds(), millis: now.getMilliseconds()
+        };
       }
 
       function addTick(degrees, length, width) {
@@ -1455,7 +1574,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
       }
 
       if (shadowsParam === 'false') {
-        [hourHandShadow, minuteHandShadow, secondHandShadow, centerDotShadow].forEach(function(el) {
+        [hourHandShadow, minuteHandShadow, secondHandShadow, centerDotShadow].forEach(function (el) {
           el.style.display = 'none';
         });
       }
@@ -1508,7 +1627,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
           }
           cell.appendChild(svgClone);
 
-          svgClone.querySelectorAll('.hour-hand-shadow, .minute-hand-shadow, .second-hand-shadow, .center-dot-shadow').forEach(function(el) {
+          svgClone.querySelectorAll('.hour-hand-shadow, .minute-hand-shadow, .second-hand-shadow, .center-dot-shadow').forEach(function (el) {
             el.style.display = 'none';
           });
 
@@ -1534,8 +1653,10 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
                 lastCalc = nowMs;
               }
               var adj = new Date(nowMs + offset);
-              return { hours: adj.getHours(), minutes: adj.getMinutes(),
-                       seconds: adj.getSeconds(), millis: now.getMilliseconds() };
+              return {
+                hours: adj.getHours(), minutes: adj.getMinutes(),
+                seconds: adj.getSeconds(), millis: now.getMilliseconds()
+              };
             }
           };
         };
@@ -2041,7 +2162,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
             const original = embedCopyBtn.textContent;
             embedCopyBtn.textContent = 'Copied!';
             setTimeout(function () { embedCopyBtn.textContent = original; }, 1500);
-          }).catch(function () {});
+          }).catch(function () { });
         });
 
         const dashboardCloseBtn = document.getElementById('dashboardCloseBtn');
@@ -2193,7 +2314,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
             const original = dashboardCopyBtn.textContent;
             dashboardCopyBtn.textContent = 'Copied!';
             setTimeout(function () { dashboardCopyBtn.textContent = original; }, 1500);
-          }).catch(function () {});
+          }).catch(function () { });
         });
 
         dashboardOpenBtn.addEventListener('click', function () {
@@ -2205,8 +2326,9 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
   </script>
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(function () {});
+      navigator.serviceWorker.register('/sw.js').catch(function () { });
     }
   </script>
 </body>
+
 </html>
