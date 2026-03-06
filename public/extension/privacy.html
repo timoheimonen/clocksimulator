@@ -1,0 +1,188 @@
+<!--
+MIT License
+
+Copyright (c) 2026 Timo Heimonen <timo.heimonen@proton.me>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy Policy - clocksimulator.com Chrome Extension</title>
+  <meta name="description" content="Privacy policy for the clocksimulator.com Chrome extension: no ads, no analytics, optional local settings storage only.">
+  <link rel="canonical" href="https://clocksimulator.com/extension/privacy">
+  <style>
+    :root {
+      --bg: #000000;
+      --fg: rgba(255, 255, 255, 0.92);
+      --muted: rgba(255, 255, 255, 0.7);
+      --link: rgba(255, 255, 255, 0.92);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 28px 18px 48px;
+    }
+    header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-size: 24px;
+      letter-spacing: -0.2px;
+      margin: 0;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    section {
+      padding: 24px 0;
+      margin: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    section:last-child {
+      border-bottom: none;
+    }
+    h2 {
+      font-size: 18px;
+      margin: 0 0 16px;
+      font-weight: 600;
+      color: var(--fg);
+    }
+    p { 
+      margin: 12px 0; 
+      line-height: 1.6;
+    }
+    ul { 
+      margin: 12px 0 12px 20px; 
+      line-height: 1.6;
+    }
+    li {
+      margin: 6px 0;
+    }
+    a {
+      color: var(--link);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      text-decoration-color: rgba(128, 128, 128, 0.55);
+    }
+    code {
+      font-family: var(--mono);
+      font-size: 0.95em;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: rgba(255, 255, 255, 0.95);
+    }
+    .home {
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Privacy Policy</h1>
+      <div class="meta">Effective date: 2026-03-06</div>
+    </header>
+
+    <div class="home">
+      <a href="https://www.clocksimulator.com/">← Back to clocksimulator.com</a>
+    </div>
+
+    <section>
+      <p>clocksimulator.com is a minimalist analog clock Chrome extension that replaces your new tab page. <strong>We do not run ads, we do not use analytics, and we do not sell personal data.</strong></p>
+    </section>
+
+    <section>
+      <h2>Summary</h2>
+      <ul>
+        <li><strong>No trackers / analytics</strong>: The extension does not use third-party analytics scripts, tracking pixels, or advertising beacons.</li>
+        <li><strong>No accounts</strong>: There is no login and no user profile.</li>
+        <li><strong>No network requests</strong>: The extension operates entirely offline. It makes no outbound network requests and does not communicate with any remote server.</li>
+        <li><strong>Optional local storage</strong>: If you choose to enable <strong>Save settings</strong>, your preferences are stored locally in your browser's storage for the extension's New Tab page.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>What information we collect</h2>
+      <p><strong>We do not collect any personal information.</strong> The extension has no backend, no server, and no mechanism to transmit data anywhere. All data stays on your device.</p>
+    </section>
+
+    <section>
+      <h2>Local device storage (optional)</h2>
+      <p>The extension includes an opt-in toggle <strong>Save settings</strong> (About menu). If you enable it, your preferences are stored <strong>locally on your device</strong> using the New Tab page's <code>localStorage</code> under this key:</p>
+      <ul>
+        <li><code>clocksimulator-user-settings</code></li>
+      </ul>
+      <p>Stored fields:</p>
+      <ul>
+        <li><code>theme</code> (<code>"dark"</code> or <code>"light"</code>)</li>
+        <li><code>wakeLock</code> (<code>true</code> or <code>false</code>)</li>
+        <li><code>secondModeTick</code> (<code>true</code> or <code>false</code>)</li>
+      </ul>
+      <p><strong>Opting out / removing saved settings</strong></p>
+      <ul>
+        <li>Turn off <strong>Save settings</strong> to remove the saved item from storage.</li>
+        <li>You can also clear the extension's site data in Chrome's settings under Privacy and security → Site settings.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Permissions</h2>
+      <p>The extension declares only the <code>chrome_url_overrides</code> permission to replace the New Tab page. No additional Chrome permissions (such as browsing history, tabs, or network access) are requested.</p>
+    </section>
+
+    <section>
+      <h2>Open source verification</h2>
+      <p>The extension is open source. You can verify the behavior described above in:</p>
+      <ul>
+        <li><code>index.html</code> — UI and localStorage usage</li>
+        <li><code>clock.js</code> — clock logic</li>
+      </ul>
+      <p>Repository: <a href="https://github.com/timoheimonen/chrome-extension-clocksimulator" target="_blank" rel="noopener">github.com/timoheimonen/chrome-extension-clocksimulator</a></p>
+    </section>
+
+    <section>
+      <h2>Contact</h2>
+      <p>If you have privacy questions, contact:</p>
+      <ul>
+        <li>Timo Heimonen — <a href="mailto:timo.heimonen@proton.me">timo.heimonen@proton.me</a></li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>
