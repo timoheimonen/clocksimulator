@@ -4,6 +4,7 @@
 
 ### Fixed
 - Timezone clock now shows the correct time during daylight saving time transitions in the viewer's local timezone.
+- Clean up CSS and variables.
 
 ### Added
 - Toogle button animations

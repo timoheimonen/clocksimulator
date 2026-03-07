@@ -94,8 +94,6 @@ SOFTWARE.
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      height: 100dvh;
       height: var(--app-height, 100dvh);
       width: 100vw;
       overflow: hidden;
@@ -184,20 +182,6 @@ SOFTWARE.
 
     .toggle-label input:checked~.toggle-slider::before {
       transform: translateX(18px);
-    }
-
-    @keyframes toggle-pulse {
-      0% {
-        transform: translateX(18px) scale(1);
-      }
-
-      50% {
-        transform: translateX(18px) scale(1.15);
-      }
-
-      100% {
-        transform: translateX(18px) scale(1);
-      }
     }
 
     .theme-toggle {
@@ -320,12 +304,14 @@ SOFTWARE.
       background: #2f6a47;
     }
 
-    .save-settings-toggle:has(input:disabled) {
+    .save-settings-toggle:has(input:disabled),
+    .save-settings-toggle.disabled {
       opacity: 0.45;
       cursor: not-allowed;
     }
 
-    .save-settings-toggle:has(input:disabled) .toggle-slider {
+    .save-settings-toggle:has(input:disabled) .toggle-slider,
+    .save-settings-toggle.disabled .toggle-slider {
       pointer-events: none;
     }
 
@@ -510,8 +496,6 @@ SOFTWARE.
       gap: 2vmin;
       padding: 2vmin;
       width: 100vw;
-      height: 100vh;
-      height: 100dvh;
       height: var(--app-height, 100dvh);
       transition: transform 10s ease-in-out;
     }
@@ -1492,7 +1476,9 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
       if (!params.toString()) {
         try {
           savedSettings = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
-        } catch (e) { }
+        } catch (e) {
+          savedSettings = null;
+        }
       }
       if (savedSettings) {
         saveSettingsToggle.checked = true;
@@ -1500,6 +1486,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
 
       if (params.toString()) {
         saveSettingsToggle.disabled = true;
+        saveSettingsLabel.classList.add('disabled');
         saveSettingsLabel.dataset.tooltip = 'Not available when URL parameters are active';
       }
 
@@ -1526,38 +1513,38 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
       }
 
       function computeTzOffset(tz) {
-        var now = new Date();
-        var fmt = {
+        const now = new Date();
+        const fmt = {
           hour12: false, year: 'numeric', month: 'numeric',
           day: 'numeric', hour: 'numeric', minute: 'numeric',
           second: 'numeric'
         };
-        var parts = new Intl.DateTimeFormat('en-US',
+        const parts = new Intl.DateTimeFormat('en-US',
           Object.assign({ timeZone: tz }, fmt)).formatToParts(now);
-        var p = {};
+        const p = {};
         parts.forEach(function (part) { p[part.type] = parseInt(part.value, 10); });
-        var tzTimeUtc = Date.UTC(p.year, p.month - 1, p.day,
+        const tzTimeUtc = Date.UTC(p.year, p.month - 1, p.day,
           p.hour === 24 ? 0 : p.hour, p.minute, p.second);
-        var localParts = new Intl.DateTimeFormat('en-US', fmt).formatToParts(now);
-        var lp = {};
+        const localParts = new Intl.DateTimeFormat('en-US', fmt).formatToParts(now);
+        const lp = {};
         localParts.forEach(function (part) { lp[part.type] = parseInt(part.value, 10); });
-        var localTimeUtc = Date.UTC(lp.year, lp.month - 1, lp.day,
+        const localTimeUtc = Date.UTC(lp.year, lp.month - 1, lp.day,
           lp.hour === 24 ? 0 : lp.hour, lp.minute, lp.second);
         return Math.round((tzTimeUtc - localTimeUtc) / 1000) * 1000;
       }
 
-      var tzOffset = timezone ? computeTzOffset(timezone) : 0;
-      var lastOffsetCalc = Date.now();
+      let tzOffset = timezone ? computeTzOffset(timezone) : 0;
+      let lastOffsetCalc = Date.now();
 
       function getTime() {
-        var now = new Date();
-        var nowMs = now.getTime();
+        const now = new Date();
+        const nowMs = now.getTime();
         if (timezone) {
           if (nowMs - lastOffsetCalc > 60000) {
             tzOffset = computeTzOffset(timezone);
             lastOffsetCalc = nowMs;
           }
-          var adj = new Date(nowMs + tzOffset);
+          const adj = new Date(nowMs + tzOffset);
           return {
             hours: adj.getHours(), minutes: adj.getMinutes(),
             seconds: adj.getSeconds(), millis: now.getMilliseconds()
@@ -1702,8 +1689,8 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
           label.textContent = tz.split('/').pop().replace(/_/g, ' ');
           cell.appendChild(label);
 
-          var offset = computeTzOffset(tz);
-          var lastCalc = Date.now();
+          let offset = computeTzOffset(tz);
+          let lastCalc = Date.now();
 
           return {
             el: cell,
@@ -1713,12 +1700,12 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
             sunIcon: svgClone.querySelector('.sun-icon'),
             moonIcon: svgClone.querySelector('.moon-icon'),
             getTime: function (now) {
-              var nowMs = now.getTime();
+              const nowMs = now.getTime();
               if (nowMs - lastCalc > 60000) {
                 offset = computeTzOffset(tz);
                 lastCalc = nowMs;
               }
-              var adj = new Date(nowMs + offset);
+              const adj = new Date(nowMs + offset);
               return {
                 hours: adj.getHours(), minutes: adj.getMinutes(),
                 seconds: adj.getSeconds(), millis: now.getMilliseconds()
@@ -1900,7 +1887,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
           } else if (dashboardOverlay.classList.contains('visible')) {
             dashboardOverlay.classList.remove('visible');
             releaseTrap(dashboardOverlay);
-            var dp = document.getElementById('dashboardPreview');
+            const dp = document.getElementById('dashboardPreview');
             if (dp) dp.src = 'about:blank';
           } else if (embedOverlay.classList.contains('visible')) {
             embedOverlay.classList.remove('visible');
