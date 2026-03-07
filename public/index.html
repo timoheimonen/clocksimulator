@@ -132,6 +132,15 @@ SOFTWARE.
       width: 40px;
       height: 22px;
       cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .toggle-label:hover {
+      transform: translateY(-1px);
+    }
+
+    .toggle-label:active {
+      transform: translateY(0);
     }
 
     .toggle-label input {
@@ -146,7 +155,11 @@ SOFTWARE.
       inset: 0;
       background: var(--toggle-bg);
       border-radius: 22px;
-      transition: background 0.3s ease;
+      transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease;
+    }
+
+    .toggle-label:active .toggle-slider {
+      transform: scale(0.96);
     }
 
     .toggle-slider::before {
@@ -158,11 +171,33 @@ SOFTWARE.
       height: 16px;
       background: var(--toggle-knob);
       border-radius: 50%;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+    }
+
+    .toggle-label input:checked~.toggle-slider {
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+    }
+
+    body.light-mode .toggle-label input:checked~.toggle-slider {
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
     }
 
     .toggle-label input:checked~.toggle-slider::before {
       transform: translateX(18px);
+    }
+
+    @keyframes toggle-pulse {
+      0% {
+        transform: translateX(18px) scale(1);
+      }
+
+      50% {
+        transform: translateX(18px) scale(1.15);
+      }
+
+      100% {
+        transform: translateX(18px) scale(1);
+      }
     }
 
     .theme-toggle {
@@ -187,8 +222,8 @@ SOFTWARE.
       position: absolute;
       left: 0;
       top: 50%;
-      transform: translateY(-50%);
-      transition: opacity 0.3s ease;
+      transform: translateY(-50%) rotate(0deg);
+      transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .theme-icon-moon {
@@ -201,10 +236,12 @@ SOFTWARE.
 
     .theme-toggle input:checked~.theme-icon-moon {
       opacity: 0;
+      transform: translateY(-50%) rotate(-90deg);
     }
 
     .theme-toggle input:checked~.theme-icon-sun {
       opacity: 1;
+      transform: translateY(-50%) rotate(0deg);
     }
 
     .wake-lock-toggle {
@@ -226,11 +263,12 @@ SOFTWARE.
       height: 18px;
       color: var(--tick);
       opacity: 0.5;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .wake-lock-toggle input:checked~.wake-lock-icon {
       opacity: 1;
+      transform: scale(1.1);
     }
 
     .second-mode-toggle {
@@ -252,11 +290,12 @@ SOFTWARE.
       height: 18px;
       color: var(--tick);
       opacity: 0.5;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .second-mode-toggle input:checked~.second-mode-icon {
       opacity: 1;
+      transform: rotate(360deg);
     }
 
     .save-settings-toggle {
@@ -1280,7 +1319,8 @@ SOFTWARE.
       <h3>Screen burn-in protection</h3>
       <p>To protect OLED and AMOLED displays, the clock subtly shifts its position every 10 minutes in a slow circular
         pattern. Dark Mode further reduces the risk of burn-in. Protection does not apply in embedded mode. Use
-        <code>?burnin=false</code> to disable.</p>
+        <code>?burnin=false</code> to disable.
+      </p>
       <h3>Install as app (PWA)</h3>
       <p>This site works as a Progressive Web App. You can install it on your phone or computer for a full-screen clock
         and offline use. Use your browser&rsquo;s menu (e.g. &ldquo;Add to Home Screen&rdquo; or &ldquo;Install
@@ -1294,7 +1334,8 @@ www.clocksimulator.com/?tz=Europe/London
 www.clocksimulator.com/?tz=Asia/Tokyo</pre>
       <h3>Multi-clock dashboard</h3>
       <p>Show multiple clocks at once by separating timezones with commas. This automatically enables
-        <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:</p>
+        <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:
+      </p>
       <pre>www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
 www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2 (dashboardMode)</pre>
       <p>You can also use the dashboard builder (<strong>&#9432;</strong> &rarr; <strong>Build dashboard</strong>) to
