@@ -43,7 +43,7 @@ SOFTWARE.
   <meta name="twitter:title" content="clocksimulator.com - Minimalist & Distraction-Free Analog Clock">
   <meta name="twitter:description"
     content="A clean, sustainable, open-source, and fullscreen analog clock simulator. View the current time with rendered clock.">
-  <meta name="version" content="1.1.6">
+  <meta name="version" content="1.1.7">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -1516,13 +1516,15 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
           Object.assign({ timeZone: tz }, fmt)).formatToParts(now);
         const p = {};
         parts.forEach(function (part) { p[part.type] = parseInt(part.value, 10); });
-        const tzTimeUtc = Date.UTC(p.year, p.month - 1, p.day,
+        let tzTimeUtc = Date.UTC(p.year, p.month - 1, p.day,
           p.hour === 24 ? 0 : p.hour, p.minute, p.second);
+        if (p.hour === 24) tzTimeUtc += 86400000;
         const localParts = new Intl.DateTimeFormat('en-US', fmt).formatToParts(now);
         const lp = {};
         localParts.forEach(function (part) { lp[part.type] = parseInt(part.value, 10); });
-        const localTimeUtc = Date.UTC(lp.year, lp.month - 1, lp.day,
+        let localTimeUtc = Date.UTC(lp.year, lp.month - 1, lp.day,
           lp.hour === 24 ? 0 : lp.hour, lp.minute, lp.second);
+        if (lp.hour === 24) localTimeUtc += 86400000;
         return Math.round((tzTimeUtc - localTimeUtc) / 1000) * 1000;
       }
 

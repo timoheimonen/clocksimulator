@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.7 - 2026-03-07
+
+### Fixed
+- Timezone clocks and dashboards now show the correct time around midnight in all timezones.
+
 ## 1.1.6 - 2026-03-07
 
 ### Fixed
