@@ -545,7 +545,7 @@ SOFTWARE.
       flex-shrink: 0;
     }
 
-    .embed-overlay {
+    .overlay {
       position: fixed;
       inset: 0;
       z-index: 100;
@@ -560,7 +560,7 @@ SOFTWARE.
       -webkit-backdrop-filter: blur(0px);
     }
 
-    .embed-overlay.visible {
+    .overlay.visible {
       opacity: 1;
       pointer-events: auto;
       backdrop-filter: blur(4px);
@@ -753,28 +753,6 @@ SOFTWARE.
       opacity: 1;
     }
 
-    .dashboard-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      background: rgba(0, 0, 0, 0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease, backdrop-filter 0.4s ease;
-      backdrop-filter: blur(0px);
-      -webkit-backdrop-filter: blur(0px);
-    }
-
-    .dashboard-overlay.visible {
-      opacity: 1;
-      pointer-events: auto;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-    }
-
     .dashboard-overlay.visible .modal-panel {
       transform: scale(1) translateY(0);
       opacity: 1;
@@ -885,28 +863,6 @@ SOFTWARE.
       font-size: 12px;
       opacity: 0.4;
       padding: 4px 0;
-    }
-
-    .help-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      background: rgba(0, 0, 0, 0.6);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease, backdrop-filter 0.4s ease;
-      backdrop-filter: blur(0px);
-      -webkit-backdrop-filter: blur(0px);
-    }
-
-    .help-overlay.visible {
-      opacity: 1;
-      pointer-events: auto;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
     }
 
     .help-overlay.visible .modal-panel {
@@ -1130,7 +1086,7 @@ SOFTWARE.
     </svg>
   </div>
 
-  <div class="embed-overlay" id="embedOverlay" role="dialog" aria-modal="true" aria-labelledby="embedPanelTitle">
+  <div class="embed-overlay overlay" id="embedOverlay" role="dialog" aria-modal="true" aria-labelledby="embedPanelTitle">
     <div class="modal-panel embed-panel">
       <div class="modal-panel-header">
         <span class="modal-panel-title" id="embedPanelTitle">Embed this clock</span>
@@ -1221,7 +1177,7 @@ SOFTWARE.
     </div>
   </div>
 
-  <div class="dashboard-overlay" id="dashboardOverlay" role="dialog" aria-modal="true"
+  <div class="dashboard-overlay overlay" id="dashboardOverlay" role="dialog" aria-modal="true"
     aria-labelledby="dashboardPanelTitle">
     <div class="modal-panel dashboard-panel">
       <div class="modal-panel-header">
@@ -1302,7 +1258,7 @@ SOFTWARE.
     </div>
   </div>
 
-  <div class="help-overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpPanelTitle">
+  <div class="help-overlay overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpPanelTitle">
     <div class="modal-panel help-panel">
       <div class="modal-panel-header">
         <span class="modal-panel-title" id="helpPanelTitle">How to use</span>
