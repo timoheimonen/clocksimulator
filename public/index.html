@@ -470,19 +470,40 @@ SOFTWARE.
       text-decoration-color: rgba(0, 0, 0, 0.7);
     }
 
-    @keyframes embed-flash {
+    #embedLink {
+      position: relative;
+      display: inline-block;
+    }
+
+    #embedLink::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--number);
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+
+    #embedLink.flash::after {
+      animation: embed-underline 0.6s ease-out;
+    }
+
+    @keyframes embed-underline {
       0% {
-        background: rgba(255, 255, 255, 0.25);
+        transform: scaleX(0);
+      }
+
+      50% {
+        transform: scaleX(1);
       }
 
       100% {
-        background: transparent;
+        transform: scaleX(0);
+        transform-origin: right;
       }
-    }
-
-    #embedLink.flash {
-      animation: embed-flash 0.8s ease-out;
-      border-radius: 3px;
     }
 
     .clock-container {
@@ -1086,7 +1107,8 @@ SOFTWARE.
     </svg>
   </div>
 
-  <div class="embed-overlay overlay" id="embedOverlay" role="dialog" aria-modal="true" aria-labelledby="embedPanelTitle">
+  <div class="embed-overlay overlay" id="embedOverlay" role="dialog" aria-modal="true"
+    aria-labelledby="embedPanelTitle">
     <div class="modal-panel embed-panel">
       <div class="modal-panel-header">
         <span class="modal-panel-title" id="embedPanelTitle">Embed this clock</span>
