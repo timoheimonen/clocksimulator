@@ -556,14 +556,16 @@ SOFTWARE.
       justify-content: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      transition: opacity 0.3s ease, backdrop-filter 0.4s ease;
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
     }
 
     .embed-overlay.visible {
       opacity: 1;
       pointer-events: auto;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
 
     .modal-panel {
@@ -579,6 +581,14 @@ SOFTWARE.
       line-height: 1.5;
       -webkit-user-select: text;
       user-select: text;
+      transform: scale(0.95) translateY(20px);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    }
+
+    .embed-overlay.visible .modal-panel {
+      transform: scale(1) translateY(0);
+      opacity: 1;
     }
 
     body.light-mode .modal-panel {
@@ -606,12 +616,13 @@ SOFTWARE.
       color: inherit;
       cursor: pointer;
       opacity: 0.6;
-      transition: opacity 0.2s;
+      transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       padding: 0;
     }
 
     .modal-panel-close:hover {
       opacity: 1;
+      transform: rotate(90deg);
     }
 
     .embed-controls {
@@ -753,14 +764,21 @@ SOFTWARE.
       justify-content: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      transition: opacity 0.3s ease, backdrop-filter 0.4s ease;
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
     }
 
     .dashboard-overlay.visible {
       opacity: 1;
       pointer-events: auto;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .dashboard-overlay.visible .modal-panel {
+      transform: scale(1) translateY(0);
+      opacity: 1;
     }
 
     .dashboard-tz-input-row {
@@ -880,14 +898,21 @@ SOFTWARE.
       justify-content: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      transition: opacity 0.3s ease, backdrop-filter 0.4s ease;
+      backdrop-filter: blur(0px);
+      -webkit-backdrop-filter: blur(0px);
     }
 
     .help-overlay.visible {
       opacity: 1;
       pointer-events: auto;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .help-overlay.visible .modal-panel {
+      transform: scale(1) translateY(0);
+      opacity: 1;
     }
 
     .help-panel h3 {

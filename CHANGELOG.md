@@ -5,8 +5,9 @@
 ### Fixed
 - Timezone clock now shows the correct time during daylight saving time transitions in the viewer's local timezone.
 
-### Changed
+### Added
 - Toogle button animations
+- Window animations
 
 ## 1.1.5 2026-03-03
 
