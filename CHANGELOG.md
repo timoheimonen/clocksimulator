@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.8 - 2026-03-09
+
+### Added
+- Clocksimulator.com Chrome extension link to about-menu. Extension follows site's no ads, no analytics promise.
+  Extension has only one permission: replace default view with analog clock when new tab is opened. Extension is 100% local.
+
 ## 1.1.7 - 2026-03-07
 
 ### Fixed
