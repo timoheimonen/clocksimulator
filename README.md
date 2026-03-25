@@ -113,6 +113,13 @@ https://www.clocksimulator.com/?embed=true&tz=America/New_York&theme=dark&second
 
 When the operating system's **prefers-reduced-motion** setting is active, the second hand and clock hand shadows are automatically disabled to reduce on-screen animation.
 
+## Chrome extension
+Chrome extension is also available at [Google Chrome web store](https://chromewebstore.google.com/detail/clocksimulatorcom/ljbpiigocbebamekohcpemgepjickldb).
+Extension replaces new tab page with analog clock.
+[GitHub repo](https://github.com/timoheimonen/chrome-extension-clocksimulator) also available.
+Extension follows main clocksimulator.com version, but not always updated 1:1 and might vary in features.
+
+
 ## Privacy & Terms of service
 
 - [`www.clocksimulator.com/privacy.html`](https://www.clocksimulator.com/privacy.html)
