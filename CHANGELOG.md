@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.6 - 2026-03-26
+
+### Fixed
+- Shadow direction calculations
+
 ## 1.2.5 - 2026-03-25
 
 ### Improved

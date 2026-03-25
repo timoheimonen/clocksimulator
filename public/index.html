@@ -43,7 +43,7 @@ SOFTWARE.
   <meta name="twitter:title" content="clocksimulator.com - Online Analog Clock">
   <meta name="twitter:description"
     content="Minimalist, open-source and sustainable analog clock. Perfect for OBS, dashboards and embeddable use. Fast, fullscreen, no ads and no tracking. Just a clock.">
-  <meta name="version" content="1.2.5">
+  <meta name="version" content="1.2.6">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -1340,7 +1340,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
       const secondDS = document.getElementById('secondDS');
       const dotDS = document.getElementById('dotDS');
       const centerDot = document.getElementById('centerDot');
-      let lastShadowAngle = -999;
+      let lastSunAngle = -999;
       const themeToggle = document.getElementById('themeToggle');
       const sunIcon = document.getElementById('sunIcon');
       const moonIcon = document.getElementById('moonIcon');
@@ -1698,19 +1698,30 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
           hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
           minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
 
-          if (shadowsEnabled && Math.abs(hourAngle - lastShadowAngle) > 0.5) {
-            lastShadowAngle = hourAngle;
-            const lightRad = hourAngle * Math.PI / 180;
-            const sdx = -Math.sin(lightRad);
-            const sdy = Math.cos(lightRad);
-            hourDS.setAttribute('dx', 0.8 * sdx);
-            hourDS.setAttribute('dy', 0.8 * sdy);
-            minuteDS.setAttribute('dx', 1.2 * sdx);
-            minuteDS.setAttribute('dy', 1.2 * sdy);
-            secondDS.setAttribute('dx', 1.8 * sdx);
-            secondDS.setAttribute('dy', 1.8 * sdy);
-            dotDS.setAttribute('dx', 1.8 * sdx);
-            dotDS.setAttribute('dy', 1.8 * sdy);
+          if (shadowsEnabled) {
+            const now = new Date();
+            const localHour = now.getHours() + now.getMinutes() / 60;
+            const sunAngle = 90 + (localHour - 6) * 15;
+
+            if (Math.abs(sunAngle - lastSunAngle) > 0.5) {
+              lastSunAngle = sunAngle;
+            }
+            const sunRad = lastSunAngle * Math.PI / 180;
+
+            const hourShadowRad = (hourAngle - lastSunAngle) * Math.PI / 180;
+            hourDS.setAttribute('dx', -0.8 * Math.cos(hourShadowRad));
+            hourDS.setAttribute('dy', -0.8 * Math.sin(hourShadowRad));
+
+            const minuteShadowRad = (minuteAngle - lastSunAngle) * Math.PI / 180;
+            minuteDS.setAttribute('dx', -1.2 * Math.cos(minuteShadowRad));
+            minuteDS.setAttribute('dy', -1.2 * Math.sin(minuteShadowRad));
+
+            const secondShadowRad = ((seconds + millis / 1000) * 6 - lastSunAngle) * Math.PI / 180;
+            secondDS.setAttribute('dx', -1.8 * Math.cos(secondShadowRad));
+            secondDS.setAttribute('dy', -1.8 * Math.sin(secondShadowRad));
+
+            dotDS.setAttribute('dx', -1.8 * Math.cos(sunRad));
+            dotDS.setAttribute('dy', -1.8 * Math.sin(sunRad));
           }
 
           if (showDayNight) updateDayNightIcons(t.hours, sunIcon, moonIcon);
