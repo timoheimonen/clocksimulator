@@ -93,7 +93,7 @@ All parameters are optional and can be combined:
 | `embed`    | `true` | — | Activates embed mode (hides UI controls) |
 | `tz`       | IANA timezone(s), comma-separated | Local time | Timezone(s), e.g. `Europe/Helsinki` or `UTC,Europe/Helsinki,America/New_York` |
 | `rows`     | Number | Auto | Number of grid rows for multi-clock dashboard |
-| `theme`    | `dark`, `light`, `transparent` | `dark` | Color theme |
+| `theme`    | `dark`, `light`, `transparent` | OS preference (light fallback) | Color theme |
 | `seconds`  | `tick`, `smooth`, `hide` | `tick` | Second hand mode |
 | `border`   | `show`, `hide` | `show` | Clock border visibility |
 | `daynight` | `show`, `hide` | `hide` | Sun/moon indicator for day/night |
