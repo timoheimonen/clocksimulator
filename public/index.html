@@ -1340,7 +1340,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
       const secondDS = document.getElementById('secondDS');
       const dotDS = document.getElementById('dotDS');
       const centerDot = document.getElementById('centerDot');
-      let lastSunAngle = -999;
+      let lastShadowUpdate = 0;
       const themeToggle = document.getElementById('themeToggle');
       const sunIcon = document.getElementById('sunIcon');
       const moonIcon = document.getElementById('moonIcon');
@@ -1699,29 +1699,30 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
           minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
 
           if (shadowsEnabled) {
-            const now = new Date();
-            const localHour = now.getHours() + now.getMinutes() / 60;
-            const sunAngle = 90 + (localHour - 6) * 15;
+            const nowMs = Date.now();
+            if (nowMs - lastShadowUpdate > 100) {
+              lastShadowUpdate = nowMs;
+              const now = new Date();
+              const localHour = now.getHours() + now.getMinutes() / 60;
+              const sunAngle = 90 + (localHour - 6) * 15;
+              const sunRad = sunAngle * Math.PI / 180;
 
-            if (Math.abs(sunAngle - lastSunAngle) > 0.5) {
-              lastSunAngle = sunAngle;
+              const hourShadowRad = (hourAngle - sunAngle) * Math.PI / 180;
+              hourDS.setAttribute('dx', -0.8 * Math.cos(hourShadowRad));
+              hourDS.setAttribute('dy', -0.8 * Math.sin(hourShadowRad));
+
+              const minuteShadowRad = (minuteAngle - sunAngle) * Math.PI / 180;
+              minuteDS.setAttribute('dx', -1.2 * Math.cos(minuteShadowRad));
+              minuteDS.setAttribute('dy', -1.2 * Math.sin(minuteShadowRad));
+
+              const secondHandAngle = secondModeTick ? seconds * 6 : (seconds + millis / 1000) * 6;
+              const secondShadowRad = (secondHandAngle - sunAngle) * Math.PI / 180;
+              secondDS.setAttribute('dx', -1.8 * Math.cos(secondShadowRad));
+              secondDS.setAttribute('dy', -1.8 * Math.sin(secondShadowRad));
+
+              dotDS.setAttribute('dx', -1.8 * Math.cos(sunRad));
+              dotDS.setAttribute('dy', -1.8 * Math.sin(sunRad));
             }
-            const sunRad = lastSunAngle * Math.PI / 180;
-
-            const hourShadowRad = (hourAngle - lastSunAngle) * Math.PI / 180;
-            hourDS.setAttribute('dx', -0.8 * Math.cos(hourShadowRad));
-            hourDS.setAttribute('dy', -0.8 * Math.sin(hourShadowRad));
-
-            const minuteShadowRad = (minuteAngle - lastSunAngle) * Math.PI / 180;
-            minuteDS.setAttribute('dx', -1.2 * Math.cos(minuteShadowRad));
-            minuteDS.setAttribute('dy', -1.2 * Math.sin(minuteShadowRad));
-
-            const secondShadowRad = ((seconds + millis / 1000) * 6 - lastSunAngle) * Math.PI / 180;
-            secondDS.setAttribute('dx', -1.8 * Math.cos(secondShadowRad));
-            secondDS.setAttribute('dy', -1.8 * Math.sin(secondShadowRad));
-
-            dotDS.setAttribute('dx', -1.8 * Math.cos(sunRad));
-            dotDS.setAttribute('dy', -1.8 * Math.sin(sunRad));
           }
 
           if (showDayNight) updateDayNightIcons(t.hours, sunIcon, moonIcon);
