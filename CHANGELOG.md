@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.5 - 2026-03-25
+
+### Improved
+- Second hand now uses hardware-accelerated CSS transforms instead of per-frame DOM updates, reducing CPU load when showing multiple clocks.
+- Dashboard mode disables the tick bounce effect for consistent ticking across all clocks.
+- Dashboard clocks now use a single global seconds value for synchronized second hand movement across all timezone clocks.
+
 ## 1.2.4 - 2026-03-25
 
 ### Changed

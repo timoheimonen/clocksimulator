@@ -43,7 +43,7 @@ SOFTWARE.
   <meta name="twitter:title" content="clocksimulator.com - Online Analog Clock">
   <meta name="twitter:description"
     content="Minimalist, open-source and sustainable analog clock. Perfect for OBS, dashboards and embeddable use. Fast, fullscreen, no ads and no tracking. Just a clock.">
-  <meta name="version" content="1.2.4">
+  <meta name="version" content="1.2.5">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -62,6 +62,13 @@ SOFTWARE.
       --center-dot: #ef4444;
       --toggle-bg: #262626;
       --toggle-knob: #e5e5e5;
+      --second-angle: 0deg;
+    }
+
+    .second-hand {
+      transform: rotate(var(--second-angle));
+      transform-origin: 100px 100px;
+      will-change: transform;
     }
 
     body.light-mode {
@@ -1600,7 +1607,6 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
             el: cell,
             hourHand: svgClone.querySelector('.hour-hand'),
             minuteHand: svgClone.querySelector('.minute-hand'),
-            secondHand: svgClone.querySelector('.second-hand'),
             sunIcon: svgClone.querySelector('.sun-icon'),
             moonIcon: svgClone.querySelector('.moon-icon'),
             getTime: function (now) {
@@ -1611,8 +1617,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
               }
               const adj = new Date(nowMs + offset);
               return {
-                hours: adj.getHours(), minutes: adj.getMinutes(),
-                seconds: adj.getSeconds(), millis: now.getMilliseconds()
+                hours: adj.getHours(), minutes: adj.getMinutes()
               };
             }
           };
@@ -1637,28 +1642,32 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
       }
 
       function updateClock() {
+        const now = new Date();
+        const seconds = now.getSeconds();
+        const millis = now.getMilliseconds();
+
+        if (!secondsHidden) {
+          let globalSecondAngle;
+          if (secondModeTick) {
+            globalSecondAngle = seconds * 6;
+            if (millis < 100 && !dashboardMode) {
+              globalSecondAngle += 0.5 * Math.exp(-millis / 25);
+            }
+          } else {
+            globalSecondAngle = (seconds + millis / 1000) * 6;
+          }
+          document.documentElement.style.setProperty('--second-angle', globalSecondAngle + 'deg');
+        }
+
         if (dashboardMode) {
-          const now = new Date();
           for (let i = 0; i < clocks.length; i++) {
             const c = clocks[i];
             const t = c.getTime(now);
             const hours = t.hours % 12;
             const minutes = t.minutes;
-            const seconds = t.seconds;
-            const millis = t.millis;
 
             const minuteAngle = (minutes + seconds / 60) * 6;
             const hourAngle = (hours + minutes / 60) * 30;
-
-            let secondAngle;
-            if (!secondsHidden) {
-              if (secondModeTick) {
-                secondAngle = seconds * 6;
-              } else {
-                secondAngle = (seconds + millis / 1000) * 6;
-              }
-              c.secondHand.setAttribute('transform', 'rotate(' + secondAngle + ' 100 100)');
-            }
 
             c.hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
             c.minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
@@ -1685,19 +1694,6 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
 
           const minuteAngle = (minutes + seconds / 60) * 6;
           const hourAngle = (hours + minutes / 60) * 30;
-
-          let secondAngle;
-          if (!secondsHidden) {
-            if (secondModeTick) {
-              secondAngle = seconds * 6;
-              if (millis < 100) {
-                secondAngle += 0.5 * Math.exp(-millis / 25);
-              }
-            } else {
-              secondAngle = (seconds + millis / 1000) * 6;
-            }
-            secondHand.setAttribute('transform', 'rotate(' + secondAngle + ' 100 100)');
-          }
 
           hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
           minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
