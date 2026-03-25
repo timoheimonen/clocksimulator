@@ -11,6 +11,17 @@ This is a minimalist, old-school web page with no trackers, no cookies, and no e
   <img src="screenshots/Clocksimulator_Dashboard_dark.png" width="320" alt="Clocksimulator dashboard dark theme" />
 </p>
 
+## Goals for clocksimulator.com
+- Privacy first
+- Keep it light and fast
+- No ads or tracking cookies, ever
+- No user accounts
+- No backend
+- No 3rd party libraries, only HTML/JS/CSS that can run even offline
+- Free for everyone
+- Make it as maintenance free as possible
+- Just a clock, nothing more or less
+
 ## Timezone support
 
 By default the clock shows your local time. To display a different timezone, add the `tz` query parameter with any valid [IANA timezone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones):
