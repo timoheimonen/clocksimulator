@@ -43,7 +43,7 @@ SOFTWARE.
   <meta name="twitter:title" content="clocksimulator.com - Online Analog Clock">
   <meta name="twitter:description"
     content="Minimalist, open-source and sustainable analog clock. Perfect for OBS, dashboards and embeddable use. Fast, fullscreen, no ads and no tracking. Just a clock.">
-  <meta name="version" content="1.2.3">
+  <meta name="version" content="1.2.4">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -998,8 +998,7 @@ SOFTWARE.
       <line id="secondHand" class="second-hand" x1="100" y1="115" x2="100" y2="22" stroke="var(--second-hand)"
         stroke-width="1.2" stroke-linecap="round" filter="url(#secondShadow)" />
 
-      <circle id="centerDot" cx="100" cy="100" r="3.5" fill="var(--center-dot)"
-        filter="url(#dotShadow)" />
+      <circle id="centerDot" cx="100" cy="100" r="3.5" fill="var(--center-dot)" filter="url(#dotShadow)" />
     </svg>
   </div>
 
@@ -1025,8 +1024,8 @@ SOFTWARE.
         <div class="embed-field">
           <label for="embedTheme">Theme</label>
           <select id="embedTheme">
-            <option value="dark">Dark</option>
             <option value="light">Light</option>
+            <option value="dark">Dark</option>
             <option value="transparent">Transparent</option>
           </select>
         </div>
@@ -1163,7 +1162,8 @@ SOFTWARE.
         </div>
       </div>
       <div class="embed-preview-wrap dashboard-preview-wrap">
-        <iframe id="dashboardPreview" width="280" height="160" title="Dashboard preview" aria-label="Dashboard preview"></iframe>
+        <iframe id="dashboardPreview" width="280" height="160" title="Dashboard preview"
+          aria-label="Dashboard preview"></iframe>
       </div>
       <div class="embed-code-wrap">
         <textarea class="embed-code" id="dashboardUrl" readonly rows="2" aria-label="Dashboard URL"></textarea>
@@ -1278,7 +1278,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
           <tr>
             <td><code>theme</code></td>
             <td><code>dark</code>, <code>light</code>, <code>transparent</code></td>
-            <td><code>dark</code></td>
+            <td>System preference</td>
           </tr>
           <tr>
             <td><code>seconds</code></td>
@@ -1396,8 +1396,12 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
         themeToggle.checked = true;
       } else if (themeParam === 'transparent') {
         document.body.classList.add('transparent-mode');
-      }
-      if (savedSettings && savedSettings.theme === 'light') {
+      } else if (themeParam === 'dark') {
+      } else if (!embedMode && savedSettings && savedSettings.theme === 'light') {
+        document.body.classList.add('light-mode');
+        themeToggle.checked = true;
+      } else if (!embedMode && savedSettings && savedSettings.theme === 'dark') {
+      } else if (!embedMode && !window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.body.classList.add('light-mode');
         themeToggle.checked = true;
       }
@@ -2022,7 +2026,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
         let embedDebounceTimer;
 
         function appendCommonParams(p, themeVal, secondsVal, borderVal, daynightVal, numbersVal) {
-          if (themeVal !== 'dark') p.push('theme=' + themeVal);
+          p.push('theme=' + themeVal);
           if (secondsVal !== 'tick') p.push('seconds=' + secondsVal);
           if (borderVal !== 'show') p.push('border=' + borderVal);
           if (daynightVal === 'show') p.push('daynight=show');
@@ -2131,6 +2135,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
         const tzChipsEl = document.getElementById('tzChips');
         const dashboardRowsSelect = document.getElementById('dashboardRows');
         const dashboardThemeSelect = document.getElementById('dashboardTheme');
+        dashboardThemeSelect.value = document.body.classList.contains('light-mode') ? 'light' : 'dark';
         const dashboardSecondsSelect = document.getElementById('dashboardSeconds');
         const dashboardNumbersSelect = document.getElementById('dashboardNumbers');
         const dashboardDayNightSelect = document.getElementById('dashboardDayNight');

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.4 - 2026-03-25
+
+### Changed
+- Default theme now respects the user's OS color scheme preference (prefers-color-scheme), with light as the fallback.
+- Embed builder defaults to light theme. Embeds are backwards compatible, if ?theme not set, it will default to dark as before.
+- Dashboard builder defaults to the user's OS color scheme preference, with light as the fallback.
+
 ## 1.2.3 - 2026-03-23
 
 ### Changed
