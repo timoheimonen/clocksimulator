@@ -11,7 +11,7 @@ This is a minimalist, old-school web page with no trackers, no cookies, and no e
   <img src="screenshots/Clocksimulator_Dashboard_dark.png" width="320" alt="Clocksimulator dashboard dark theme" />
 </p>
 
-## Goals for clocksimulator.com
+## Goals
 - Privacy first
 - Keep it light and fast
 - No ads or tracking cookies, ever
