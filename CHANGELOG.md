@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.7 - 2026-03-29
+
+### Added
+- og-image
+
+### Changed
+- all addresses are now clocksimulator.com instead of www.clocksimulator.com
+
 ## 1.2.6 - 2026-03-26
 
 ### Fixed

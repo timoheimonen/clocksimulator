@@ -32,18 +32,20 @@ SOFTWARE.
     content="Minimalist, open-source and sustainable analog clock. Perfect for OBS, dashboards and embeddable use. Fast, fullscreen, no ads and no tracking. Just a clock.">
   <meta name="keywords"
     content="clock simulator, analog clock, online clock, distraction-free clock, fullscreen clock, no ads clock, open source, sustainable">
-  <link rel="canonical" href="https://www.clocksimulator.com/">
+  <link rel="canonical" href="https://clocksimulator.com/">
   <meta property="og:title" content="clocksimulator.com - Online Analog Clock">
   <meta property="og:description"
     content="Minimalist, open-source and sustainable analog clock. Perfect for OBS, dashboards and embeddable use. Fast, fullscreen, no ads and no tracking. Just a clock.">
-  <meta property="og:url" content="https://www.clocksimulator.com/">
+  <meta property="og:url" content="https://clocksimulator.com/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="clocksimulator.com">
+  <meta property="og:image" content="https://clocksimulator.com/og-image.png" />
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="clocksimulator.com - Online Analog Clock">
   <meta name="twitter:description"
     content="Minimalist, open-source and sustainable analog clock. Perfect for OBS, dashboards and embeddable use. Fast, fullscreen, no ads and no tracking. Just a clock.">
-  <meta name="version" content="1.2.6">
+  <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
+  <meta name="version" content="1.2.7">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -943,8 +945,8 @@ SOFTWARE.
         <br>
         Made by Timo Heimonen<br>
         <a href="mailto:timo.heimonen@proton.me">timo.heimonen@proton.me</a><br>
-        <a href="https://www.clocksimulator.com/privacy.html">Privacy</a> &middot; <a
-          href="https://www.clocksimulator.com/TOS.html">Terms</a> &middot;
+        <a href="https://clocksimulator.com/privacy.html">Privacy</a> &middot; <a
+          href="https://clocksimulator.com/TOS.html">Terms</a> &middot;
         <a href="https://github.com/timoheimonen/clocksimulator" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
@@ -1236,15 +1238,15 @@ SOFTWARE.
       <p>Add <code>?tz=</code> to the URL with any <a
           href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener">IANA
           timezone</a>:</p>
-      <pre>www.clocksimulator.com/?tz=America/New_York
-www.clocksimulator.com/?tz=Europe/London
-www.clocksimulator.com/?tz=Asia/Tokyo</pre>
+      <pre>clocksimulator.com/?tz=America/New_York
+clocksimulator.com/?tz=Europe/London
+clocksimulator.com/?tz=Asia/Tokyo</pre>
       <h3>Multi-clock dashboard</h3>
       <p>Show multiple clocks at once by separating timezones with commas. This automatically enables
         <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:
       </p>
-      <pre>www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
-www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2 (dashboardMode)</pre>
+      <pre>clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
+clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2 (dashboardMode)</pre>
       <p>You can also use the dashboard builder (<strong>&#9432;</strong> &rarr; <strong>Build dashboard</strong>) to
         visually add timezones and configure the grid.</p>
       <h3>Embedding</h3>
@@ -2030,7 +2032,7 @@ www.clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;r
         const embedCodeEl = document.getElementById('embedCode');
         const embedCopyBtn = document.getElementById('embedCopyBtn');
         const localBase = window.location.origin + window.location.pathname;
-        const prodBase = 'https://www.clocksimulator.com/';
+        const prodBase = 'https://clocksimulator.com/';
         let embedDebounceTimer;
 
         function appendCommonParams(p, themeVal, secondsVal, borderVal, daynightVal, numbersVal) {

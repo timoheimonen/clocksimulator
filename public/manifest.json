@@ -5,7 +5,10 @@
   "lang": "en",
   "dir": "ltr",
   "description": "Online analog clock with timezone support, dark and light themes, and embeddable options.",
-  "categories": ["utilities", "productivity"],
+  "categories": [
+    "utilities",
+    "productivity"
+  ],
   "icons": [
     {
       "src": "/android-chrome-192x192.png",

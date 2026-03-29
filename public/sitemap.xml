@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://www.clocksimulator.com/</loc>
-    <lastmod>2026-03-25</lastmod>
+    <loc>https://clocksimulator.com/</loc>
+    <lastmod>2026-03-29</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.clocksimulator.com/privacy.html</loc>
+    <loc>https://clocksimulator.com/privacy.html</loc>
     <lastmod>2026-02-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://www.clocksimulator.com/TOS.html</loc>
+    <loc>https://clocksimulator.com/TOS.html</loc>
     <lastmod>2026-03-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>

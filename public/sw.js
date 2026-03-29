@@ -1,11 +1,12 @@
-var CACHE_NAME = 'clocksimulator-v1.2.6';
+var CACHE_NAME = 'clocksimulator-v1.2.7';
 var ASSETS = [
   '/',
   '/privacy.html',
   '/manifest.json',
   '/apple-touch-icon.png',
   '/android-chrome-192x192.png',
-  '/android-chrome-512x512.png'
+  '/android-chrome-512x512.png',
+  '/og-image.png'
 ];
 
 self.addEventListener('install', function (event) {
