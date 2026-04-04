@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Minimalist, open-source and sustainable analog clock. Perfect for OBS, dashboards and embeddable use. Fast, fullscreen, no ads and no tracking. Just a clock.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.2.7">
+  <meta name="version" content="1.2.8">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -53,27 +53,6 @@ SOFTWARE.
     href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRU5ErkJggg==">
   <style>
     :root {
-      --bg: #000000;
-      --clock-face: #0a0a0a;
-      --clock-border: #f5f5f5;
-      --tick: #d4d4d4;
-      --number: #fafafa;
-      --hour-hand: #fafafa;
-      --minute-hand: #d4d4d4;
-      --second-hand: #ef4444;
-      --center-dot: #ef4444;
-      --toggle-bg: #262626;
-      --toggle-knob: #e5e5e5;
-      --second-angle: 0deg;
-    }
-
-    .second-hand {
-      transform: rotate(var(--second-angle));
-      transform-origin: 100px 100px;
-      will-change: transform;
-    }
-
-    body.light-mode {
       --bg: #f0f0f0;
       --clock-face: #ffffff;
       --clock-border: #333333;
@@ -85,11 +64,39 @@ SOFTWARE.
       --center-dot: #d63031;
       --toggle-bg: #bbb;
       --toggle-knob: #fff;
+      --second-angle: 0deg;
     }
 
-    body.transparent-mode {
+    .second-hand {
+      transform: rotate(var(--second-angle));
+      transform-origin: 100px 100px;
+      will-change: transform;
+    }
+
+    html.dark-mode {
+      --bg: #000000;
+      --clock-face: #0a0a0a;
+      --clock-border: #f5f5f5;
+      --tick: #d4d4d4;
+      --number: #fafafa;
+      --hour-hand: #fafafa;
+      --minute-hand: #d4d4d4;
+      --second-hand: #ef4444;
+      --center-dot: #ef4444;
+      --toggle-bg: #262626;
+      --toggle-knob: #e5e5e5;
+    }
+
+    html.transparent-mode {
       --bg: transparent;
       --clock-face: transparent;
+      --clock-border: #333333;
+      --tick: #333333;
+      --number: #222222;
+      --hour-hand: #222222;
+      --minute-hand: #444444;
+      --second-hand: #d63031;
+      --center-dot: #d63031;
     }
 
     * {
@@ -185,7 +192,7 @@ SOFTWARE.
       box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
     }
 
-    body.light-mode .toggle-label input:checked~.toggle-slider {
+    .dark-mode .toggle-label input:checked~.toggle-slider {
       box-shadow: 0 0 12px rgba(59, 130, 246, 0.5);
     }
 
@@ -228,21 +235,22 @@ SOFTWARE.
     }
 
     .theme-icon-moon {
-      opacity: 1;
-    }
-
-    .theme-icon-sun {
-      opacity: 0;
-    }
-
-    .theme-toggle input:checked~.theme-icon-moon {
       opacity: 0;
       transform: translateY(-50%) rotate(-90deg);
     }
 
-    .theme-toggle input:checked~.theme-icon-sun {
+    .theme-icon-sun {
+      opacity: 1;
+    }
+
+    .theme-toggle input:checked~.theme-icon-moon {
       opacity: 1;
       transform: translateY(-50%) rotate(0deg);
+    }
+
+    .theme-toggle input:checked~.theme-icon-sun {
+      opacity: 0;
+      transform: translateY(-50%) rotate(90deg);
     }
 
     .wake-lock-toggle,
@@ -284,7 +292,7 @@ SOFTWARE.
       background: #3a7d55;
     }
 
-    body.light-mode .save-settings-toggle input:checked~.toggle-slider {
+    .dark-mode .save-settings-toggle input:checked~.toggle-slider {
       background: #2f6a47;
     }
 
@@ -313,8 +321,9 @@ SOFTWARE.
       left: 50%;
       top: calc(100% + 6px);
       transform: translateX(-50%);
-      background: #1e1e1e;
-      color: #eee;
+      background: #f0f0f0;
+      color: #222;
+      border: 1px solid rgba(0, 0, 0, 0.15);
       font-size: 11px;
       padding: 4px 8px;
       border-radius: 4px;
@@ -328,10 +337,11 @@ SOFTWARE.
       transition: opacity 0.2s ease 0.15s;
     }
 
-    body.light-mode .toggle-label[data-tooltip]::after,
-    body.light-mode .about-btn[data-tooltip]::after {
-      background: #323232;
-      color: #fff;
+    .dark-mode .toggle-label[data-tooltip]::after,
+    .dark-mode .about-btn[data-tooltip]::after {
+      background: #222;
+      color: #eee;
+      border-color: rgba(255, 255, 255, 0.15);
     }
 
     .toggle-label[data-tooltip]:hover::after,
@@ -382,8 +392,8 @@ SOFTWARE.
       position: absolute;
       top: calc(100% + 8px);
       left: 0;
-      background: rgba(30, 30, 30, 0.92);
-      color: #eee;
+      background: rgba(255, 255, 255, 0.95);
+      color: #222;
       font-size: 12px;
       line-height: 1.5;
       padding: 8px 12px;
@@ -403,32 +413,32 @@ SOFTWARE.
       pointer-events: auto;
     }
 
-    body.light-mode .about-bubble {
-      background: rgba(240, 240, 240, 0.95);
-      color: #222;
+    .dark-mode .about-bubble {
+      background: rgba(30, 30, 30, 0.95);
+      color: #eee;
     }
 
     .about-bubble a,
     .help-panel a {
       color: inherit;
       text-decoration: underline;
-      text-decoration-color: rgba(255, 255, 255, 0.35);
+      text-decoration-color: rgba(0, 0, 0, 0.3);
       text-underline-offset: 2px;
     }
 
     .about-bubble a:hover,
     .help-panel a:hover {
+      text-decoration-color: rgba(0, 0, 0, 0.6);
+    }
+
+    .dark-mode .about-bubble a,
+    .dark-mode .help-panel a {
+      text-decoration-color: rgba(255, 255, 255, 0.35);
+    }
+
+    .dark-mode .about-bubble a:hover,
+    .dark-mode .help-panel a:hover {
       text-decoration-color: rgba(255, 255, 255, 0.7);
-    }
-
-    body.light-mode .about-bubble a,
-    body.light-mode .help-panel a {
-      text-decoration-color: rgba(0, 0, 0, 0.35);
-    }
-
-    body.light-mode .about-bubble a:hover,
-    body.light-mode .help-panel a:hover {
-      text-decoration-color: rgba(0, 0, 0, 0.7);
     }
 
     .clock-container {
@@ -514,8 +524,8 @@ SOFTWARE.
     }
 
     .modal-panel {
-      background: #1a1a1a;
-      color: #eee;
+      background: #ffffff;
+      color: #222;
       border-radius: 12px;
       padding: 20px 24px;
       max-width: 520px;
@@ -538,9 +548,9 @@ SOFTWARE.
       opacity: 1;
     }
 
-    body.light-mode .modal-panel {
-      background: #f5f5f5;
-      color: #222;
+    .dark-mode .modal-panel {
+      background: #1a1a1a;
+      color: #eee;
     }
 
     .modal-panel-header {
@@ -613,13 +623,13 @@ SOFTWARE.
     }
 
     .embed-field select option {
-      background: #1a1a1a;
-      color: #eee;
+      background: #ffffff;
+      color: #222;
     }
 
-    body.light-mode .embed-field select option {
-      background: #f5f5f5;
-      color: #222;
+    .dark-mode .embed-field select option {
+      background: #1a1a1a;
+      color: #eee;
     }
 
     .embed-preview-wrap {
@@ -647,7 +657,7 @@ SOFTWARE.
       padding: 10px 12px;
       border: 1px solid rgba(128, 128, 128, 0.3);
       border-radius: 6px;
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0, 0, 0, 0.05);
       color: inherit;
       font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
       font-size: 11px;
@@ -656,8 +666,8 @@ SOFTWARE.
       min-height: 60px;
     }
 
-    body.light-mode .embed-code {
-      background: rgba(0, 0, 0, 0.05);
+    .dark-mode .embed-code {
+      background: rgba(255, 255, 255, 0.06);
     }
 
     .embed-copy-btn,
@@ -816,19 +826,19 @@ SOFTWARE.
     }
 
     .help-panel code {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.08);
       padding: 1px 4px;
       border-radius: 3px;
       font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
       font-size: 11px;
     }
 
-    body.light-mode .help-panel code {
-      background: rgba(0, 0, 0, 0.08);
+    .dark-mode .help-panel code {
+      background: rgba(255, 255, 255, 0.12);
     }
 
     .help-panel pre {
-      background: rgba(0, 0, 0, 0.25);
+      background: rgba(0, 0, 0, 0.06);
       padding: 8px 10px;
       border-radius: 6px;
       font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
@@ -838,8 +848,8 @@ SOFTWARE.
       margin: 4px 0 8px;
     }
 
-    body.light-mode .help-panel pre {
-      background: rgba(0, 0, 0, 0.06);
+    .dark-mode .help-panel pre {
+      background: rgba(255, 255, 255, 0.08);
     }
 
     .help-panel table {
@@ -875,11 +885,28 @@ SOFTWARE.
       border: 0;
     }
   </style>
+  <script>
+    (function () {
+      if (window.location.search.indexOf('theme=') !== -1) return;
+      if (window.location.search.indexOf('embed=true') !== -1) {
+        document.documentElement.classList.add('dark-mode');
+        return;
+      }
+      try {
+        var s = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
+        if (s && s.theme === 'dark') {
+          document.documentElement.classList.add('dark-mode');
+        } else if (!s && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.classList.add('dark-mode');
+        }
+      } catch (e) { }
+    })();
+  </script>
 </head>
 
 <body>
   <div class="toggle-wrapper">
-    <label class="toggle-label theme-toggle" aria-label="Toggle light mode" data-tooltip="Toggle light mode">
+    <label class="toggle-label theme-toggle" aria-label="Toggle dark mode" data-tooltip="Toggle dark mode">
       <input type="checkbox" id="themeToggle">
       <svg class="theme-icon theme-icon-moon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M17 11.5A7.5 7.5 0 0 1 8.5 3a7.65 7.65 0 0 1 .2-1.5A8 8 0 1 0 18.5 11.3a7.65 7.65 0 0 1-1.5.2Z"
@@ -1034,7 +1061,7 @@ SOFTWARE.
           <label for="embedTheme">Theme</label>
           <select id="embedTheme">
             <option value="light">Light</option>
-            <option value="dark">Dark</option>
+            <option value="dark" selected>Dark</option>
             <option value="transparent">Transparent</option>
           </select>
         </div>
@@ -1326,6 +1353,13 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
   <script>
     (function () {
+      const OFFSET_RECALC_MS = 60000;
+      const SHADOW_THROTTLE_MS = 100;
+      const BURN_IN_INTERVAL_MS = 600000;
+      const EMBED_DEBOUNCE_MS = 400;
+      const COPY_FEEDBACK_MS = 1500;
+      const FAVICON_UPDATE_MS = 60000;
+
       function setAppHeight() {
         document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
       }
@@ -1400,18 +1434,14 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const fl = document.getElementById('favicon');
         if (fl) fl.remove();
       }
-      if (themeParam === 'light') {
-        document.body.classList.add('light-mode');
+      const activeTheme = themeParam || (!embedMode && savedSettings && savedSettings.theme);
+      if (activeTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
         themeToggle.checked = true;
-      } else if (themeParam === 'transparent') {
-        document.body.classList.add('transparent-mode');
-      } else if (themeParam === 'dark') {
-      } else if (!embedMode && savedSettings && savedSettings.theme === 'light') {
-        document.body.classList.add('light-mode');
-        themeToggle.checked = true;
-      } else if (!embedMode && savedSettings && savedSettings.theme === 'dark') {
-      } else if (!embedMode && !window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.body.classList.add('light-mode');
+      } else if (activeTheme === 'transparent') {
+        document.documentElement.classList.add('transparent-mode');
+      } else if (!activeTheme && !embedMode && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark-mode');
         themeToggle.checked = true;
       }
 
@@ -1453,7 +1483,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const now = new Date();
         const nowMs = now.getTime();
         if (timezone) {
-          if (nowMs - lastOffsetCalc > 60000) {
+          if (nowMs - lastOffsetCalc > OFFSET_RECALC_MS) {
             tzOffset = computeTzOffset(timezone);
             lastOffsetCalc = nowMs;
           }
@@ -1548,7 +1578,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       function saveSettings() {
         if (!saveSettingsToggle.checked) return;
         localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
-          theme: document.body.classList.contains('light-mode') ? 'light' : 'dark',
+          theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
           wakeLock: document.getElementById('wakeLockToggle').checked,
           secondModeTick: secondModeTick
         }));
@@ -1613,7 +1643,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             moonIcon: svgClone.querySelector('.moon-icon'),
             getTime: function (now) {
               const nowMs = now.getTime();
-              if (nowMs - lastCalc > 60000) {
+              if (nowMs - lastCalc > OFFSET_RECALC_MS) {
                 offset = computeTzOffset(tz);
                 lastCalc = nowMs;
               }
@@ -1680,7 +1710,6 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           const t = getTime();
           const hours = t.hours % 12;
           const minutes = t.minutes;
-          const seconds = t.seconds;
           const millis = t.millis;
 
           if (minutes !== lastAriaMinute) {
@@ -1694,7 +1723,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             }
           }
 
-          const minuteAngle = (minutes + seconds / 60) * 6;
+          const minuteAngle = (minutes + t.seconds / 60) * 6;
           const hourAngle = (hours + minutes / 60) * 30;
 
           hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
@@ -1702,9 +1731,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
           if (shadowsEnabled) {
             const nowMs = Date.now();
-            if (nowMs - lastShadowUpdate > 100) {
+            if (nowMs - lastShadowUpdate > SHADOW_THROTTLE_MS) {
               lastShadowUpdate = nowMs;
-              const now = new Date();
               const localHour = now.getHours() + now.getMinutes() / 60;
               const sunAngle = 90 + (localHour - 6) * 15;
               const sunRad = sunAngle * Math.PI / 180;
@@ -1717,7 +1745,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
               minuteDS.setAttribute('dx', -1.2 * Math.cos(minuteShadowRad));
               minuteDS.setAttribute('dy', -1.2 * Math.sin(minuteShadowRad));
 
-              const secondHandAngle = secondModeTick ? seconds * 6 : (seconds + millis / 1000) * 6;
+              const secondHandAngle = secondModeTick ? t.seconds * 6 : (t.seconds + millis / 1000) * 6;
               const secondShadowRad = (secondHandAngle - sunAngle) * Math.PI / 180;
               secondDS.setAttribute('dx', -1.8 * Math.cos(secondShadowRad));
               secondDS.setAttribute('dy', -1.8 * Math.sin(secondShadowRad));
@@ -1743,8 +1771,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       requestAnimationFrame(updateClock);
 
       themeToggle.addEventListener('change', function () {
-        document.body.classList.remove('transparent-mode');
-        document.body.classList.toggle('light-mode', this.checked);
+        document.documentElement.classList.remove('transparent-mode');
+        document.documentElement.classList.toggle('dark-mode', this.checked);
         saveSettings();
       });
 
@@ -1819,13 +1847,13 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       }
 
       function copyWithFlash(text, btn) {
-        var original = btn.textContent;
+        const original = btn.textContent;
         navigator.clipboard.writeText(text).then(function () {
           btn.textContent = 'Copied!';
-          setTimeout(function () { btn.textContent = original; }, 1500);
+          setTimeout(function () { btn.textContent = original; }, COPY_FEEDBACK_MS);
         }).catch(function () {
           btn.textContent = 'Failed';
-          setTimeout(function () { btn.textContent = original; }, 1500);
+          setTimeout(function () { btn.textContent = original; }, COPY_FEEDBACK_MS);
         });
       }
 
@@ -1944,10 +1972,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         }
 
         updateFavicon();
-        const msToNextMinute = 60000 - (Date.now() % 60000);
+        const msToNextMinute = FAVICON_UPDATE_MS - (Date.now() % FAVICON_UPDATE_MS);
         setTimeout(function () {
           updateFavicon();
-          setInterval(updateFavicon, 60000);
+          setInterval(updateFavicon, FAVICON_UPDATE_MS);
         }, msToNextMinute);
 
         if ('wakeLock' in navigator) {
@@ -2014,7 +2042,26 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             burnInStep++;
           }
 
-          setInterval(applyBurnInShift, 600000);
+          let burnInInterval = null;
+
+          function startBurnIn() {
+            burnInInterval = setInterval(applyBurnInShift, BURN_IN_INTERVAL_MS);
+          }
+
+          function stopBurnIn() {
+            clearInterval(burnInInterval);
+            burnInInterval = null;
+          }
+
+          if (!document.hidden) startBurnIn();
+
+          document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+              stopBurnIn();
+            } else {
+              startBurnIn();
+            }
+          });
         }
 
         const embedCloseBtn = document.getElementById('embedCloseBtn');
@@ -2087,7 +2134,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
         function updateEmbedDebounced() {
           clearTimeout(embedDebounceTimer);
-          embedDebounceTimer = setTimeout(updateEmbed, 400);
+          embedDebounceTimer = setTimeout(updateEmbed, EMBED_DEBOUNCE_MS);
         }
 
         function openEmbedPanel(e) {
@@ -2145,7 +2192,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const tzChipsEl = document.getElementById('tzChips');
         const dashboardRowsSelect = document.getElementById('dashboardRows');
         const dashboardThemeSelect = document.getElementById('dashboardTheme');
-        dashboardThemeSelect.value = document.body.classList.contains('light-mode') ? 'light' : 'dark';
+        dashboardThemeSelect.value = document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light';
         const dashboardSecondsSelect = document.getElementById('dashboardSeconds');
         const dashboardNumbersSelect = document.getElementById('dashboardNumbers');
         const dashboardDayNightSelect = document.getElementById('dashboardDayNight');

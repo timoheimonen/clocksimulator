@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.8 - 2026-04-04
+
+### Changed
+- Default theme is now light mode. Dark mode is opt-in.
+- Embeds without a theme parameter default to dark for backwards compatibility.
+- Service worker now pre-caches TOS and sitemap pages.
+- Simplify theme initialization logic.
+- Replace magic numbers with named constants for maintainability.
+
+### Fixed
+- Variable shadowing in clock update function that could cause subtle bugs during refactoring.
+- Burn-in protection timer now pauses when the tab is hidden instead of running unnecessarily.
+- Theme no longer flashes on page load when OS or saved preference differs from default.
+
+
 ## 1.2.7 - 2026-03-29
 
 ### Added
