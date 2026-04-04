@@ -90,6 +90,13 @@ SOFTWARE.
     html.transparent-mode {
       --bg: transparent;
       --clock-face: transparent;
+      --clock-border: #333333;
+      --tick: #333333;
+      --number: #222222;
+      --hour-hand: #222222;
+      --minute-hand: #444444;
+      --second-hand: #d63031;
+      --center-dot: #d63031;
     }
 
     * {
@@ -2046,7 +2053,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             burnInInterval = null;
           }
 
-          startBurnIn();
+          if (!document.hidden) startBurnIn();
 
           document.addEventListener('visibilitychange', function () {
             if (document.hidden) {
