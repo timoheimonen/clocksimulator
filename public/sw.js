@@ -1,7 +1,9 @@
-var CACHE_NAME = 'clocksimulator-v1.2.7';
-var ASSETS = [
+const CACHE_NAME = 'clocksimulator-v1.2.8';
+const ASSETS = [
   '/',
   '/privacy.html',
+  '/TOS.html',
+  '/sitemap.xml',
   '/manifest.json',
   '/apple-touch-icon.png',
   '/android-chrome-192x192.png',
