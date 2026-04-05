@@ -119,6 +119,24 @@ Extension replaces new tab page with analog clock.
 [GitHub repo](https://github.com/timoheimonen/chrome-extension-clocksimulator) also available.
 Extension follows main clocksimulator.com version, but not always updated 1:1 and might vary in features.
 
+## Testing
+
+Automated tests using pytest and Playwright. No build step required.
+
+```bash
+# Install test dependencies
+pip install -r requirements-dev.txt
+python -m playwright install chromium
+
+# Run all tests
+python -m pytest
+
+# Run only visual snapshot tests
+python -m pytest -k "visual_snapshot"
+
+# Regenerate screenshot baselines
+python -m pytest --update-snapshots
+```
 
 ## Privacy & Terms of service
 
