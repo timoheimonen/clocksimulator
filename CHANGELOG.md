@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.2.9 - 2026-04-06
+
+### Changed
+- Hour and minute hands now use CSS transforms instead of SVG attribute updates, enabling GPU-composited animation and reducing per-frame rendering cost.
+- Day/night icon updates are now throttled to once per second instead of every frame.
+- Clock hands are promoted to their own compositor layers for smoother rotation.
+
 ## 1.2.8 - 2026-04-04
 
 ### Changed
@@ -13,7 +20,6 @@
 - Variable shadowing in clock update function that could cause subtle bugs during refactoring.
 - Burn-in protection timer now pauses when the tab is hidden instead of running unnecessarily.
 - Theme no longer flashes on page load when OS or saved preference differs from default.
-
 
 ## 1.2.7 - 2026-03-29
 

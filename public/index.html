@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Minimalist, open-source and sustainable analog clock. Perfect for OBS, dashboards and embeddable use. Fast, fullscreen, no ads and no tracking. Just a clock.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.2.8">
+  <meta name="version" content="1.2.9">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -70,6 +70,13 @@ SOFTWARE.
     .second-hand {
       transform: rotate(var(--second-angle));
       transform-origin: 100px 100px;
+      will-change: transform;
+    }
+
+    .hour-hand,
+    .minute-hand {
+      transform-origin: 100px 100px;
+      transform-box: view-box;
       will-change: transform;
     }
 
@@ -1665,6 +1672,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       }
 
       let lastAriaMinute = -1;
+      let lastDayNightSecond = -1;
       const clockSvg = document.getElementById('clock');
 
       function updateDayNightIcons(hours, sun, moon) {
@@ -1701,11 +1709,12 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             const minuteAngle = (minutes + seconds / 60) * 6;
             const hourAngle = (hours + minutes / 60) * 30;
 
-            c.hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
-            c.minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
+            c.hourHand.style.transform = 'rotate(' + hourAngle + 'deg)';
+            c.minuteHand.style.transform = 'rotate(' + minuteAngle + 'deg)';
 
-            if (showDayNight) updateDayNightIcons(t.hours, c.sunIcon, c.moonIcon);
+            if (showDayNight && seconds !== lastDayNightSecond) updateDayNightIcons(t.hours, c.sunIcon, c.moonIcon);
           }
+          if (showDayNight && seconds !== lastDayNightSecond) lastDayNightSecond = seconds;
         } else {
           const t = getTime();
           const hours = t.hours % 12;
@@ -1726,8 +1735,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           const minuteAngle = (minutes + t.seconds / 60) * 6;
           const hourAngle = (hours + minutes / 60) * 30;
 
-          hourHand.setAttribute('transform', 'rotate(' + hourAngle + ' 100 100)');
-          minuteHand.setAttribute('transform', 'rotate(' + minuteAngle + ' 100 100)');
+          hourHand.style.transform = 'rotate(' + hourAngle + 'deg)';
+          minuteHand.style.transform = 'rotate(' + minuteAngle + 'deg)';
 
           if (shadowsEnabled) {
             const nowMs = Date.now();
@@ -1755,7 +1764,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             }
           }
 
-          if (showDayNight) updateDayNightIcons(t.hours, sunIcon, moonIcon);
+          if (showDayNight && t.seconds !== lastDayNightSecond) {
+            updateDayNightIcons(t.hours, sunIcon, moonIcon);
+            lastDayNightSecond = t.seconds;
+          }
         }
 
         if (!document.hidden) {
