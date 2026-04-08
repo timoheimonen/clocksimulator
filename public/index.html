@@ -139,12 +139,14 @@ SOFTWARE.
       align-items: center;
       gap: 8px;
       opacity: 0;
+      visibility: hidden;
       transition: opacity 0.4s ease;
       pointer-events: none;
     }
 
     .toggle-wrapper.visible {
       opacity: 1;
+      visibility: visible;
       pointer-events: auto;
     }
 
@@ -407,6 +409,7 @@ SOFTWARE.
       border-radius: 8px;
       white-space: nowrap;
       opacity: 0;
+      visibility: hidden;
       pointer-events: none;
       transition: opacity 0.2s ease;
       backdrop-filter: blur(8px);
@@ -417,6 +420,7 @@ SOFTWARE.
 
     .about-bubble.visible {
       opacity: 1;
+      visibility: visible;
       pointer-events: auto;
     }
 
@@ -517,6 +521,7 @@ SOFTWARE.
       align-items: center;
       justify-content: center;
       opacity: 0;
+      visibility: hidden;
       pointer-events: none;
       transition: opacity 0.3s ease, backdrop-filter 0.4s ease;
       backdrop-filter: blur(0px);
@@ -525,6 +530,7 @@ SOFTWARE.
 
     .overlay.visible {
       opacity: 1;
+      visibility: visible;
       pointer-events: auto;
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
@@ -912,7 +918,7 @@ SOFTWARE.
 </head>
 
 <body>
-  <div class="toggle-wrapper" aria-hidden="true">
+  <div class="toggle-wrapper" aria-hidden="true" inert>
     <label class="toggle-label theme-toggle" data-tooltip="Toggle dark mode">
       <input type="checkbox" id="themeToggle" role="switch" aria-label="Toggle dark mode">
       <svg class="theme-icon theme-icon-moon" aria-hidden="true" viewBox="0 0 20 20" fill="none"
@@ -958,7 +964,8 @@ SOFTWARE.
       </svg>
     </label>
     <div class="about-wrapper">
-      <button class="about-btn" id="aboutBtn" aria-label="About" aria-haspopup="true" aria-expanded="false"
+      <button class="about-btn" id="aboutBtn" aria-label="About" aria-haspopup="dialog" aria-expanded="false"
+        aria-controls="aboutBubble"
         data-tooltip="About">
         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
@@ -966,7 +973,8 @@ SOFTWARE.
           <line x1="10" y1="9.5" x2="10" y2="14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
         </svg>
       </button>
-      <div class="about-bubble" id="aboutBubble" role="region" aria-label="About">
+      <div class="about-bubble" id="aboutBubble" role="dialog" aria-modal="false" aria-label="About"
+        aria-hidden="true" inert>
         <a href="#" id="embedLink">Embed this clock &rarr;</a><br>
         <a href="https://chromewebstore.google.com/detail/clocksimulatorcom/ljbpiigocbebamekohcpemgepjickldb"
           target="_blank" rel="noopener">Chrome Extension &rarr;</a><br>
@@ -1053,7 +1061,7 @@ SOFTWARE.
   </main>
 
   <div class="embed-overlay overlay" id="embedOverlay" role="dialog" aria-modal="true" aria-labelledby="embedPanelTitle"
-    aria-hidden="true">
+    aria-hidden="true" inert>
     <div class="modal-panel embed-panel">
       <div class="modal-panel-header">
         <span class="modal-panel-title" id="embedPanelTitle">Embed this clock</span>
@@ -1131,7 +1139,7 @@ SOFTWARE.
         </div>
       </div>
       <div class="embed-preview-wrap">
-        <iframe id="embedPreview" width="120" height="120" title="Clock preview" aria-label="Clock preview"></iframe>
+        <iframe id="embedPreview" width="120" height="120" title="Clock preview"></iframe>
       </div>
       <div class="embed-code-wrap">
         <textarea class="embed-code" id="embedCode" readonly rows="3" aria-label="Embed code"></textarea>
@@ -1146,7 +1154,7 @@ SOFTWARE.
   </div>
 
   <div class="dashboard-overlay overlay" id="dashboardOverlay" role="dialog" aria-modal="true"
-    aria-labelledby="dashboardPanelTitle" aria-hidden="true">
+    aria-labelledby="dashboardPanelTitle" aria-hidden="true" inert>
     <div class="modal-panel dashboard-panel">
       <div class="modal-panel-header">
         <span class="modal-panel-title" id="dashboardPanelTitle">Build dashboard</span>
@@ -1212,8 +1220,7 @@ SOFTWARE.
         </div>
       </div>
       <div class="embed-preview-wrap dashboard-preview-wrap">
-        <iframe id="dashboardPreview" width="280" height="160" title="Dashboard preview"
-          aria-label="Dashboard preview"></iframe>
+        <iframe id="dashboardPreview" width="280" height="160" title="Dashboard preview"></iframe>
       </div>
       <div class="embed-code-wrap">
         <textarea class="embed-code" id="dashboardUrl" readonly rows="2" aria-label="Dashboard URL"></textarea>
@@ -1229,7 +1236,7 @@ SOFTWARE.
   </div>
 
   <div class="help-overlay overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpPanelTitle"
-    aria-hidden="true">
+    aria-hidden="true" inert>
     <div class="modal-panel help-panel">
       <div class="modal-panel-header">
         <span class="modal-panel-title" id="helpPanelTitle">How to use</span>
@@ -1829,6 +1836,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       });
 
       const toggleWrapper = document.querySelector('.toggle-wrapper');
+      const mainEl = document.querySelector('main');
       const aboutBtn = document.getElementById('aboutBtn');
       const aboutBubble = document.getElementById('aboutBubble');
       let hideTimer;
@@ -1842,6 +1850,26 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       let activeTrapHandler = null;
       let overlayMouseDownTarget = null;
       document.addEventListener('mousedown', function (e) { overlayMouseDownTarget = e.target; });
+
+      function isAnyPanelOpen() {
+        return embedOverlay.classList.contains('visible') ||
+          dashboardOverlay.classList.contains('visible') ||
+          helpOverlay.classList.contains('visible');
+      }
+
+      function setBackgroundInert(isInert) {
+        if (isInert) {
+          mainEl.setAttribute('inert', '');
+          toggleWrapper.setAttribute('inert', '');
+          toggleWrapper.setAttribute('aria-hidden', 'true');
+        } else {
+          mainEl.removeAttribute('inert');
+          toggleWrapper.removeAttribute('inert');
+          if (toggleWrapper.classList.contains('visible')) {
+            toggleWrapper.setAttribute('aria-hidden', 'false');
+          }
+        }
+      }
 
       function trapFocus(overlay) {
         const focusable = overlay.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
@@ -1873,22 +1901,33 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
       function openPanel(e, overlay) {
         if (e) e.preventDefault();
+        previousFocus = document.activeElement;
+        if (aboutBubble.contains(previousFocus)) {
+          previousFocus = aboutBtn;
+        }
         closeAboutBubble();
         clearTimeout(hideTimer);
-        previousFocus = document.activeElement;
+        overlay.removeAttribute('inert');
         overlay.classList.add('visible');
         overlay.setAttribute('aria-hidden', 'false');
+        setBackgroundInert(true);
       }
 
       function closePanel(overlay, previewEl) {
         overlay.classList.remove('visible');
         overlay.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('inert', '');
         if (previewEl) previewEl.src = 'about:blank';
+        if (!isAnyPanelOpen()) {
+          setBackgroundInert(false);
+        }
         releaseTrap(overlay);
       }
 
       function closeAboutBubble() {
         aboutBubble.classList.remove('visible');
+        aboutBubble.setAttribute('aria-hidden', 'true');
+        aboutBubble.setAttribute('inert', '');
         document.body.classList.remove('about-bubble-open');
         aboutBtn.setAttribute('aria-expanded', 'false');
       }
@@ -1907,35 +1946,29 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
           if (helpOverlay.classList.contains('visible')) {
-            helpOverlay.classList.remove('visible');
-            helpOverlay.setAttribute('aria-hidden', 'true');
-            releaseTrap(helpOverlay);
+            closeHelpPanel();
           } else if (dashboardOverlay.classList.contains('visible')) {
-            dashboardOverlay.classList.remove('visible');
-            dashboardOverlay.setAttribute('aria-hidden', 'true');
-            releaseTrap(dashboardOverlay);
-            const dp = document.getElementById('dashboardPreview');
-            if (dp) dp.src = 'about:blank';
+            closeDashboardPanel();
           } else if (embedOverlay.classList.contains('visible')) {
-            embedOverlay.classList.remove('visible');
-            embedOverlay.setAttribute('aria-hidden', 'true');
-            releaseTrap(embedOverlay);
-            const ep = document.getElementById('embedPreview');
-            if (ep) ep.src = 'about:blank';
+            closeEmbedPanel();
+          } else {
+            closeAboutBubble();
           }
-          else closeAboutBubble();
         }
       });
 
       function showToggle() {
+        if (isAnyPanelOpen()) return;
         document.body.classList.remove('cursor-hidden');
+        toggleWrapper.removeAttribute('inert');
         toggleWrapper.classList.add('visible');
         toggleWrapper.setAttribute('aria-hidden', 'false');
         clearTimeout(hideTimer);
-        if (aboutBubble.classList.contains('visible') || embedOverlay.classList.contains('visible') || dashboardOverlay.classList.contains('visible') || helpOverlay.classList.contains('visible')) return;
+        if (aboutBubble.classList.contains('visible')) return;
         hideTimer = setTimeout(function () {
           if (toggleWrapper.contains(document.activeElement)) return;
           toggleWrapper.classList.remove('visible');
+          toggleWrapper.setAttribute('inert', '');
           toggleWrapper.setAttribute('aria-hidden', 'true');
           document.body.classList.add('cursor-hidden');
           closeAboutBubble();
@@ -1944,10 +1977,16 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
       aboutBtn.addEventListener('click', function (e) {
         e.stopPropagation();
-        aboutBubble.classList.toggle('visible');
         var isOpen = aboutBubble.classList.contains('visible');
-        document.body.classList.toggle('about-bubble-open', isOpen);
-        aboutBtn.setAttribute('aria-expanded', String(isOpen));
+        if (isOpen) {
+          closeAboutBubble();
+        } else {
+          aboutBubble.removeAttribute('inert');
+          aboutBubble.classList.add('visible');
+          aboutBubble.setAttribute('aria-hidden', 'false');
+          document.body.classList.add('about-bubble-open');
+          aboutBtn.setAttribute('aria-expanded', 'true');
+        }
         clearTimeout(hideTimer);
       });
 
@@ -1971,6 +2010,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         });
         toggleWrapper.addEventListener('focusin', function () {
           clearTimeout(hideTimer);
+          toggleWrapper.removeAttribute('inert');
           toggleWrapper.classList.add('visible');
           toggleWrapper.setAttribute('aria-hidden', 'false');
           document.body.classList.remove('cursor-hidden');
@@ -1984,6 +2024,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         window.addEventListener('blur', function () {
           clearTimeout(hideTimer);
           toggleWrapper.classList.remove('visible');
+          toggleWrapper.setAttribute('inert', '');
           toggleWrapper.setAttribute('aria-hidden', 'true');
           closeAboutBubble();
         });

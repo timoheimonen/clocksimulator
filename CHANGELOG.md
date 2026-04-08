@@ -2,13 +2,15 @@
 
 ## 1.3.0 - 2026-04-08
 
-### Improved
-- Screen reader support: all toggle controls now announce their name and on/off state correctly.
-- Dashboard clocks now announce each timezone's time to screen readers, updated every minute.
-- About menu button now communicates its open/closed state to assistive technology.
-- Controls stay visible while navigating with the keyboard and are hidden from screen readers when not shown.
-- Modal dialogs are now fully hidden from assistive technology when closed.
-- Decorative icons are no longer announced by screen readers.
+### Changed
+- Accessibility was improved across controls, menus, and dialogs for both keyboard and screen reader users.
+- About menu now clearly reports when it is open or closed to assistive technology.
+- Hidden controls and closed menus/dialogs are no longer reachable while navigating with the keyboard.
+- When a dialog is open, background content is excluded from keyboard and assistive technology navigation.
+- Dashboard clocks now announce the time in each timezone every minute for screen reader users.
+
+### Removed
+- Duplicate accessibility labels were removed from preview frames.
 
 ## 1.2.9 - 2026-04-06
 
