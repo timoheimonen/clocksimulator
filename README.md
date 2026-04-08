@@ -22,11 +22,13 @@ This is a minimalist, old-school web page with no trackers, no cookies, and no e
 - Make it as maintenance free as possible
 - Just a clock, nothing more or less
 
-## Architecture choice
+## Architecture & Performance
 
-clocksimulator is intentionally built as a single-file application (`public/index.html`).
-This choice keeps HTTP requests low, helps the clock load fast, and simplifies caching and deployment.
-The tradeoff is that one long file can be more difficult to maintain, so the project keeps the scope intentionally focused and avoids unnecessary complexity.
+clocksimulator is intentionally built as a **single-file, Edge-Native application** (`public/index.html`). This architecture ensures infinite scalability, maximum reliability, and lightning-fast performance.
+
+* **Single-File Simplicity:** Keeping everything in one file minimizes HTTP requests and simplifies deployment. While a single long file is a maintenance tradeoff, the project stays focused to avoid unnecessary complexity.
+* **Originless Edge Distribution:** Hosted on **Cloudflare Pages**, the site has no single origin server that can be overwhelmed. Assets are served directly from the global edge network, ensuring good cache hit rate and minimal latency worldwide.
+* **Client-Side Execution:** 100% of the logic and rendering happen in the user's browser. There is no backend to crash; the performance is limited only by the client's device.
 
 ## Timezone support
 
