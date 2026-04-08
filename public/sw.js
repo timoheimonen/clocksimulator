@@ -1,4 +1,4 @@
-const CACHE_NAME = 'clocksimulator-v1.2.9';
+const CACHE_NAME = 'clocksimulator-v1.3.0';
 const ASSETS = [
   '/',
   '/privacy.html',
