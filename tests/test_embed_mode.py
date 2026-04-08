@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import time
+
 from playwright.sync_api import Page
 
-from conftest import open_page, assert_screenshot
+from tests.helpers import open_page, assert_screenshot
 
 
 def test_embed_mode_adds_embed_mode_class(page: Page, app_url: str) -> None:
@@ -51,7 +53,7 @@ def test_embed_mode_disables_save_settings(page: Page, app_url: str) -> None:
 
 def test_embed_mode_no_time_announcements(page: Page, app_url: str) -> None:
     open_page(page, app_url, {"embed": "true"})
-    page.wait_for_timeout(2000)
+    page.wait_for_function("() => getComputedStyle(document.documentElement).getPropertyValue('--second-angle').trim() !== ''")
     announce_text = page.evaluate("() => document.getElementById('timeAnnounce').textContent")
     assert announce_text == ""
 
@@ -122,6 +124,62 @@ def test_embed_mode_wakelock_hidden(page: Page, app_url: str) -> None:
     open_page(page, app_url, {"embed": "true"})
     wake_lock_hidden = page.evaluate("() => document.getElementById('wakeLockLabel').hasAttribute('hidden')")
     assert wake_lock_hidden is True
+
+
+def test_embed_mode_overlays_not_visible(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"embed": "true"})
+    result = page.evaluate("""() => {
+        var ids = ['embedOverlay', 'dashboardOverlay', 'helpOverlay'];
+        var visible = [];
+        for (var i = 0; i < ids.length; i++) {
+            var el = document.getElementById(ids[i]);
+            if (el && el.classList.contains('visible')) visible.push(ids[i]);
+        }
+        return visible;
+    }""")
+    assert result == []
+
+
+def test_embed_mode_about_bubble_hidden(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"embed": "true"})
+    about_visible = page.evaluate("""() => {
+        var bubble = document.getElementById('aboutBubble');
+        var btn = document.querySelector('.about-btn');
+        return {
+            bubbleVisible: bubble && bubble.classList.contains('visible'),
+            btnWidth: btn ? btn.offsetWidth : 0
+        };
+    }""")
+    assert about_visible["bubbleVisible"] is not True
+    assert about_visible["btnWidth"] == 0
+
+
+def test_embed_mode_burnin_disabled(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"embed": "true"})
+    time.sleep(0.2)
+    transform = page.evaluate("() => document.querySelector('.clock-container').style.transform")
+    assert transform == "" or transform == "none"
+
+
+def test_embed_mode_clock_container_no_transition(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"embed": "true"})
+    transition = page.evaluate("() => getComputedStyle(document.querySelector('.clock-container')).transition")
+    assert "none" in transition
+
+
+def test_embed_mode_escape_key_no_effect(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"embed": "true"})
+    page.keyboard.press("Escape")
+    result = page.evaluate("""() => {
+        var overlays = document.querySelectorAll('.overlay');
+        for (var i = 0; i < overlays.length; i++) {
+            if (overlays[i].classList.contains('visible')) return false;
+        }
+        var bubble = document.getElementById('aboutBubble');
+        if (bubble && bubble.classList.contains('visible')) return false;
+        return true;
+    }""")
+    assert result is True
 
 
 def test_embed_mode_visual_snapshot_dark(page: Page, app_url: str, update_snapshots: bool) -> None:

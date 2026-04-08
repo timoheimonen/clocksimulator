@@ -127,7 +127,7 @@ Extension follows main clocksimulator.com version, but not always updated 1:1 an
 
 ## Testing
 
-Automated tests using pytest and Playwright. No build step required.
+90 automated tests using pytest and Playwright. No build step required. See [`TESTING.md`](TESTING.md) for the full test list.
 
 ```bash
 # Install test dependencies
