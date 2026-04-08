@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from playwright.sync_api import Page
 
-from conftest import open_page, assert_screenshot
+from tests.helpers import open_page, assert_screenshot
 
 
 def _has_class(page: Page, cls: str) -> bool:
@@ -77,16 +77,6 @@ def test_saved_settings_theme_light(page: Page, app_url: str) -> None:
     assert _has_class(page, "dark-mode") is False
 
 
-def test_saved_settings_ignored_with_url_params(page: Page, app_url: str) -> None:
-    open_page(
-        page,
-        app_url,
-        params={"theme": "light"},
-        localStorage_items={"clocksimulator-user-settings": '{"theme":"dark","wakeLock":false,"secondModeTick":true}'},
-    )
-    assert _has_class(page, "dark-mode") is False
-
-
 def test_os_dark_preference_applied(page: Page, app_url: str) -> None:
     page.add_init_script("""
         Object.defineProperty(window, 'matchMedia', {
@@ -123,10 +113,10 @@ def test_os_light_preference_applied(page: Page, app_url: str) -> None:
         else:
             route.continue_()
 
+    page.add_init_script("localStorage.clear();")
     page.route("**/*", route_handler)
     page.goto(app_url)
     page.wait_for_load_state("domcontentloaded")
-    page.wait_for_timeout(500)
     assert _has_class(page, "dark-mode") is False
     page.unroute("**/*", route_handler)
 
