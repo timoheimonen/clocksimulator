@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Minimalist, open-source and sustainable analog clock. Perfect for OBS, dashboards and embeddable use. Fast, fullscreen, no ads and no tracking. Just a clock.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.2.9">
+  <meta name="version" content="1.3.0">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -912,14 +912,16 @@ SOFTWARE.
 </head>
 
 <body>
-  <div class="toggle-wrapper">
-    <label class="toggle-label theme-toggle" aria-label="Toggle dark mode" data-tooltip="Toggle dark mode">
-      <input type="checkbox" id="themeToggle">
-      <svg class="theme-icon theme-icon-moon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <div class="toggle-wrapper" aria-hidden="true">
+    <label class="toggle-label theme-toggle" data-tooltip="Toggle dark mode">
+      <input type="checkbox" id="themeToggle" role="switch" aria-label="Toggle dark mode">
+      <svg class="theme-icon theme-icon-moon" aria-hidden="true" viewBox="0 0 20 20" fill="none"
+        xmlns="http://www.w3.org/2000/svg">
         <path d="M17 11.5A7.5 7.5 0 0 1 8.5 3a7.65 7.65 0 0 1 .2-1.5A8 8 0 1 0 18.5 11.3a7.65 7.65 0 0 1-1.5.2Z"
           stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
-      <svg class="theme-icon theme-icon-sun" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="theme-icon theme-icon-sun" aria-hidden="true" viewBox="0 0 20 20" fill="none"
+        xmlns="http://www.w3.org/2000/svg">
         <circle cx="10" cy="10" r="3.5" stroke="currentColor" stroke-width="1.5" />
         <line x1="10" y1="2" x2="10" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         <line x1="10" y1="16" x2="10" y2="18" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -935,20 +937,20 @@ SOFTWARE.
       </svg>
       <span class="toggle-slider"></span>
     </label>
-    <label class="toggle-label wake-lock-toggle" id="wakeLockLabel" aria-label="Keep screen on"
-      data-tooltip="Keep screen on" hidden>
-      <input type="checkbox" id="wakeLockToggle">
+    <label class="toggle-label wake-lock-toggle" id="wakeLockLabel" data-tooltip="Keep screen on" hidden>
+      <input type="checkbox" id="wakeLockToggle" role="switch" aria-label="Keep screen on">
       <span class="toggle-slider"></span>
-      <svg class="wake-lock-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="wake-lock-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="2" y="3" width="16" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5" />
         <line x1="10" y1="14" x2="10" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         <line x1="6" y1="17" x2="14" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
       </svg>
     </label>
-    <label class="toggle-label second-mode-toggle" aria-label="Tick seconds" data-tooltip="Tick seconds">
-      <input type="checkbox" id="secondModeToggle">
+    <label class="toggle-label second-mode-toggle" data-tooltip="Tick seconds">
+      <input type="checkbox" id="secondModeToggle" role="switch" aria-label="Tick seconds">
       <span class="toggle-slider"></span>
-      <svg class="second-mode-icon" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg class="second-mode-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none"
+        xmlns="http://www.w3.org/2000/svg">
         <circle cx="10" cy="11" r="7.5" stroke="currentColor" stroke-width="1.5" />
         <line x1="10" y1="3.5" x2="10" y2="1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
         <line x1="10" y1="11" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -956,23 +958,24 @@ SOFTWARE.
       </svg>
     </label>
     <div class="about-wrapper">
-      <button class="about-btn" id="aboutBtn" aria-label="About" data-tooltip="About">
-        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <button class="about-btn" id="aboutBtn" aria-label="About" aria-haspopup="true" aria-expanded="false"
+        data-tooltip="About">
+        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
           <circle cx="10" cy="6.5" r="1" fill="currentColor" />
           <line x1="10" y1="9.5" x2="10" y2="14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
         </svg>
       </button>
-      <div class="about-bubble" id="aboutBubble">
+      <div class="about-bubble" id="aboutBubble" role="region" aria-label="About">
         <a href="#" id="embedLink">Embed this clock &rarr;</a><br>
         <a href="https://chromewebstore.google.com/detail/clocksimulatorcom/ljbpiigocbebamekohcpemgepjickldb"
           target="_blank" rel="noopener">Chrome Extension &rarr;</a><br>
         <a href="#" id="dashboardLink">Build dashboard &rarr;</a><br>
         <a href="#" id="helpLink">How to use &rarr;</a><br>
         <br>
-        <label class="toggle-label save-settings-toggle" id="saveSettingsLabel" aria-label="Save settings"
+        <label class="toggle-label save-settings-toggle" id="saveSettingsLabel"
           data-tooltip="Save settings to local storage.">
-          <input type="checkbox" id="saveSettingsToggle">
+          <input type="checkbox" id="saveSettingsToggle" role="switch" aria-label="Save settings">
           <span class="toggle-slider"></span>
           <span>Save settings</span>
         </label><br>
@@ -986,74 +989,77 @@ SOFTWARE.
     </div>
   </div>
 
-  <div class="clock-container">
-    <svg viewBox="0 0 200 200" id="clock" role="img" aria-label="Clock">
-      <circle id="clockBorder" class="clock-border" cx="100" cy="100" r="95" fill="var(--clock-face)"
-        stroke="var(--clock-border)" stroke-width="2.5" />
+  <main>
+    <div class="clock-container">
+      <svg viewBox="0 0 200 200" id="clock" role="img" aria-label="Clock">
+        <circle id="clockBorder" class="clock-border" cx="100" cy="100" r="95" fill="var(--clock-face)"
+          stroke="var(--clock-border)" stroke-width="2.5" />
 
-      <defs>
-        <filter id="hourShadow" filterUnits="userSpaceOnUse" x="44" y="44" width="112" height="112">
-          <feDropShadow id="hourDS" dx="0" dy="0" stdDeviation="0.6" flood-color="#000" flood-opacity="0.15" />
-        </filter>
-        <filter id="minuteShadow" filterUnits="userSpaceOnUse" x="22" y="22" width="156" height="156">
-          <feDropShadow id="minuteDS" dx="0" dy="0" stdDeviation="0.8" flood-color="#000" flood-opacity="0.2" />
-        </filter>
-        <filter id="secondShadow" filterUnits="userSpaceOnUse" x="14" y="14" width="172" height="172">
-          <feDropShadow id="secondDS" dx="0" dy="0" stdDeviation="1.0" flood-color="#000" flood-opacity="0.25" />
-        </filter>
-        <filter id="dotShadow" filterUnits="userSpaceOnUse" x="89" y="89" width="22" height="22">
-          <feDropShadow id="dotDS" dx="0" dy="0" stdDeviation="1.0" flood-color="#000" flood-opacity="0.25" />
-        </filter>
-      </defs>
+        <defs>
+          <filter id="hourShadow" filterUnits="userSpaceOnUse" x="44" y="44" width="112" height="112">
+            <feDropShadow id="hourDS" dx="0" dy="0" stdDeviation="0.6" flood-color="#000" flood-opacity="0.15" />
+          </filter>
+          <filter id="minuteShadow" filterUnits="userSpaceOnUse" x="22" y="22" width="156" height="156">
+            <feDropShadow id="minuteDS" dx="0" dy="0" stdDeviation="0.8" flood-color="#000" flood-opacity="0.2" />
+          </filter>
+          <filter id="secondShadow" filterUnits="userSpaceOnUse" x="14" y="14" width="172" height="172">
+            <feDropShadow id="secondDS" dx="0" dy="0" stdDeviation="1.0" flood-color="#000" flood-opacity="0.25" />
+          </filter>
+          <filter id="dotShadow" filterUnits="userSpaceOnUse" x="89" y="89" width="22" height="22">
+            <feDropShadow id="dotDS" dx="0" dy="0" stdDeviation="1.0" flood-color="#000" flood-opacity="0.25" />
+          </filter>
+        </defs>
 
-      <g id="ticks" class="ticks"></g>
-      <g id="numbers" class="numbers"></g>
+        <g id="ticks" class="ticks"></g>
+        <g id="numbers" class="numbers"></g>
 
-      <g id="sunIcon" class="sun-icon" display="none">
-        <circle cx="100" cy="52" r="3" fill="none" stroke="var(--number)" stroke-width="1" opacity="0.55" />
-        <line x1="100" y1="45.5" x2="100" y2="47" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-          opacity="0.55" />
-        <line x1="100" y1="57" x2="100" y2="58.5" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-          opacity="0.55" />
-        <line x1="93.5" y1="52" x2="95" y2="52" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-          opacity="0.55" />
-        <line x1="105" y1="52" x2="106.5" y2="52" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-          opacity="0.55" />
-        <line x1="95.4" y1="47.4" x2="96.4" y2="48.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-          opacity="0.55" />
-        <line x1="103.6" y1="55.6" x2="104.6" y2="56.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-          opacity="0.55" />
-        <line x1="95.4" y1="56.6" x2="96.4" y2="55.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-          opacity="0.55" />
-        <line x1="103.6" y1="48.4" x2="104.6" y2="47.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-          opacity="0.55" />
-      </g>
-      <g id="moonIcon" class="moon-icon" display="none">
-        <path d="M103.5 48.5a5 5 0 1 1-4.5 8 4 4 0 0 0 4.5-8Z" fill="var(--number)" opacity="0.55" />
-      </g>
+        <g id="sunIcon" class="sun-icon" display="none">
+          <circle cx="100" cy="52" r="3" fill="none" stroke="var(--number)" stroke-width="1" opacity="0.55" />
+          <line x1="100" y1="45.5" x2="100" y2="47" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+            opacity="0.55" />
+          <line x1="100" y1="57" x2="100" y2="58.5" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+            opacity="0.55" />
+          <line x1="93.5" y1="52" x2="95" y2="52" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+            opacity="0.55" />
+          <line x1="105" y1="52" x2="106.5" y2="52" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+            opacity="0.55" />
+          <line x1="95.4" y1="47.4" x2="96.4" y2="48.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+            opacity="0.55" />
+          <line x1="103.6" y1="55.6" x2="104.6" y2="56.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+            opacity="0.55" />
+          <line x1="95.4" y1="56.6" x2="96.4" y2="55.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+            opacity="0.55" />
+          <line x1="103.6" y1="48.4" x2="104.6" y2="47.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
+            opacity="0.55" />
+        </g>
+        <g id="moonIcon" class="moon-icon" display="none">
+          <path d="M103.5 48.5a5 5 0 1 1-4.5 8 4 4 0 0 0 4.5-8Z" fill="var(--number)" opacity="0.55" />
+        </g>
 
-      <path id="hourHand" class="hour-hand" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
-        fill="var(--hour-hand)" stroke="var(--hour-hand)" stroke-width="0.8" stroke-linejoin="round"
-        filter="url(#hourShadow)" />
-      <path id="minuteHand" class="minute-hand" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
-        fill="var(--minute-hand)" stroke="var(--minute-hand)" stroke-width="0.8" stroke-linejoin="round"
-        filter="url(#minuteShadow)" />
-      <line id="secondHand" class="second-hand" x1="100" y1="115" x2="100" y2="22" stroke="var(--second-hand)"
-        stroke-width="1.2" stroke-linecap="round" filter="url(#secondShadow)" />
+        <path id="hourHand" class="hour-hand" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
+          fill="var(--hour-hand)" stroke="var(--hour-hand)" stroke-width="0.8" stroke-linejoin="round"
+          filter="url(#hourShadow)" />
+        <path id="minuteHand" class="minute-hand" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
+          fill="var(--minute-hand)" stroke="var(--minute-hand)" stroke-width="0.8" stroke-linejoin="round"
+          filter="url(#minuteShadow)" />
+        <line id="secondHand" class="second-hand" x1="100" y1="115" x2="100" y2="22" stroke="var(--second-hand)"
+          stroke-width="1.2" stroke-linecap="round" filter="url(#secondShadow)" />
 
-      <circle id="centerDot" cx="100" cy="100" r="3.5" fill="var(--center-dot)" filter="url(#dotShadow)" />
-    </svg>
-  </div>
+        <circle id="centerDot" cx="100" cy="100" r="3.5" fill="var(--center-dot)" filter="url(#dotShadow)" />
+      </svg>
+    </div>
 
-  <div class="sr-only" aria-live="polite" aria-atomic="true" id="timeAnnounce"></div>
+    <div class="sr-only" aria-live="polite" aria-atomic="true" id="timeAnnounce"></div>
+  </main>
 
-  <div class="embed-overlay overlay" id="embedOverlay" role="dialog" aria-modal="true"
-    aria-labelledby="embedPanelTitle">
+  <div class="embed-overlay overlay" id="embedOverlay" role="dialog" aria-modal="true" aria-labelledby="embedPanelTitle"
+    aria-hidden="true">
     <div class="modal-panel embed-panel">
       <div class="modal-panel-header">
         <span class="modal-panel-title" id="embedPanelTitle">Embed this clock</span>
         <button class="modal-panel-close" id="embedCloseBtn" aria-label="Close">
-          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%"
+            height="100%">
             <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
             <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
@@ -1140,12 +1146,13 @@ SOFTWARE.
   </div>
 
   <div class="dashboard-overlay overlay" id="dashboardOverlay" role="dialog" aria-modal="true"
-    aria-labelledby="dashboardPanelTitle">
+    aria-labelledby="dashboardPanelTitle" aria-hidden="true">
     <div class="modal-panel dashboard-panel">
       <div class="modal-panel-header">
         <span class="modal-panel-title" id="dashboardPanelTitle">Build dashboard</span>
         <button class="modal-panel-close" id="dashboardCloseBtn" aria-label="Close">
-          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%"
+            height="100%">
             <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
             <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
@@ -1221,12 +1228,14 @@ SOFTWARE.
     </div>
   </div>
 
-  <div class="help-overlay overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpPanelTitle">
+  <div class="help-overlay overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpPanelTitle"
+    aria-hidden="true">
     <div class="modal-panel help-panel">
       <div class="modal-panel-header">
         <span class="modal-panel-title" id="helpPanelTitle">How to use</span>
         <button class="modal-panel-close" id="helpCloseBtn" aria-label="Close">
-          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%"
+            height="100%">
             <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
             <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
           </svg>
@@ -1628,6 +1637,9 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           for (let j = 0; j < idEls.length; j++) {
             idEls[j].removeAttribute('id');
           }
+          svgClone.setAttribute('role', 'img');
+          var displayName = tz.split('/').pop().replace(/_/g, ' ');
+          svgClone.setAttribute('aria-label', displayName + ' clock');
           cell.appendChild(svgClone);
 
           svgClone.querySelectorAll('[filter]').forEach(function (el) {
@@ -1636,7 +1648,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
           const label = document.createElement('div');
           label.className = 'clock-label';
-          label.textContent = tz.split('/').pop().replace(/_/g, ' ');
+          label.textContent = displayName;
           cell.appendChild(label);
 
           let offset = computeTzOffset(tz);
@@ -1644,6 +1656,9 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
           return {
             el: cell,
+            svg: svgClone,
+            displayName: displayName,
+            lastMinute: -1,
             hourHand: svgClone.querySelector('.hour-hand'),
             minuteHand: svgClone.querySelector('.minute-hand'),
             sunIcon: svgClone.querySelector('.sun-icon'),
@@ -1700,11 +1715,20 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         }
 
         if (dashboardMode) {
+          var anyMinuteChanged = false;
           for (let i = 0; i < clocks.length; i++) {
             const c = clocks[i];
             const t = c.getTime(now);
             const hours = t.hours % 12;
             const minutes = t.minutes;
+
+            if (minutes !== c.lastMinute) {
+              c.lastMinute = minutes;
+              anyMinuteChanged = true;
+              var hh = String(t.hours).padStart(2, '0');
+              var mm = String(minutes).padStart(2, '0');
+              c.svg.setAttribute('aria-label', c.displayName + ': ' + hh + ':' + mm);
+            }
 
             const minuteAngle = (minutes + seconds / 60) * 6;
             const hourAngle = (hours + minutes / 60) * 30;
@@ -1713,6 +1737,14 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             c.minuteHand.style.transform = 'rotate(' + minuteAngle + 'deg)';
 
             if (showDayNight && seconds !== lastDayNightSecond) updateDayNightIcons(t.hours, c.sunIcon, c.moonIcon);
+          }
+          if (anyMinuteChanged && !embedMode) {
+            var parts = [];
+            for (let i = 0; i < clocks.length; i++) {
+              var ct = clocks[i].getTime(now);
+              parts.push(clocks[i].displayName + ' ' + String(ct.hours).padStart(2, '0') + ':' + String(ct.minutes).padStart(2, '0'));
+            }
+            document.getElementById('timeAnnounce').textContent = parts.join(', ');
           }
           if (showDayNight && seconds !== lastDayNightSecond) lastDayNightSecond = seconds;
         } else {
@@ -1845,10 +1877,12 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         clearTimeout(hideTimer);
         previousFocus = document.activeElement;
         overlay.classList.add('visible');
+        overlay.setAttribute('aria-hidden', 'false');
       }
 
       function closePanel(overlay, previewEl) {
         overlay.classList.remove('visible');
+        overlay.setAttribute('aria-hidden', 'true');
         if (previewEl) previewEl.src = 'about:blank';
         releaseTrap(overlay);
       }
@@ -1856,6 +1890,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       function closeAboutBubble() {
         aboutBubble.classList.remove('visible');
         document.body.classList.remove('about-bubble-open');
+        aboutBtn.setAttribute('aria-expanded', 'false');
       }
 
       function copyWithFlash(text, btn) {
@@ -1873,14 +1908,17 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         if (e.key === 'Escape') {
           if (helpOverlay.classList.contains('visible')) {
             helpOverlay.classList.remove('visible');
+            helpOverlay.setAttribute('aria-hidden', 'true');
             releaseTrap(helpOverlay);
           } else if (dashboardOverlay.classList.contains('visible')) {
             dashboardOverlay.classList.remove('visible');
+            dashboardOverlay.setAttribute('aria-hidden', 'true');
             releaseTrap(dashboardOverlay);
             const dp = document.getElementById('dashboardPreview');
             if (dp) dp.src = 'about:blank';
           } else if (embedOverlay.classList.contains('visible')) {
             embedOverlay.classList.remove('visible');
+            embedOverlay.setAttribute('aria-hidden', 'true');
             releaseTrap(embedOverlay);
             const ep = document.getElementById('embedPreview');
             if (ep) ep.src = 'about:blank';
@@ -1892,10 +1930,13 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       function showToggle() {
         document.body.classList.remove('cursor-hidden');
         toggleWrapper.classList.add('visible');
+        toggleWrapper.setAttribute('aria-hidden', 'false');
         clearTimeout(hideTimer);
         if (aboutBubble.classList.contains('visible') || embedOverlay.classList.contains('visible') || dashboardOverlay.classList.contains('visible') || helpOverlay.classList.contains('visible')) return;
         hideTimer = setTimeout(function () {
+          if (toggleWrapper.contains(document.activeElement)) return;
           toggleWrapper.classList.remove('visible');
+          toggleWrapper.setAttribute('aria-hidden', 'true');
           document.body.classList.add('cursor-hidden');
           closeAboutBubble();
         }, 1000);
@@ -1904,7 +1945,9 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       aboutBtn.addEventListener('click', function (e) {
         e.stopPropagation();
         aboutBubble.classList.toggle('visible');
-        document.body.classList.toggle('about-bubble-open', aboutBubble.classList.contains('visible'));
+        var isOpen = aboutBubble.classList.contains('visible');
+        document.body.classList.toggle('about-bubble-open', isOpen);
+        aboutBtn.setAttribute('aria-expanded', String(isOpen));
         clearTimeout(hideTimer);
       });
 
@@ -1923,10 +1966,25 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           showToggle();
         });
         document.addEventListener('touchstart', showToggle, { passive: true });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Tab') showToggle();
+        });
+        toggleWrapper.addEventListener('focusin', function () {
+          clearTimeout(hideTimer);
+          toggleWrapper.classList.add('visible');
+          toggleWrapper.setAttribute('aria-hidden', 'false');
+          document.body.classList.remove('cursor-hidden');
+        });
+        toggleWrapper.addEventListener('focusout', function (e) {
+          if (!toggleWrapper.contains(e.relatedTarget)) {
+            showToggle();
+          }
+        });
         window.addEventListener('focus', showToggle);
         window.addEventListener('blur', function () {
           clearTimeout(hideTimer);
           toggleWrapper.classList.remove('visible');
+          toggleWrapper.setAttribute('aria-hidden', 'true');
           closeAboutBubble();
         });
 

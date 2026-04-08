@@ -22,6 +22,12 @@ This is a minimalist, old-school web page with no trackers, no cookies, and no e
 - Make it as maintenance free as possible
 - Just a clock, nothing more or less
 
+## Architecture choice
+
+clocksimulator is intentionally built as a single-file application (`public/index.html`).
+This choice keeps HTTP requests low, helps the clock load fast, and simplifies caching and deployment.
+The tradeoff is that one long file can be more difficult to maintain, so the project keeps the scope intentionally focused and avoids unnecessary complexity.
+
 ## Timezone support
 
 By default the clock shows your local time. To display a different timezone, add the `tz` query parameter with any valid [IANA timezone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones):
