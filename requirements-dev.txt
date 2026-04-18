@@ -1,4 +1,4 @@
 pytest
 pytest-playwright
 playwright
-Pillow
+Pillow>=11,<14

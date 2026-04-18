@@ -113,7 +113,7 @@ def assert_screenshot(page: Page, name: str, update: bool = False, threshold: fl
 
     diff_raw = ImageChops.difference(actual_img, baseline_img)
     zero = tuple(0 for _ in diff_raw.getbands())
-    diff_count = sum(1 for px in diff_raw.getdata() if px != zero)
+    diff_count = sum(1 for px in diff_raw.get_flattened_data() if px != zero)
 
     diff_ratio = diff_count / total_pixels
 
