@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.1 - 2026-04-18
+
+### Fixed
+- Theme flash on pages loaded with an explicit `theme=` URL parameter (for example `?embed=true&theme=dark`) when the OS or browser prefers the opposite color scheme. The early theme-preset script now reads the `theme` parameter (including `dark`, `light`, and `transparent`) and applies the matching class before first paint.
+
 ## 1.3.0 - 2026-04-08
 
 ### Changed
