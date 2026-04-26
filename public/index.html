@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Minimalist, open-source and sustainable analog clock. Perfect for OBS, dashboards and embeddable use. Fast, fullscreen, no ads and no tracking. Just a clock.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.3.1">
+  <meta name="version" content="1.3.2">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -1641,7 +1641,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const clockGrid = document.createElement('div');
         clockGrid.className = 'clock-grid';
         const n = validTimezones.length;
-        const gridRowsVal = parseInt(params.get('rows')) || 0;
+        const requestedRows = parseInt(params.get('rows'), 10) || 0;
+        const gridRowsVal = requestedRows > 0 ? Math.min(requestedRows, n) : 0;
         const cols = gridRowsVal ? Math.ceil(n / gridRowsVal) : Math.ceil(Math.sqrt(n));
         const gridRows = gridRowsVal || Math.ceil(n / cols);
         clockGrid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
@@ -1861,6 +1862,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       let previousFocus = null;
       let activeTrapHandler = null;
       let overlayMouseDownTarget = null;
+      const copyFlashTimers = new WeakMap();
       document.addEventListener('mousedown', function (e) { overlayMouseDownTarget = e.target; });
 
       function isAnyPanelOpen() {
@@ -1944,14 +1946,25 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         aboutBtn.setAttribute('aria-expanded', 'false');
       }
 
+      function flashCopyButton(btn, text) {
+        const original = btn.dataset.copyOriginal || btn.textContent;
+        const existingTimer = copyFlashTimers.get(btn);
+        btn.dataset.copyOriginal = original;
+        if (existingTimer) clearTimeout(existingTimer);
+        btn.textContent = text;
+        const timer = setTimeout(function () {
+          btn.textContent = original;
+          copyFlashTimers.delete(btn);
+        }, COPY_FEEDBACK_MS);
+        copyFlashTimers.set(btn, timer);
+      }
+
       function copyWithFlash(text, btn) {
-        const original = btn.textContent;
+        if (!btn.dataset.copyOriginal) btn.dataset.copyOriginal = btn.textContent;
         navigator.clipboard.writeText(text).then(function () {
-          btn.textContent = 'Copied!';
-          setTimeout(function () { btn.textContent = original; }, COPY_FEEDBACK_MS);
+          flashCopyButton(btn, 'Copied!');
         }).catch(function () {
-          btn.textContent = 'Failed';
-          setTimeout(function () { btn.textContent = original; }, COPY_FEEDBACK_MS);
+          flashCopyButton(btn, 'Failed');
         });
       }
 

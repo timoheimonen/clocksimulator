@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.2 - 2026-04-26
+
+### Changed
+- Dashboard row settings now handle invalid or overly large values more gracefully.
+- Copy buttons now return to their normal label reliably after quick repeated clicks.
+
 ## 1.3.1 - 2026-04-18
 
 ### Fixed
