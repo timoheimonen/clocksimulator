@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.3 - 2026-04-27
+
+### Changed
+- Changed the about/info menu icon from an information symbol to a question mark to better match the help-oriented menu contents.
+
 ## 1.3.2 - 2026-04-26
 
 ### Changed
