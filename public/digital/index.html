@@ -1,52 +1,29 @@
-<!--
-MIT License
-
-Copyright (c) 2026 Timo Heimonen <timo.heimonen@proton.me>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
--->
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fullscreen Online Analog Clock | Clocksimulator</title>
+  <title>Fullscreen Online Digital Clock | Clocksimulator</title>
   <meta name="description"
-    content="Free online analog clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
+    content="Free online digital clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="keywords"
-    content="clock simulator, analog clock, online clock, distraction-free clock, fullscreen clock, no ads clock, open source, sustainable">
-  <link rel="canonical" href="https://clocksimulator.com/">
-  <meta property="og:title" content="Fullscreen Online Analog Clock | Clocksimulator">
+    content="clocksimulator.com, digital clock, online clock, fullscreen clock, timezone dashboard, no ads clock, open source">
+  <link rel="canonical" href="https://clocksimulator.com/digital/">
+  <meta property="og:title" content="Fullscreen Online Digital Clock | Clocksimulator">
   <meta property="og:description"
-    content="Free online analog clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
-  <meta property="og:url" content="https://clocksimulator.com/">
+    content="Free online digital clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
+  <meta property="og:url" content="https://clocksimulator.com/digital/">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="clocksimulator.com">
-  <meta property="og:image" content="https://clocksimulator.com/og-image.png" />
+  <meta property="og:image" content="https://clocksimulator.com/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Fullscreen Online Analog Clock | Clocksimulator">
+  <meta name="twitter:title" content="Fullscreen Online Digital Clock | Clocksimulator">
   <meta name="twitter:description"
-    content="Free online analog clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
-  <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
+    content="Free online digital clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
+  <meta name="twitter:image" content="https://clocksimulator.com/og-image.png">
   <meta name="version" content="1.3.4">
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
   <link rel="icon" id="favicon" type="image/png"
@@ -54,56 +31,34 @@ SOFTWARE.
   <style>
     :root {
       --bg: #f0f0f0;
-      --clock-face: #ffffff;
-      --clock-border: #333333;
+      --digit: #222222;
+      --muted: #555555;
       --tick: #333333;
-      --number: #222222;
-      --hour-hand: #222222;
-      --minute-hand: #444444;
-      --second-hand: #d63031;
-      --center-dot: #d63031;
+      --panel: #ffffff;
+      --panel-text: #222222;
       --toggle-bg: #bbb;
       --toggle-knob: #fff;
-      --second-angle: 0deg;
-    }
-
-    .second-hand {
-      transform: rotate(var(--second-angle));
-      transform-origin: 100px 100px;
-      will-change: transform;
-    }
-
-    .hour-hand,
-    .minute-hand {
-      transform-origin: 100px 100px;
-      transform-box: view-box;
-      will-change: transform;
+      --digital-font-size: 18dvh;
     }
 
     html.dark-mode {
       --bg: #000000;
-      --clock-face: #0a0a0a;
-      --clock-border: #f5f5f5;
+      --digit: #fafafa;
+      --muted: #b8b8b8;
       --tick: #d4d4d4;
-      --number: #fafafa;
-      --hour-hand: #fafafa;
-      --minute-hand: #d4d4d4;
-      --second-hand: #ef4444;
-      --center-dot: #ef4444;
+      --panel: #1a1a1a;
+      --panel-text: #eeeeee;
       --toggle-bg: #262626;
       --toggle-knob: #e5e5e5;
     }
 
     html.transparent-mode {
       --bg: transparent;
-      --clock-face: transparent;
-      --clock-border: #333333;
-      --tick: #333333;
-      --number: #222222;
-      --hour-hand: #222222;
-      --minute-hand: #444444;
-      --second-hand: #d63031;
-      --center-dot: #d63031;
+      --digit: #fafafa;
+      --muted: #d4d4d4;
+      --tick: #d4d4d4;
+      --panel: #ffffff;
+      --panel-text: #222222;
     }
 
     * {
@@ -114,6 +69,7 @@ SOFTWARE.
 
     body {
       background: var(--bg);
+      color: var(--digit);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -452,28 +408,118 @@ SOFTWARE.
       text-decoration-color: rgba(255, 255, 255, 0.7);
     }
 
-    .clock-container {
-      width: 90vmin;
-      height: 90vmin;
-      transition: transform 10s ease-in-out;
+    main {
+      width: 100vw;
+      height: var(--app-height, 100dvh);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
     }
 
-    .clock-container svg {
+    .digital-container {
+      width: min(92vw, 1600px);
+      height: min(78dvh, 760px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.8dvh;
+      transition: transform 10s ease-in-out;
+      min-width: 0;
+    }
+
+    .digital-container.bordered,
+    .digital-cell.bordered {
+      border: 2px solid color-mix(in srgb, var(--digit) 28%, transparent);
+      border-radius: 8px;
+    }
+
+    .digital-time {
+      display: block;
+      color: var(--digit);
+      font-size: var(--digital-font-size);
+      font-weight: 600;
+      line-height: 0.9;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      text-align: center;
+      max-width: 100%;
+    }
+
+    .digital-meta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 22px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.2;
+      white-space: nowrap;
+      text-align: center;
+      opacity: 0.78;
+    }
+
+    html.transparent-mode .digital-time,
+    html.transparent-mode .digital-meta {
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75), 0 0 1px rgba(0, 0, 0, 0.9);
+    }
+
+    html.transparent-mode .daynight-mark {
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+    }
+
+    .daynight-mark {
+      position: relative;
+      display: none;
+      width: 20px;
+      height: 20px;
+      flex: 0 0 auto;
+      color: var(--digit);
+      opacity: 0.55;
+    }
+
+    .daynight-mark.visible {
+      display: inline-block;
+    }
+
+    .daynight-mark svg {
+      display: block;
       width: 100%;
       height: 100%;
+      overflow: visible;
+    }
+
+    .daynight-sun,
+    .daynight-moon {
+      display: none;
+    }
+
+    .daynight-mark[data-state="day"] .daynight-sun {
+      display: block;
+    }
+
+    .daynight-mark[data-state="night"] .daynight-moon {
+      display: block;
     }
 
     body.embed-mode .toggle-wrapper {
       display: none !important;
     }
 
-    body.embed-mode .clock-container {
-      width: 100vmin;
-      height: 100vmin;
+    body.embed-mode .digital-container,
+    body.embed-mode .digital-grid {
       transition: none;
     }
 
-    .clock-grid {
+    body.embed-mode .digital-container {
+      width: 100vw;
+      height: var(--app-height, 100dvh);
+    }
+
+    .digital-grid {
       display: grid;
       gap: 2vmin;
       padding: 2vmin;
@@ -482,34 +528,24 @@ SOFTWARE.
       transition: transform 10s ease-in-out;
     }
 
-    body.embed-mode .clock-grid {
-      transition: none;
-    }
-
-    .clock-cell {
+    .digital-cell {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       min-width: 0;
       min-height: 0;
+      padding: 1.5vmin;
+      gap: 1vmin;
     }
 
-    .clock-cell svg {
-      display: block;
-      flex: 1 1 0;
-      min-height: 0;
-      max-width: 100%;
+    .digital-cell .digital-time {
+      font-size: var(--cell-font-size, 10dvh);
+      line-height: 0.95;
     }
 
-    .clock-label {
-      color: var(--number);
-      font-size: clamp(10px, 1.5vmin, 16px);
-      text-align: center;
-      padding-top: 0.5vmin;
-      opacity: 0.7;
-      white-space: nowrap;
-      flex-shrink: 0;
+    .digital-cell .digital-meta {
+      font-size: clamp(10px, 1.5dvh, 16px);
     }
 
     .overlay {
@@ -537,8 +573,8 @@ SOFTWARE.
     }
 
     .modal-panel {
-      background: #ffffff;
-      color: #222;
+      background: var(--panel);
+      color: var(--panel-text);
       border-radius: 12px;
       padding: 20px 24px;
       max-width: 520px;
@@ -559,11 +595,6 @@ SOFTWARE.
     .help-overlay.visible .modal-panel {
       transform: scale(1) translateY(0);
       opacity: 1;
-    }
-
-    .dark-mode .modal-panel {
-      background: #1a1a1a;
-      color: #eee;
     }
 
     .modal-panel-header {
@@ -659,6 +690,10 @@ SOFTWARE.
       border: none;
     }
 
+    .dashboard-preview-wrap iframe {
+      border-radius: 6px;
+    }
+
     .embed-code-wrap {
       position: relative;
       margin-bottom: 8px;
@@ -705,6 +740,14 @@ SOFTWARE.
       align-items: center;
       gap: 6px;
       padding: 7px 14px;
+    }
+
+    .dashboard-open-btn {
+      background: #22c55e;
+    }
+
+    .dashboard-open-btn:hover {
+      background: #16a34a;
     }
 
     .overlay-actions-row,
@@ -791,27 +834,6 @@ SOFTWARE.
       background: rgba(220, 60, 60, 0.6);
     }
 
-    .dashboard-preview-wrap iframe {
-      border-radius: 6px;
-    }
-
-    .dashboard-open-btn {
-      background: #22c55e;
-    }
-
-    .dashboard-open-btn:hover {
-      background: #16a34a;
-    }
-
-    @media (max-width: 560px) {
-      .overlay-sustainability {
-        margin-left: 0;
-        max-width: none;
-        text-align: left;
-        flex-basis: 100%;
-      }
-    }
-
     .tz-chips-empty {
       font-size: 12px;
       opacity: 0.4;
@@ -884,6 +906,19 @@ SOFTWARE.
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+    }
+
+    @media (max-width: 560px) {
+      .overlay-sustainability {
+        margin-left: 0;
+        max-width: none;
+        text-align: left;
+        flex-basis: 100%;
+      }
+
+      .embed-controls {
+        grid-template-columns: 1fr;
+      }
     }
 
     .sr-only {
@@ -964,8 +999,8 @@ SOFTWARE.
         <line x1="6" y1="17" x2="14" y2="17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
       </svg>
     </label>
-    <label class="toggle-label second-mode-toggle" data-tooltip="Tick seconds">
-      <input type="checkbox" id="secondModeToggle" role="switch" aria-label="Tick seconds">
+    <label class="toggle-label second-mode-toggle" data-tooltip="Show seconds">
+      <input type="checkbox" id="secondModeToggle" role="switch" aria-label="Show seconds">
       <span class="toggle-slider"></span>
       <svg class="second-mode-icon" aria-hidden="true" viewBox="0 0 20 20" fill="none"
         xmlns="http://www.w3.org/2000/svg">
@@ -977,8 +1012,7 @@ SOFTWARE.
     </label>
     <div class="about-wrapper">
       <button class="about-btn" id="aboutBtn" aria-label="About" aria-haspopup="dialog" aria-expanded="false"
-        aria-controls="aboutBubble"
-        data-tooltip="About">
+        aria-controls="aboutBubble" data-tooltip="About">
         <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
           <path d="M7.6 7.4a2.5 2.5 0 0 1 4.8.9c0 1.55-1.1 2.2-2 2.8-.5.35-.8.75-.8 1.4"
@@ -988,12 +1022,12 @@ SOFTWARE.
       </button>
       <div class="about-bubble" id="aboutBubble" role="dialog" aria-modal="false" aria-label="About"
         aria-hidden="true" inert>
-        <a href="#" id="embedLink">Embed this analog clock &rarr;</a><br>
+        <a href="#" id="embedLink">Embed this digital clock &rarr;</a><br>
         <a href="https://chromewebstore.google.com/detail/clocksimulatorcom/ljbpiigocbebamekohcpemgepjickldb"
           target="_blank" rel="noopener">Chrome Extension &rarr;</a><br>
         <a href="#" id="dashboardLink">Build dashboard &rarr;</a><br>
         <a href="#" id="helpLink">How to use &rarr;</a><br>
-        <a href="/digital/" id="digitalClockLink">Digital clock &rarr;</a><br>
+        <a href="/" id="analogClockLink">Analog clock &rarr;</a><br>
         <br>
         <label class="toggle-label save-settings-toggle" id="saveSettingsLabel"
           data-tooltip="Save settings to local storage.">
@@ -1012,67 +1046,15 @@ SOFTWARE.
   </div>
 
   <main>
-    <h1 class="sr-only">Online Analog Clock</h1>
-    <p class="sr-only">Free fullscreen analog clock with timezone dashboards, OBS embeds, no ads, no tracking, and offline PWA support.</p>
-    <div class="clock-container">
-      <svg viewBox="0 0 200 200" id="clock" role="img" aria-label="Clock">
-        <circle id="clockBorder" class="clock-border" cx="100" cy="100" r="95" fill="var(--clock-face)"
-          stroke="var(--clock-border)" stroke-width="2.5" />
-
-        <defs>
-          <filter id="hourShadow" filterUnits="userSpaceOnUse" x="44" y="44" width="112" height="112">
-            <feDropShadow id="hourDS" dx="0" dy="0" stdDeviation="0.6" flood-color="#000" flood-opacity="0.15" />
-          </filter>
-          <filter id="minuteShadow" filterUnits="userSpaceOnUse" x="22" y="22" width="156" height="156">
-            <feDropShadow id="minuteDS" dx="0" dy="0" stdDeviation="0.8" flood-color="#000" flood-opacity="0.2" />
-          </filter>
-          <filter id="secondShadow" filterUnits="userSpaceOnUse" x="14" y="14" width="172" height="172">
-            <feDropShadow id="secondDS" dx="0" dy="0" stdDeviation="1.0" flood-color="#000" flood-opacity="0.25" />
-          </filter>
-          <filter id="dotShadow" filterUnits="userSpaceOnUse" x="89" y="89" width="22" height="22">
-            <feDropShadow id="dotDS" dx="0" dy="0" stdDeviation="1.0" flood-color="#000" flood-opacity="0.25" />
-          </filter>
-        </defs>
-
-        <g id="ticks" class="ticks"></g>
-        <g id="numbers" class="numbers"></g>
-
-        <g id="sunIcon" class="sun-icon" display="none">
-          <circle cx="100" cy="52" r="3" fill="none" stroke="var(--number)" stroke-width="1" opacity="0.55" />
-          <line x1="100" y1="45.5" x2="100" y2="47" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-            opacity="0.55" />
-          <line x1="100" y1="57" x2="100" y2="58.5" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-            opacity="0.55" />
-          <line x1="93.5" y1="52" x2="95" y2="52" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-            opacity="0.55" />
-          <line x1="105" y1="52" x2="106.5" y2="52" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-            opacity="0.55" />
-          <line x1="95.4" y1="47.4" x2="96.4" y2="48.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-            opacity="0.55" />
-          <line x1="103.6" y1="55.6" x2="104.6" y2="56.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-            opacity="0.55" />
-          <line x1="95.4" y1="56.6" x2="96.4" y2="55.6" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-            opacity="0.55" />
-          <line x1="103.6" y1="48.4" x2="104.6" y2="47.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
-            opacity="0.55" />
-        </g>
-        <g id="moonIcon" class="moon-icon" display="none">
-          <path d="M103.5 48.5a5 5 0 1 1-4.5 8 4 4 0 0 0 4.5-8Z" fill="var(--number)" opacity="0.55" />
-        </g>
-
-        <path id="hourHand" class="hour-hand" d="M97.25,100 L97.25,55 L100,50 L102.75,55 L102.75,100 Z"
-          fill="var(--hour-hand)" stroke="var(--hour-hand)" stroke-width="0.8" stroke-linejoin="round"
-          filter="url(#hourShadow)" />
-        <path id="minuteHand" class="minute-hand" d="M98.5,100 L98.5,34 L100,28 L101.5,34 L101.5,100 Z"
-          fill="var(--minute-hand)" stroke="var(--minute-hand)" stroke-width="0.8" stroke-linejoin="round"
-          filter="url(#minuteShadow)" />
-        <line id="secondHand" class="second-hand" x1="100" y1="115" x2="100" y2="22" stroke="var(--second-hand)"
-          stroke-width="1.2" stroke-linecap="round" filter="url(#secondShadow)" />
-
-        <circle id="centerDot" cx="100" cy="100" r="3.5" fill="var(--center-dot)" filter="url(#dotShadow)" />
-      </svg>
+    <h1 class="sr-only">Online Digital Clock</h1>
+    <p class="sr-only">Free fullscreen digital clock with timezone dashboards, OBS embeds, no ads, no tracking, and offline PWA support.</p>
+    <div class="digital-container" id="digitalContainer">
+      <time id="digitalTime" class="digital-time" datetime=""></time>
+      <div class="digital-meta" id="digitalMeta">
+        <span class="daynight-mark" id="dayNightIcon" aria-hidden="true"></span>
+        <span id="digitalLabel"></span>
+      </div>
     </div>
-
     <div class="sr-only" aria-live="polite" aria-atomic="true" id="timeAnnounce"></div>
   </main>
 
@@ -1080,7 +1062,7 @@ SOFTWARE.
     aria-hidden="true" inert>
     <div class="modal-panel embed-panel">
       <div class="modal-panel-header">
-        <span class="modal-panel-title" id="embedPanelTitle">Embed this analog clock</span>
+        <span class="modal-panel-title" id="embedPanelTitle">Embed this digital clock</span>
         <button class="modal-panel-close" id="embedCloseBtn" aria-label="Close">
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%"
             height="100%">
@@ -1103,25 +1085,24 @@ SOFTWARE.
           </select>
         </div>
         <div class="embed-field">
-          <label for="embedSeconds">Second hand</label>
+          <label for="embedSeconds">Seconds</label>
           <select id="embedSeconds">
-            <option value="tick">Tick</option>
-            <option value="smooth">Smooth</option>
-            <option value="hide">Hidden</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="embedBorder">Clock border</label>
-          <select id="embedBorder">
             <option value="show">Show</option>
             <option value="hide">Hide</option>
           </select>
         </div>
         <div class="embed-field">
-          <label for="embedShape">Shape</label>
-          <select id="embedShape">
-            <option value="round">Round</option>
-            <option value="square">Square</option>
+          <label for="embedFormat">Format</label>
+          <select id="embedFormat">
+            <option value="24">24-hour</option>
+            <option value="12">12-hour</option>
+          </select>
+        </div>
+        <div class="embed-field">
+          <label for="embedBorder">Border</label>
+          <select id="embedBorder">
+            <option value="hide">Hide</option>
+            <option value="show">Show</option>
           </select>
         </div>
         <div class="embed-field">
@@ -1132,30 +1113,16 @@ SOFTWARE.
           </select>
         </div>
         <div class="embed-field">
-          <label for="embedNumbers">Numbers</label>
-          <select id="embedNumbers">
-            <option value="show">Show</option>
-            <option value="hide">Hide</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="embedShadows">Shadows</label>
-          <select id="embedShadows">
-            <option value="true">Show</option>
-            <option value="false">Hide</option>
-          </select>
-        </div>
-        <div class="embed-field">
           <label for="embedWidth">Width (px)</label>
-          <input type="number" id="embedWidth" value="200" min="50" max="1000">
+          <input type="number" id="embedWidth" value="360" min="120" max="1600">
         </div>
         <div class="embed-field">
           <label for="embedHeight">Height (px)</label>
-          <input type="number" id="embedHeight" value="200" min="50" max="1000">
+          <input type="number" id="embedHeight" value="160" min="80" max="1000">
         </div>
       </div>
       <div class="embed-preview-wrap">
-        <iframe id="embedPreview" width="120" height="120" title="Clock preview"></iframe>
+        <iframe id="embedPreview" width="240" height="110" title="Digital clock preview"></iframe>
       </div>
       <div class="embed-code-wrap">
         <textarea class="embed-code" id="embedCode" readonly rows="3" aria-label="Embed code"></textarea>
@@ -1206,18 +1173,17 @@ SOFTWARE.
           </select>
         </div>
         <div class="embed-field">
-          <label for="dashboardSeconds">Second hand</label>
+          <label for="dashboardSeconds">Seconds</label>
           <select id="dashboardSeconds">
-            <option value="tick">Tick</option>
-            <option value="smooth">Smooth</option>
-            <option value="hide">Hidden</option>
+            <option value="show">Show</option>
+            <option value="hide">Hide</option>
           </select>
         </div>
         <div class="embed-field">
-          <label for="dashboardNumbers">Numbers</label>
-          <select id="dashboardNumbers">
-            <option value="show">Show</option>
-            <option value="hide">Hide</option>
+          <label for="dashboardFormat">Format</label>
+          <select id="dashboardFormat">
+            <option value="24">24-hour</option>
+            <option value="12">12-hour</option>
           </select>
         </div>
         <div class="embed-field">
@@ -1230,8 +1196,8 @@ SOFTWARE.
         <div class="embed-field">
           <label for="dashboardBorder">Border</label>
           <select id="dashboardBorder">
-            <option value="show">Show</option>
             <option value="hide">Hide</option>
+            <option value="show">Show</option>
           </select>
         </div>
       </div>
@@ -1282,12 +1248,12 @@ SOFTWARE.
             <td>Prevent the display from sleeping</td>
           </tr>
           <tr>
-            <td><strong>Tick seconds</strong> (stopwatch icon)</td>
-            <td>Switch between ticking and smooth second hand</td>
+            <td><strong>Show seconds</strong> (stopwatch icon)</td>
+            <td>Show or hide seconds in the digital time</td>
           </tr>
           <tr>
             <td><strong>Info</strong> (&#9432; button)</td>
-            <td>Show embed link, this help, and contact info</td>
+            <td>Show embed link, dashboard builder, this help, and contact info</td>
           </tr>
         </tbody>
       </table>
@@ -1298,26 +1264,22 @@ SOFTWARE.
       </p>
       <h3>Install as app (PWA)</h3>
       <p>This site works as a Progressive Web App. You can install it on your phone or computer for a full-screen clock
-        and offline use. Use your browser&rsquo;s menu (e.g. &ldquo;Add to Home Screen&rdquo; or &ldquo;Install
-        app&rdquo;) to install.</p>
+        and offline use. Use your browser&rsquo;s menu to install.</p>
       <h3>Timezones</h3>
       <p>Add <code>?tz=</code> to the URL with any <a
           href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener">IANA
           timezone</a>:</p>
-      <pre>clocksimulator.com/?tz=America/New_York
-clocksimulator.com/?tz=Europe/London
-clocksimulator.com/?tz=Asia/Tokyo</pre>
+      <pre>clocksimulator.com/digital/?tz=America/New_York
+clocksimulator.com/digital/?tz=Europe/London
+clocksimulator.com/digital/?tz=Asia/Tokyo</pre>
       <h3>Multi-clock dashboard</h3>
-      <p>Show multiple clocks at once by separating timezones with commas. This automatically enables
-        <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:
-      </p>
-      <pre>clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
-clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2 (dashboardMode)</pre>
-      <p>You can also use the dashboard builder (<strong>&#9432;</strong> &rarr; <strong>Build dashboard</strong>) to
-        visually add timezones and configure the grid.</p>
+      <p>Show multiple digital clocks at once by separating timezones with commas. Use <code>&amp;rows=</code> to
+        control the grid layout:</p>
+      <pre>clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York
+clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2</pre>
       <h3>Embedding</h3>
-      <p>Embed the clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel
-        (<strong>&#9432;</strong> &rarr; <strong>Embed this analog clock</strong>) to configure and copy the code.</p>
+      <p>Embed the digital clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel
+        (<strong>&#9432;</strong> &rarr; <strong>Embed this digital clock</strong>) to configure and copy the code.</p>
       <h3>Privacy</h3>
       <p>Read the privacy policy at <a href="/privacy.html">/privacy.html</a> and the terms of service at <a
           href="/TOS.html">/TOS.html</a>.</p>
@@ -1357,28 +1319,23 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           </tr>
           <tr>
             <td><code>seconds</code></td>
-            <td><code>tick</code>, <code>smooth</code>, <code>hide</code></td>
-            <td><code>tick</code></td>
+            <td><code>show</code>, <code>hide</code></td>
+            <td><code>show</code></td>
+          </tr>
+          <tr>
+            <td><code>format</code></td>
+            <td><code>24</code>, <code>12</code></td>
+            <td><code>24</code></td>
           </tr>
           <tr>
             <td><code>border</code></td>
             <td><code>show</code>, <code>hide</code></td>
-            <td><code>show</code></td>
+            <td><code>hide</code></td>
           </tr>
           <tr>
             <td><code>daynight</code></td>
             <td><code>show</code>, <code>hide</code></td>
             <td><code>hide</code></td>
-          </tr>
-          <tr>
-            <td><code>numbers</code></td>
-            <td><code>show</code>, <code>hide</code></td>
-            <td><code>show</code></td>
-          </tr>
-          <tr>
-            <td><code>shadows</code></td>
-            <td><code>true</code>, <code>false</code></td>
-            <td><code>true</code></td>
           </tr>
           <tr>
             <td><code>burnin</code></td>
@@ -1393,7 +1350,6 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
   <script>
     (function () {
       const OFFSET_RECALC_MS = 60000;
-      const SHADOW_THROTTLE_MS = 100;
       const BURN_IN_INTERVAL_MS = 600000;
       const EMBED_DEBOUNCE_MS = 400;
       const COPY_FEEDBACK_MS = 1500;
@@ -1402,34 +1358,11 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       function setAppHeight() {
         document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
       }
-      window.addEventListener('resize', setAppHeight);
+      window.addEventListener('resize', function () {
+        setAppHeight();
+        fitDigitalText();
+      });
       setAppHeight();
-
-      const ticksGroup = document.getElementById('ticks');
-      const numbersGroup = document.getElementById('numbers');
-      const hourHand = document.getElementById('hourHand');
-      const minuteHand = document.getElementById('minuteHand');
-      const secondHand = document.getElementById('secondHand');
-      const hourDS = document.getElementById('hourDS');
-      const minuteDS = document.getElementById('minuteDS');
-      const secondDS = document.getElementById('secondDS');
-      const dotDS = document.getElementById('dotDS');
-      const centerDot = document.getElementById('centerDot');
-      let lastShadowUpdate = 0;
-      const themeToggle = document.getElementById('themeToggle');
-      const sunIcon = document.getElementById('sunIcon');
-      const moonIcon = document.getElementById('moonIcon');
-      const saveSettingsToggle = document.getElementById('saveSettingsToggle');
-      const saveSettingsLabel = document.getElementById('saveSettingsLabel');
-
-      const CX = 100, CY = 100, R = 85;
-
-      function isValidTimezone(tz) {
-        try {
-          new Intl.DateTimeFormat(undefined, { timeZone: tz });
-          return true;
-        } catch (e) { return false; }
-      }
 
       const params = new URLSearchParams(window.location.search);
       const tzParam = params.get('tz');
@@ -1437,20 +1370,41 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       const validTimezones = tzList.filter(isValidTimezone);
       const dashboardMode = validTimezones.length > 1;
       const timezone = validTimezones.length >= 1 ? validTimezones[0] : null;
-
       const embedMode = params.get('embed') === 'true';
       const themeParam = params.get('theme');
       const secondsParam = params.get('seconds');
+      const formatParam = params.get('format');
       const borderParam = params.get('border');
       const daynightParam = params.get('daynight');
-      const numbersParam = params.get('numbers');
-      const shadowsParam = params.get('shadows');
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const shadowsEnabled = shadowsParam !== 'false' && !reducedMotion;
       const burninParam = params.get('burnin');
       const showDayNight = daynightParam === 'show';
-
+      const useTwelveHour = formatParam === '12';
+      const digitalContainer = document.getElementById('digitalContainer');
+      const digitalTime = document.getElementById('digitalTime');
+      const digitalMeta = document.getElementById('digitalMeta');
+      const digitalLabel = document.getElementById('digitalLabel');
+      const dayNightIcon = document.getElementById('dayNightIcon');
+      const dayNightIconSvg = '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+        '<g class="daynight-sun">' +
+        '<circle cx="10" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="1"/>' +
+        '<line x1="10" y1="3.5" x2="10" y2="5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>' +
+        '<line x1="10" y1="15" x2="10" y2="16.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>' +
+        '<line x1="3.5" y1="10" x2="5" y2="10" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>' +
+        '<line x1="15" y1="10" x2="16.5" y2="10" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>' +
+        '<line x1="5.4" y1="5.4" x2="6.4" y2="6.4" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>' +
+        '<line x1="13.6" y1="13.6" x2="14.6" y2="14.6" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>' +
+        '<line x1="5.4" y1="14.6" x2="6.4" y2="13.6" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>' +
+        '<line x1="13.6" y1="6.4" x2="14.6" y2="5.4" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>' +
+        '</g>' +
+        '<g class="daynight-moon"><path d="M13.5 6.5a5 5 0 1 1-4.5 8 4 4 0 0 0 4.5-8Z" fill="currentColor"/></g>' +
+        '</svg>';
+      const themeToggle = document.getElementById('themeToggle');
+      const secondModeToggle = document.getElementById('secondModeToggle');
+      const saveSettingsToggle = document.getElementById('saveSettingsToggle');
+      const saveSettingsLabel = document.getElementById('saveSettingsLabel');
       let savedSettings = null;
+      dayNightIcon.innerHTML = dayNightIconSvg;
+
       if (!params.toString()) {
         try {
           savedSettings = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
@@ -1473,6 +1427,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const fl = document.getElementById('favicon');
         if (fl) fl.remove();
       }
+
       const activeTheme = themeParam || (!embedMode && savedSettings && savedSettings.theme);
       if (activeTheme === 'dark') {
         document.documentElement.classList.add('dark-mode');
@@ -1484,10 +1439,30 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         themeToggle.checked = true;
       }
 
+      let showSeconds = secondsParam !== 'hide';
+      if (savedSettings && typeof savedSettings.digitalShowSeconds === 'boolean') {
+        showSeconds = savedSettings.digitalShowSeconds;
+      }
+      secondModeToggle.checked = showSeconds;
+      if (secondsParam === 'hide') {
+        document.querySelector('.second-mode-toggle').style.display = 'none';
+      }
+
+      if (borderParam === 'show') {
+        digitalContainer.classList.add('bordered');
+      }
+
       if (dashboardMode) {
-        document.title = 'clocksimulator.com - Dashboard';
+        document.title = 'clocksimulator.com - Digital Dashboard';
       } else if (timezone) {
-        document.title = 'clocksimulator.com - ' + timezone;
+        document.title = 'clocksimulator.com - Digital - ' + timezone;
+      }
+
+      function isValidTimezone(tz) {
+        try {
+          new Intl.DateTimeFormat(undefined, { timeZone: tz });
+          return true;
+        } catch (e) { return false; }
       }
 
       function partsToUtc(formatter, now) {
@@ -1515,135 +1490,66 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         return Math.round((tzTimeUtc - localTimeUtc) / 1000) * 1000;
       }
 
-      let tzOffset = timezone ? computeTzOffset(timezone) : 0;
-      let lastOffsetCalc = Date.now();
-
-      function getTime() {
-        const now = new Date();
-        const nowMs = now.getTime();
-        if (timezone) {
-          if (nowMs - lastOffsetCalc > OFFSET_RECALC_MS) {
-            tzOffset = computeTzOffset(timezone);
-            lastOffsetCalc = nowMs;
+      function createTimeSource(tz) {
+        let offset = tz ? computeTzOffset(tz) : 0;
+        let lastCalc = Date.now();
+        return function (now) {
+          const nowMs = now.getTime();
+          if (tz && nowMs - lastCalc > OFFSET_RECALC_MS) {
+            offset = computeTzOffset(tz);
+            lastCalc = nowMs;
           }
-          const adj = new Date(nowMs + tzOffset);
+          const adj = tz ? new Date(nowMs + offset) : now;
           return {
-            hours: adj.getHours(), minutes: adj.getMinutes(),
-            seconds: adj.getSeconds(), millis: now.getMilliseconds()
+            hours: adj.getHours(),
+            minutes: adj.getMinutes(),
+            seconds: adj.getSeconds()
           };
-        }
-        return {
-          hours: now.getHours(), minutes: now.getMinutes(),
-          seconds: now.getSeconds(), millis: now.getMilliseconds()
         };
       }
 
-      function addTick(degrees, length, width) {
-        const angle = (degrees - 90) * Math.PI / 180;
-        const x1 = CX + Math.cos(angle) * (R - length);
-        const y1 = CY + Math.sin(angle) * (R - length);
-        const x2 = CX + Math.cos(angle) * R;
-        const y2 = CY + Math.sin(angle) * R;
-        const tick = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        tick.setAttribute('x1', x1);
-        tick.setAttribute('y1', y1);
-        tick.setAttribute('x2', x2);
-        tick.setAttribute('y2', y2);
-        tick.setAttribute('stroke', 'var(--tick)');
-        tick.setAttribute('stroke-width', width);
-        tick.setAttribute('stroke-linecap', 'round');
-        ticksGroup.appendChild(tick);
+      const getSingleTime = createTimeSource(timezone);
+
+      function displayName(tz) {
+        return tz ? tz.split('/').pop().replace(/_/g, ' ') : '';
       }
 
-      for (let i = 0; i < 60; i++) {
-        if (i % 5 === 0) {
-          addTick(i * 6, 10, '2');
-        } else {
-          addTick(i * 6, 5, '1');
+      function formatTime(t) {
+        let hours = t.hours;
+        let suffix = '';
+        if (useTwelveHour) {
+          suffix = hours >= 12 ? ' PM' : ' AM';
+          hours = hours % 12;
+          if (hours === 0) hours = 12;
         }
+        const hh = String(hours).padStart(2, '0');
+        const mm = String(t.minutes).padStart(2, '0');
+        const ss = String(t.seconds).padStart(2, '0');
+        return hh + ':' + mm + (showSeconds ? ':' + ss : '') + suffix;
       }
 
-      for (let h = 1; h <= 12; h++) {
-        const angle = (h * 30 - 90) * Math.PI / 180;
-        const x = CX + Math.cos(angle) * (R - 20);
-        const y = CY + Math.sin(angle) * (R - 20);
-        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttribute('x', x);
-        text.setAttribute('y', y);
-        text.setAttribute('text-anchor', 'middle');
-        text.setAttribute('dominant-baseline', 'central');
-        text.setAttribute('fill', 'var(--number)');
-        text.setAttribute('font-size', '12');
-        text.setAttribute('font-family', '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif');
-        text.setAttribute('font-weight', '500');
-        text.textContent = h;
-        numbersGroup.appendChild(text);
+      function datetimeValue(t) {
+        return String(t.hours).padStart(2, '0') + ':' +
+          String(t.minutes).padStart(2, '0') + ':' +
+          String(t.seconds).padStart(2, '0');
       }
 
-      if (numbersParam === 'hide') {
-        numbersGroup.style.display = 'none';
+      function setDayNightIcon(icon, hours) {
+        if (!showDayNight) {
+          icon.classList.remove('visible');
+          icon.removeAttribute('data-state');
+          return;
+        }
+        icon.classList.add('visible');
+        icon.dataset.state = hours >= 6 && hours < 18 ? 'day' : 'night';
       }
-
-      let secondModeTick = true;
-      const secondModeToggle = document.getElementById('secondModeToggle');
-      secondModeToggle.checked = true;
-      const secondsHidden = secondsParam === 'hide' || reducedMotion;
-
-      if (secondsParam === 'smooth' && !reducedMotion) {
-        secondModeTick = false;
-        secondModeToggle.checked = false;
-      }
-      if (secondsHidden) {
-        secondHand.style.display = 'none';
-        secondModeToggle.checked = false;
-        document.querySelector('.second-mode-toggle').style.display = 'none';
-      }
-
-      if (savedSettings) {
-        secondModeTick = savedSettings.secondModeTick;
-        secondModeToggle.checked = savedSettings.secondModeTick;
-      }
-
-      if (borderParam === 'hide') {
-        document.getElementById('clockBorder').setAttribute('stroke', 'none');
-      }
-
-      if (!shadowsEnabled) {
-        [hourHand, minuteHand, secondHand, centerDot].forEach(function (el) {
-          el.removeAttribute('filter');
-        });
-      }
-
-      function saveSettings() {
-        if (!saveSettingsToggle.checked) return;
-        localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
-          theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
-          wakeLock: document.getElementById('wakeLockToggle').checked,
-          secondModeTick: secondModeTick
-        }));
-      }
-
-      secondModeToggle.addEventListener('change', function () {
-        secondModeTick = this.checked;
-        saveSettings();
-      });
 
       const clocks = [];
       if (dashboardMode) {
-        const clockContainer = document.querySelector('.clock-container');
-        const templateSvg = document.getElementById('clock');
-
-        const sharedDefs = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        sharedDefs.setAttribute('width', '0');
-        sharedDefs.setAttribute('height', '0');
-        sharedDefs.style.position = 'absolute';
-        sharedDefs.appendChild(templateSvg.querySelector('defs'));
-        document.body.insertBefore(sharedDefs, document.body.firstChild);
-
-        clockContainer.style.display = 'none';
-
+        digitalContainer.style.display = 'none';
+        document.querySelector('main').style.display = 'none';
         const clockGrid = document.createElement('div');
-        clockGrid.className = 'clock-grid';
+        clockGrid.className = 'digital-grid';
         const n = validTimezones.length;
         const requestedRows = parseInt(params.get('rows'), 10) || 0;
         const gridRowsVal = requestedRows > 0 ? Math.min(requestedRows, n) : 0;
@@ -1652,195 +1558,152 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         clockGrid.style.gridTemplateColumns = 'repeat(' + cols + ', 1fr)';
         clockGrid.style.gridTemplateRows = 'repeat(' + gridRows + ', 1fr)';
 
-        const createClock = function (tz) {
+        for (let i = 0; i < validTimezones.length; i++) {
+          const tz = validTimezones[i];
           const cell = document.createElement('div');
-          cell.className = 'clock-cell';
-
-          const svgClone = templateSvg.cloneNode(true);
-          const idEls = svgClone.querySelectorAll('[id]');
-          for (let j = 0; j < idEls.length; j++) {
-            idEls[j].removeAttribute('id');
-          }
-          svgClone.setAttribute('role', 'img');
-          var displayName = tz.split('/').pop().replace(/_/g, ' ');
-          svgClone.setAttribute('aria-label', displayName + ' clock');
-          cell.appendChild(svgClone);
-
-          svgClone.querySelectorAll('[filter]').forEach(function (el) {
-            el.removeAttribute('filter');
+          cell.className = borderParam === 'show' ? 'digital-cell bordered' : 'digital-cell';
+          const timeEl = document.createElement('time');
+          timeEl.className = 'digital-time';
+          timeEl.setAttribute('datetime', '');
+          const meta = document.createElement('div');
+          meta.className = 'digital-meta';
+          const icon = document.createElement('span');
+          icon.className = 'daynight-mark';
+          icon.setAttribute('aria-hidden', 'true');
+          icon.innerHTML = dayNightIconSvg;
+          const label = document.createElement('span');
+          label.className = 'digital-label';
+          label.textContent = displayName(tz);
+          meta.appendChild(icon);
+          meta.appendChild(label);
+          cell.appendChild(timeEl);
+          cell.appendChild(meta);
+          clockGrid.appendChild(cell);
+          clocks.push({
+            cell: cell,
+            timeEl: timeEl,
+            label: label,
+            icon: icon,
+            displayName: displayName(tz),
+            lastAnnounced: '',
+            getTime: createTimeSource(tz)
           });
-
-          const label = document.createElement('div');
-          label.className = 'clock-label';
-          label.textContent = displayName;
-          cell.appendChild(label);
-
-          let offset = computeTzOffset(tz);
-          let lastCalc = Date.now();
-
-          return {
-            el: cell,
-            svg: svgClone,
-            displayName: displayName,
-            lastMinute: -1,
-            hourHand: svgClone.querySelector('.hour-hand'),
-            minuteHand: svgClone.querySelector('.minute-hand'),
-            sunIcon: svgClone.querySelector('.sun-icon'),
-            moonIcon: svgClone.querySelector('.moon-icon'),
-            getTime: function (now) {
-              const nowMs = now.getTime();
-              if (nowMs - lastCalc > OFFSET_RECALC_MS) {
-                offset = computeTzOffset(tz);
-                lastCalc = nowMs;
-              }
-              const adj = new Date(nowMs + offset);
-              return {
-                hours: adj.getHours(), minutes: adj.getMinutes()
-              };
-            }
-          };
-        };
-
-        for (let ci = 0; ci < validTimezones.length; ci++) {
-          const clock = createClock(validTimezones[ci]);
-          clocks.push(clock);
-          clockGrid.appendChild(clock.el);
         }
 
         document.body.insertBefore(clockGrid, document.querySelector('.embed-overlay'));
+      } else {
+        const singleDisplayName = displayName(timezone);
+        digitalLabel.textContent = singleDisplayName;
+        digitalLabel.hidden = !singleDisplayName;
+        digitalMeta.hidden = !singleDisplayName && !showDayNight;
       }
 
-      let lastAriaMinute = -1;
-      let lastDayNightSecond = -1;
-      const clockSvg = document.getElementById('clock');
-
-      function updateDayNightIcons(hours, sun, moon) {
-        const isDay = hours >= 6 && hours < 18;
-        sun.setAttribute('display', isDay ? 'inline' : 'none');
-        moon.setAttribute('display', isDay ? 'none' : 'inline');
-      }
+      let updateTimer = null;
+      let lastSingleAnnounced = '';
 
       function updateClock() {
         const now = new Date();
-        const seconds = now.getSeconds();
-        const millis = now.getMilliseconds();
-
-        if (!secondsHidden) {
-          let globalSecondAngle;
-          if (secondModeTick) {
-            globalSecondAngle = seconds * 6;
-            if (millis < 100 && !dashboardMode) {
-              globalSecondAngle += 0.5 * Math.exp(-millis / 25);
-            }
-          } else {
-            globalSecondAngle = (seconds + millis / 1000) * 6;
-          }
-          document.documentElement.style.setProperty('--second-angle', globalSecondAngle + 'deg');
-        }
-
         if (dashboardMode) {
-          var anyMinuteChanged = false;
+          const parts = [];
           for (let i = 0; i < clocks.length; i++) {
             const c = clocks[i];
             const t = c.getTime(now);
-            const hours = t.hours % 12;
-            const minutes = t.minutes;
-
-            if (minutes !== c.lastMinute) {
-              c.lastMinute = minutes;
-              anyMinuteChanged = true;
-              var hh = String(t.hours).padStart(2, '0');
-              var mm = String(minutes).padStart(2, '0');
-              c.svg.setAttribute('aria-label', c.displayName + ': ' + hh + ':' + mm);
-            }
-
-            const minuteAngle = (minutes + seconds / 60) * 6;
-            const hourAngle = (hours + minutes / 60) * 30;
-
-            c.hourHand.style.transform = 'rotate(' + hourAngle + 'deg)';
-            c.minuteHand.style.transform = 'rotate(' + minuteAngle + 'deg)';
-
-            if (showDayNight && seconds !== lastDayNightSecond) updateDayNightIcons(t.hours, c.sunIcon, c.moonIcon);
+            const text = formatTime(t);
+            c.timeEl.textContent = text;
+            c.timeEl.setAttribute('datetime', datetimeValue(t));
+            c.cell.setAttribute('aria-label', c.displayName + ': ' + text);
+            setDayNightIcon(c.icon, t.hours);
+            parts.push(c.displayName + ' ' + text);
           }
-          if (anyMinuteChanged && !embedMode) {
-            var parts = [];
-            for (let i = 0; i < clocks.length; i++) {
-              var ct = clocks[i].getTime(now);
-              parts.push(clocks[i].displayName + ' ' + String(ct.hours).padStart(2, '0') + ':' + String(ct.minutes).padStart(2, '0'));
-            }
-            document.getElementById('timeAnnounce').textContent = parts.join(', ');
+          if (!embedMode && parts.join(', ') !== lastSingleAnnounced) {
+            lastSingleAnnounced = parts.join(', ');
+            document.getElementById('timeAnnounce').textContent = lastSingleAnnounced;
           }
-          if (showDayNight && seconds !== lastDayNightSecond) lastDayNightSecond = seconds;
+          fitDigitalText();
         } else {
-          const t = getTime();
-          const hours = t.hours % 12;
-          const minutes = t.minutes;
-          const millis = t.millis;
-
-          if (minutes !== lastAriaMinute) {
-            lastAriaMinute = minutes;
-            const hh = String(t.hours).padStart(2, '0');
-            const mm = String(minutes).padStart(2, '0');
-            const timeStr = 'The time is ' + hh + ':' + mm;
-            clockSvg.setAttribute('aria-label', timeStr);
-            if (!embedMode) {
-              document.getElementById('timeAnnounce').textContent = timeStr;
-            }
+          const t = getSingleTime(now);
+          const text = formatTime(t);
+          digitalTime.textContent = text;
+          digitalTime.setAttribute('datetime', datetimeValue(t));
+          digitalContainer.setAttribute('aria-label', 'The time is ' + text);
+          setDayNightIcon(dayNightIcon, t.hours);
+          if (!embedMode && text !== lastSingleAnnounced) {
+            lastSingleAnnounced = text;
+            document.getElementById('timeAnnounce').textContent = 'The time is ' + text;
           }
-
-          const minuteAngle = (minutes + t.seconds / 60) * 6;
-          const hourAngle = (hours + minutes / 60) * 30;
-
-          hourHand.style.transform = 'rotate(' + hourAngle + 'deg)';
-          minuteHand.style.transform = 'rotate(' + minuteAngle + 'deg)';
-
-          if (shadowsEnabled) {
-            const nowMs = Date.now();
-            if (nowMs - lastShadowUpdate > SHADOW_THROTTLE_MS) {
-              lastShadowUpdate = nowMs;
-              const localHour = now.getHours() + now.getMinutes() / 60;
-              const sunAngle = 90 + (localHour - 6) * 15;
-              const sunRad = sunAngle * Math.PI / 180;
-
-              const hourShadowRad = (hourAngle - sunAngle) * Math.PI / 180;
-              hourDS.setAttribute('dx', -0.8 * Math.cos(hourShadowRad));
-              hourDS.setAttribute('dy', -0.8 * Math.sin(hourShadowRad));
-
-              const minuteShadowRad = (minuteAngle - sunAngle) * Math.PI / 180;
-              minuteDS.setAttribute('dx', -1.2 * Math.cos(minuteShadowRad));
-              minuteDS.setAttribute('dy', -1.2 * Math.sin(minuteShadowRad));
-
-              const secondHandAngle = secondModeTick ? t.seconds * 6 : (t.seconds + millis / 1000) * 6;
-              const secondShadowRad = (secondHandAngle - sunAngle) * Math.PI / 180;
-              secondDS.setAttribute('dx', -1.8 * Math.cos(secondShadowRad));
-              secondDS.setAttribute('dy', -1.8 * Math.sin(secondShadowRad));
-
-              dotDS.setAttribute('dx', -1.8 * Math.cos(sunRad));
-              dotDS.setAttribute('dy', -1.8 * Math.sin(sunRad));
-            }
-          }
-
-          if (showDayNight && t.seconds !== lastDayNightSecond) {
-            updateDayNightIcons(t.hours, sunIcon, moonIcon);
-            lastDayNightSecond = t.seconds;
-          }
+          fitDigitalText();
         }
+        scheduleNextTick();
+      }
 
-        if (!document.hidden) {
-          requestAnimationFrame(updateClock);
+      function scheduleNextTick() {
+        clearTimeout(updateTimer);
+        const now = Date.now();
+        const interval = showSeconds ? 1000 : 60000;
+        const next = interval - (now % interval);
+        updateTimer = setTimeout(updateClock, next || interval);
+      }
+
+      function fitDigitalText() {
+        if (dashboardMode) {
+          for (let i = 0; i < clocks.length; i++) {
+            fitOne(clocks[i].timeEl, clocks[i].cell, '--cell-font-size', 0.42);
+          }
         } else {
-          document.addEventListener('visibilitychange', function resume() {
-            document.removeEventListener('visibilitychange', resume);
-            requestAnimationFrame(updateClock);
-          });
+          fitOne(digitalTime, digitalContainer, '--digital-font-size', 0.54);
         }
       }
 
-      requestAnimationFrame(updateClock);
+      function fitOne(timeEl, box, variableName, heightRatio) {
+        if (!timeEl || !box || !timeEl.textContent) return;
+        const boxRect = box.getBoundingClientRect();
+        if (!boxRect.width || !boxRect.height) return;
+        const boxStyle = getComputedStyle(box);
+        const horizontalInset = (parseFloat(boxStyle.paddingLeft) || 0) +
+          (parseFloat(boxStyle.paddingRight) || 0) +
+          (parseFloat(boxStyle.borderLeftWidth) || 0) +
+          (parseFloat(boxStyle.borderRightWidth) || 0);
+        const availableWidth = Math.max(0, boxRect.width - horizontalInset) || boxRect.width;
+        let size = Math.floor(boxRect.height * heightRatio);
+        size = Math.max(38, Math.min(size, 260));
+        timeEl.style.setProperty(variableName, size + 'px');
+        let targetWidth = availableWidth * 0.96;
+        for (let i = 0; i < 24 && timeEl.scrollWidth > targetWidth && size > 28; i++) {
+          const ratio = (targetWidth * 0.98) / timeEl.scrollWidth;
+          size = Math.max(28, Math.floor(size * Math.min(0.9, ratio)));
+          timeEl.style.setProperty(variableName, size + 'px');
+        }
+      }
+
+      updateClock();
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+          clearTimeout(updateTimer);
+        } else {
+          updateClock();
+        }
+      });
+
+      function saveSettings() {
+        if (!saveSettingsToggle.checked) return;
+        localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
+          theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
+          wakeLock: document.getElementById('wakeLockToggle').checked,
+          secondModeTick: true,
+          digitalShowSeconds: showSeconds
+        }));
+      }
 
       themeToggle.addEventListener('change', function () {
         document.documentElement.classList.remove('transparent-mode');
         document.documentElement.classList.toggle('dark-mode', this.checked);
+        saveSettings();
+      });
+
+      secondModeToggle.addEventListener('change', function () {
+        showSeconds = this.checked;
+        updateClock();
         saveSettings();
       });
 
@@ -1965,6 +1828,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
       function copyWithFlash(text, btn) {
         if (!btn.dataset.copyOriginal) btn.dataset.copyOriginal = btn.textContent;
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+          flashCopyButton(btn, 'Failed');
+          return;
+        }
         navigator.clipboard.writeText(text).then(function () {
           flashCopyButton(btn, 'Copied!');
         }).catch(function () {
@@ -2065,49 +1932,15 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
         function updateFavicon() {
           const ctx = faviconCanvas.getContext('2d');
-          const size = 32;
-          const cx = size / 2;
-          const cy = size / 2;
-          const r = 14;
-
-          ctx.clearRect(0, 0, size, size);
-
-          ctx.beginPath();
-          ctx.arc(cx, cy, r, 0, Math.PI * 2);
+          ctx.clearRect(0, 0, 32, 32);
           ctx.fillStyle = '#ffffff';
-          ctx.fill();
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = '#333333';
-          ctx.stroke();
-
-          const t = getTime();
-          const h = t.hours % 12;
-          const m = t.minutes;
-
-          const hourAngle = ((h + m / 60) * 30 - 90) * Math.PI / 180;
-          const minuteAngle = (m * 6 - 90) * Math.PI / 180;
-
-          ctx.beginPath();
-          ctx.moveTo(cx, cy);
-          ctx.lineTo(cx + Math.cos(hourAngle) * 7, cy + Math.sin(hourAngle) * 7);
-          ctx.lineWidth = 3;
-          ctx.strokeStyle = '#222222';
-          ctx.lineCap = 'round';
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.moveTo(cx, cy);
-          ctx.lineTo(cx + Math.cos(minuteAngle) * 10, cy + Math.sin(minuteAngle) * 10);
-          ctx.lineWidth = 2;
-          ctx.strokeStyle = '#444444';
-          ctx.lineCap = 'round';
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(cx, cy, 1.5, 0, Math.PI * 2);
+          ctx.fillRect(0, 0, 32, 32);
           ctx.fillStyle = '#222222';
-          ctx.fill();
-
+          ctx.font = '600 14px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const t = getSingleTime(new Date());
+          ctx.fillText(String(t.hours).padStart(2, '0'), 16, 16);
           faviconLink.href = faviconCanvas.toDataURL('image/png');
         }
 
@@ -2166,10 +1999,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           });
         }
 
-        const burninEnabled = burninParam !== 'false' && !embedMode;
+        const burninEnabled = burninParam !== 'false';
 
         if (burninEnabled) {
-          const container = dashboardMode ? document.querySelector('.clock-grid') : document.querySelector('.clock-container');
+          const container = dashboardMode ? document.querySelector('.digital-grid') : digitalContainer;
           let burnInStep = 0;
           const burnInRadius = 6;
           const burnInPositions = 8;
@@ -2208,37 +2041,35 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const embedTzInput = document.getElementById('embedTz');
         const embedThemeSelect = document.getElementById('embedTheme');
         const embedSecondsSelect = document.getElementById('embedSeconds');
+        const embedFormatSelect = document.getElementById('embedFormat');
         const embedBorderSelect = document.getElementById('embedBorder');
-        const embedShapeSelect = document.getElementById('embedShape');
         const embedDayNightSelect = document.getElementById('embedDayNight');
-        const embedNumbersSelect = document.getElementById('embedNumbers');
-        const embedShadowsSelect = document.getElementById('embedShadows');
         const embedWidthInput = document.getElementById('embedWidth');
         const embedHeightInput = document.getElementById('embedHeight');
         const embedPreview = document.getElementById('embedPreview');
         const embedCodeEl = document.getElementById('embedCode');
         const embedCopyBtn = document.getElementById('embedCopyBtn');
         const localBase = window.location.origin + window.location.pathname;
-        const prodBase = 'https://clocksimulator.com/';
+        const prodBase = 'https://clocksimulator.com/digital/';
         let embedDebounceTimer;
 
-        function appendCommonParams(p, themeVal, secondsVal, borderVal, daynightVal, numbersVal) {
+        function appendCommonParams(p, themeVal, secondsVal, formatVal, borderVal, daynightVal) {
           p.push('theme=' + themeVal);
-          if (secondsVal !== 'tick') p.push('seconds=' + secondsVal);
-          if (borderVal !== 'show') p.push('border=' + borderVal);
+          if (secondsVal === 'hide') p.push('seconds=hide');
+          if (formatVal === '12') p.push('format=12');
+          if (borderVal === 'show') p.push('border=show');
           if (daynightVal === 'show') p.push('daynight=show');
-          if (numbersVal === 'hide') p.push('numbers=hide');
         }
 
         function buildEmbedParams() {
           const p = ['embed=true'];
           const tzInputRaw = embedTzInput.value.trim();
           if (tzInputRaw) {
-            const tzList = tzInputRaw.split(',').map(function (t) { return t.trim(); }).filter(Boolean);
-            const allValid = tzList.length > 0 && tzList.every(isValidTimezone);
+            const tzItems = tzInputRaw.split(',').map(function (t) { return t.trim(); }).filter(Boolean);
+            const allValid = tzItems.length > 0 && tzItems.every(isValidTimezone);
             if (allValid) {
               embedTzInput.setCustomValidity('');
-              p.push('tz=' + encodeURIComponent(tzList.join(',')));
+              p.push('tz=' + encodeURIComponent(tzItems.join(',')));
             } else {
               embedTzInput.setCustomValidity('Invalid timezone(s)');
               embedTzInput.reportValidity();
@@ -2247,27 +2078,21 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             embedTzInput.setCustomValidity('');
           }
           appendCommonParams(p, embedThemeSelect.value, embedSecondsSelect.value,
-            embedBorderSelect.value, embedDayNightSelect.value, embedNumbersSelect.value);
-          const shadows = embedShadowsSelect.value;
-          if (shadows === 'false') p.push('shadows=false');
+            embedFormatSelect.value, embedBorderSelect.value, embedDayNightSelect.value);
           return '?' + p.join('&');
         }
 
         function updateEmbed() {
           const qs = buildEmbedParams();
-          const w = parseInt(embedWidthInput.value) || 200;
-          const h = parseInt(embedHeightInput.value) || 200;
-          const isRound = embedShapeSelect.value === 'round';
-          const radius = isRound ? ' border-radius:50%;' : '';
+          const w = parseInt(embedWidthInput.value) || 360;
+          const h = parseInt(embedHeightInput.value) || 160;
           embedPreview.src = localBase + qs;
-          embedPreview.width = Math.min(w, 120);
-          embedPreview.height = Math.min(h, 120);
-          embedPreview.style.borderRadius = isRound ? '50%' : '0';
-          embedPreview.style.overflow = 'hidden';
+          embedPreview.width = Math.min(w, 240);
+          embedPreview.height = Math.min(h, 110);
           const transparent = embedThemeSelect.value === 'transparent' ? ' allowtransparency="true"' : '';
           const code = '<iframe src="' + prodBase + qs + '"\n' +
             '  width="' + w + '" height="' + h + '"' + transparent + '\n' +
-            '  style="border:none;' + radius + ' overflow:hidden;">\n' +
+            '  style="border:none; overflow:hidden;">\n' +
             '</iframe>';
           embedCodeEl.value = code;
         }
@@ -2314,11 +2139,9 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         embedTzInput.addEventListener('input', updateEmbedDebounced);
         embedThemeSelect.addEventListener('change', updateEmbed);
         embedSecondsSelect.addEventListener('change', updateEmbed);
+        embedFormatSelect.addEventListener('change', updateEmbed);
         embedBorderSelect.addEventListener('change', updateEmbed);
-        embedShapeSelect.addEventListener('change', updateEmbed);
         embedDayNightSelect.addEventListener('change', updateEmbed);
-        embedNumbersSelect.addEventListener('change', updateEmbed);
-        embedShadowsSelect.addEventListener('change', updateEmbed);
         embedWidthInput.addEventListener('input', updateEmbedDebounced);
         embedHeightInput.addEventListener('input', updateEmbedDebounced);
 
@@ -2334,7 +2157,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const dashboardThemeSelect = document.getElementById('dashboardTheme');
         dashboardThemeSelect.value = document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light';
         const dashboardSecondsSelect = document.getElementById('dashboardSeconds');
-        const dashboardNumbersSelect = document.getElementById('dashboardNumbers');
+        const dashboardFormatSelect = document.getElementById('dashboardFormat');
         const dashboardDayNightSelect = document.getElementById('dashboardDayNight');
         const dashboardBorderSelect = document.getElementById('dashboardBorder');
         const dashboardPreview = document.getElementById('dashboardPreview');
@@ -2406,7 +2229,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           const rows = dashboardRowsSelect.value;
           if (rows !== '0') p.push('rows=' + rows);
           appendCommonParams(p, dashboardThemeSelect.value, dashboardSecondsSelect.value,
-            dashboardBorderSelect.value, dashboardDayNightSelect.value, dashboardNumbersSelect.value);
+            dashboardFormatSelect.value, dashboardBorderSelect.value, dashboardDayNightSelect.value);
           return '?' + p.join('&');
         }
 
@@ -2451,7 +2274,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         dashboardRowsSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardThemeSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardSecondsSelect.addEventListener('change', debouncedDashboardPreview);
-        dashboardNumbersSelect.addEventListener('change', debouncedDashboardPreview);
+        dashboardFormatSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardDayNightSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardBorderSelect.addEventListener('change', debouncedDashboardPreview);
 

@@ -3,12 +3,14 @@
 [![GitHub stars](https://img.shields.io/github/stars/timoheimonen/clocksimulator?style=for-the-badge)](https://github.com/timoheimonen/clocksimulator/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/timoheimonen/clocksimulator?style=for-the-badge)](https://github.com/timoheimonen/clocksimulator/network/members) [![Website Carbon](https://img.shields.io/badge/Website_Carbon-0.01g_CO2-brightgreen?style=flat-square)](https://www.websitecarbon.com/website/clocksimulator-com/)
 
-A clean, fullscreen analog clock simulator built with plain HTML, CSS, and JavaScript.
-This is a minimalist, old-school web page with no trackers, no cookies, and no extra bloat. Just a pure analog clock, nothing more.
+A clean, fullscreen clock simulator built with plain HTML, CSS, and JavaScript.
+The site is available as both an analog clock at [`clocksimulator.com`](https://clocksimulator.com) and a digital clock at [`clocksimulator.com/digital/`](https://clocksimulator.com/digital/).
+This is a minimalist, old-school web page with no trackers, no cookies, and no extra bloat. Just a pure clock, nothing more.
 
 <p align="center">
-  <img src="screenshots/Clocksimulator_dark.png" width="320" alt="Clocksimulator dark theme" />
-  <img src="screenshots/Clocksimulator_Dashboard_dark.png" width="320" alt="Clocksimulator dashboard dark theme" />
+  <img src="screenshots/Clocksimulator_dark.png" width="320" alt="Clocksimulator.com analog dark theme" />
+  <img src="screenshots/Clocksimulator_Dashboard_dark.png" width="320" alt="Clocksimulator.com analog dashboard dark theme" />
+  <img src="screenshots/Clocksimulator_Digital_Dashboard_dark.png" width="320" alt="Clocksimulator.com digital dark theme" />
 </p>
 
 ## Goals
@@ -34,11 +36,22 @@ clocksimulator is intentionally built as a **single-file, Edge-Native applicatio
 
 By default the clock shows your local time. To display a different timezone, add the `tz` query parameter with any valid [IANA timezone identifier](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones):
 
+Analog:
+
 ```
 https://clocksimulator.com/?tz=America/New_York
 https://clocksimulator.com/?tz=Asia/Tokyo
 https://clocksimulator.com/?tz=Europe/Helsinki
 https://clocksimulator.com/?tz=UTC
+```
+
+Digital:
+
+```
+https://clocksimulator.com/digital/?tz=America/New_York
+https://clocksimulator.com/digital/?tz=Asia/Tokyo
+https://clocksimulator.com/digital/?tz=Europe/Helsinki
+https://clocksimulator.com/digital/?tz=UTC
 ```
 
 If the value is invalid or omitted, the clock falls back to your local timezone.
@@ -47,9 +60,18 @@ If the value is invalid or omitted, the clock falls back to your local timezone.
 
 Show multiple clocks at once by separating timezones with commas:
 
+Analog:
+
 ```
 https://clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
 https://clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&rows=2
+```
+
+Digital:
+
+```
+https://clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York
+https://clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&rows=2
 ```
 
 The grid layout is calculated automatically. Use the optional `rows` parameter to control the number of rows.
@@ -59,7 +81,7 @@ Feature of easy url with multiple timezones requested by "Hacker News" user "elt
 
 ## Embed
 
-You can embed the clock on any website using an iframe. Click the **info button** on [clocksimulator.com](https://clocksimulator.com) and select **Embed this clock** to open the generator with a live preview and copy-ready code.
+You can embed either clock on any website using an iframe. Click the **info button** on [clocksimulator.com](https://clocksimulator.com) and select **Embed this analog clock** or open [`/digital/`](https://clocksimulator.com/digital/) and select **Embed this digital clock** to use the generator with a live preview and copy-ready code.
 
 ### Quick start
 
@@ -109,14 +131,6 @@ All parameters are optional and can be combined:
 | `shadows`  | `true`, `false` | `true` | Hand and center dot shadows |
 | `burnin`   | `true`, `false` | `true` | Screen burn-in protection (pixel shift) |
 
-### Examples
-
-```
-https://clocksimulator.com/?embed=true&tz=Asia/Tokyo&theme=light
-https://clocksimulator.com/?embed=true&seconds=smooth&border=hide
-https://clocksimulator.com/?embed=true&tz=America/New_York&theme=dark&seconds=hide
-```
-
 ## Accessibility
 
 When the operating system's **prefers-reduced-motion** setting is active, the second hand and clock hand shadows are automatically disabled to reduce on-screen animation.
@@ -129,7 +143,7 @@ Extension follows main clocksimulator.com version, but not always updated 1:1 an
 
 ## Testing
 
-90 automated tests using pytest and Playwright. No build step required. See [`TESTING.md`](TESTING.md) for the full test list.
+126 automated tests using pytest and Playwright. No build step required. See [`TESTING.md`](TESTING.md) for the full test list.
 
 ```bash
 # Install test dependencies

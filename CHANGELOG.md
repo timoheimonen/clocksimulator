@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3.4 - 2026-05-18
+
+### Added
+- Added a new digital clock page at `/digital/` with fullscreen, embed, timezone, dashboard, theme, 12/24-hour format, seconds, border, day/night, burn-in protection, and saved settings support.
+- Added high-contrast transparent digital embeds for use over dark or video backgrounds.
+- Added analog-style SVG sun and moon artwork for the digital clock day/night indicator.
+- Added viewport-fitting digital dashboard text scaling and graceful clipboard fallback behavior.
+- Added digital clock screenshots and regression coverage for the new page.
+- Added cross-links between the analog and digital clock pages in the about/info menus.
+
+### Changed
+- The analog page now labels its embed action as "Embed this analog clock" to match the digital page wording.
+- The default digital clock shows only the time unless a timezone or day/night indicator is requested.
+
 ## 1.3.3 - 2026-04-27
 
 ### Changed

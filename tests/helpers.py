@@ -16,6 +16,7 @@ def open_page(
     app_url: str,
     params: dict[str, str] | None = None,
     localStorage_items: dict[str, str] | None = None,
+    path: str = "",
 ) -> None:
     page.add_init_script("localStorage.clear();")
     page.add_init_script("""
@@ -38,7 +39,7 @@ def open_page(
         for key, value in localStorage_items.items():
             page.add_init_script(f"localStorage.setItem({key!r}, {value!r});")
 
-    url = app_url
+    url = app_url.rstrip("/") + path if path else app_url
     if params:
         qs = "&".join(f"{k}={v}" for k, v in params.items())
         url += f"?{qs}"
@@ -47,7 +48,7 @@ def open_page(
     page.wait_for_load_state("domcontentloaded")
     page.wait_for_function(
         """() => {
-            return !!document.getElementById('clock') &&
+            return (!!document.getElementById('clock') || !!document.getElementById('digitalTime')) &&
                 document.documentElement.style.getPropertyValue('--app-height') !== '';
         }"""
     )
@@ -61,6 +62,7 @@ def assert_screenshot(page: Page, name: str, update: bool = False, threshold: fl
         """() => {
             var html = document.documentElement;
             var inDashboard = !!document.querySelector('.clock-grid');
+            var inDigitalDashboard = !!document.querySelector('.digital-grid');
             var normalize = function (value) {
                 return String(value || '').replace(/\\s+/g, '').toLowerCase();
             };
@@ -87,7 +89,23 @@ def assert_screenshot(page: Page, name: str, update: bool = False, threshold: fl
                 }
             }
 
-            return darkReady && transparentReady && lightReady && singleReady && dashboardReady;
+            var digitalReady = true;
+            var digitalTime = document.getElementById('digitalTime');
+            if (digitalTime) {
+                digitalReady = digitalTime.textContent.trim() !== '';
+            }
+            if (inDigitalDashboard) {
+                var digitalTimes = document.querySelectorAll('.digital-grid .digital-time');
+                digitalReady = digitalTimes.length > 0;
+                for (var j = 0; j < digitalTimes.length; j++) {
+                    if (digitalTimes[j].textContent.trim() === '') {
+                        digitalReady = false;
+                        break;
+                    }
+                }
+            }
+
+            return darkReady && transparentReady && lightReady && singleReady && dashboardReady && digitalReady;
         }"""
     )
 
