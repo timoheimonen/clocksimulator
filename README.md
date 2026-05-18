@@ -10,6 +10,7 @@ This is a minimalist, old-school web page with no trackers, no cookies, and no e
 <p align="center">
   <img src="screenshots/Clocksimulator_dark.png" width="320" alt="Clocksimulator.com analog dark theme" />
   <img src="screenshots/Clocksimulator_Dashboard_dark.png" width="320" alt="Clocksimulator.com analog dashboard dark theme" />
+  <img src="screenshots/Clocksimulator_Digital_dark.png" width="320" alt="Clocksimulator.com digital dark theme" />
   <img src="screenshots/Clocksimulator_Digital_Dashboard_dark.png" width="320" alt="Clocksimulator.com digital dark theme" />
 </p>
 
