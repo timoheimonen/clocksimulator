@@ -1,6 +1,6 @@
 # Testing
 
-90 tests across 3 test files. Run with `python -m pytest`.
+123 tests across 4 test files. Run with `python -m pytest`.
 
 ## Embed mode (`test_embed_mode.py` — 29 tests)
 
@@ -116,6 +116,66 @@
 | `test_dashboard_mode_visual_snapshot_light_3tz` | `dashboard-light-3tz.png` |
 | `test_dashboard_mode_visual_snapshot_dark_4tz` | `dashboard-dark-4tz.png` |
 | `test_dashboard_mode_visual_snapshot_embed_2tz` | `dashboard-embed-2tz.png` |
+
+## Digital clock (`test_digital_clock.py` — 33 tests)
+
+### Single clock rendering
+
+| Test | Verifies |
+|---|---|
+| `test_digital_page_renders_local_time` | `/digital/` renders local digital time |
+| `test_digital_seconds_hide` | `seconds=hide` hides seconds and the seconds toggle |
+| `test_digital_seconds_toggle_hides_seconds` | Seconds toggle updates the display |
+| `test_digital_format_12_hour` | `format=12` renders 12-hour time |
+| `test_digital_timezone` | Single IANA timezone adjusts the displayed time |
+| `test_digital_title_changes_for_timezone` | Page title includes the digital timezone |
+| `test_digital_daynight_show` | `daynight=show` renders the day/night marker |
+| `test_digital_border_show` | `border=show` adds the digital border |
+| `test_digital_saved_settings_seconds_hidden` | Saved digital seconds preference is restored |
+
+### Theme and embed behavior
+
+| Test | Verifies |
+|---|---|
+| `test_digital_theme_dark` | `theme=dark` applies dark mode |
+| `test_digital_theme_light` | `theme=light` removes dark/transparent modes |
+| `test_digital_theme_transparent` | `theme=transparent` applies transparent mode |
+| `test_digital_theme_toggle_changes_class` | Theme toggle changes the class |
+| `test_digital_embed_mode_defaults_dark_and_hides_controls` | Embed mode defaults dark and hides controls |
+| `test_digital_embed_theme_transparent` | Transparent theme works in digital embed |
+| `test_digital_embed_removes_favicon` | Embed mode removes the dynamic favicon |
+| `test_digital_embed_burnin_disabled` | Embed mode disables burn-in shifting |
+
+### Digital dashboard
+
+| Test | Verifies |
+|---|---|
+| `test_digital_dashboard_activates_with_multiple_timezones` | 2+ timezones create `.digital-grid` |
+| `test_digital_dashboard_labels_and_times` | Dashboard labels and timezone-adjusted times render |
+| `test_digital_dashboard_rows_parameter` | `rows` controls digital dashboard layout |
+| `test_digital_dashboard_seconds_hide` | `seconds=hide` applies to all digital clocks |
+| `test_digital_dashboard_format_12_hour` | `format=12` applies to dashboard clocks |
+| `test_digital_dashboard_daynight_show` | Day/night markers render in dashboard mode |
+| `test_digital_dashboard_invalid_timezone_ignored` | Invalid timezone is filtered |
+| `test_digital_dashboard_all_invalid_timezone_falls_back` | All-invalid `tz` falls back to local time |
+
+### Builders and integration
+
+| Test | Verifies |
+|---|---|
+| `test_digital_embed_panel_generates_digital_iframe` | Embed panel generates `/digital/` iframe code |
+| `test_digital_dashboard_builder_generates_digital_url` | Dashboard builder generates `/digital/` URLs |
+| `test_digital_service_worker_caches_digital_page` | Service worker caches `/digital/` and offline fallback |
+| `test_analog_index_has_no_digital_link` | Analog `public/index.html` has no `/digital` link |
+
+### Visual snapshots
+
+| Test | Snapshot |
+|---|---|
+| `test_digital_visual_snapshot_dark` | `digital-dark.png` |
+| `test_digital_visual_snapshot_light` | `digital-light.png` |
+| `test_digital_visual_snapshot_embed_transparent` | `digital-embed-transparent.png` |
+| `test_digital_visual_snapshot_dashboard_dark` | `digital-dashboard-dark-3tz.png` |
 
 ## Theme handling (`test_theme_handling.py` — 24 tests)
 

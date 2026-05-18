@@ -1,6 +1,7 @@
-const CACHE_NAME = 'clocksimulator-v1.3.3';
+const CACHE_NAME = 'clocksimulator-v1.3.4';
 const ASSETS = [
   '/',
+  '/digital/',
   '/privacy.html',
   '/TOS.html',
   '/sitemap.xml',
@@ -42,6 +43,10 @@ self.addEventListener('fetch', function (event) {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(function () {
+        const url = new URL(event.request.url);
+        if (url.pathname === '/digital' || url.pathname.indexOf('/digital/') === 0) {
+          return caches.match('/digital/');
+        }
         return caches.match('/');
       })
     );
