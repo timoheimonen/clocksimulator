@@ -39,6 +39,7 @@
       --toggle-bg: #bbb;
       --toggle-knob: #fff;
       --digital-font-size: 18dvh;
+      --digital-meta-offset: 0px;
     }
 
     html.dark-mode {
@@ -517,6 +518,24 @@
     body.embed-mode .digital-container {
       width: 100vw;
       height: var(--app-height, 100dvh);
+      position: relative;
+      display: block;
+    }
+
+    body.embed-mode .digital-container .digital-time {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      max-width: 96vw;
+      transform: translate(-50%, -50%);
+    }
+
+    body.embed-mode .digital-container .digital-meta {
+      position: absolute;
+      top: calc(50% + var(--digital-meta-offset));
+      left: 50%;
+      max-width: 96vw;
+      transform: translateX(-50%);
     }
 
     .digital-grid {
@@ -1593,9 +1612,10 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         document.body.insertBefore(clockGrid, document.querySelector('.embed-overlay'));
       } else {
         const singleDisplayName = displayName(timezone);
+        const hasSingleMeta = !!singleDisplayName || showDayNight;
         digitalLabel.textContent = singleDisplayName;
         digitalLabel.hidden = !singleDisplayName;
-        digitalMeta.hidden = !singleDisplayName && !showDayNight;
+        digitalMeta.hidden = !hasSingleMeta;
       }
 
       let updateTimer = null;
@@ -1650,7 +1670,11 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
             fitOne(clocks[i].timeEl, clocks[i].cell, '--cell-font-size', 0.42);
           }
         } else {
-          fitOne(digitalTime, digitalContainer, '--digital-font-size', 0.54);
+          const size = fitOne(digitalTime, digitalContainer, '--digital-font-size', 0.54);
+          if (size) {
+            const gap = Math.max(8, Math.min(window.innerHeight * 0.035, 18));
+            digitalContainer.style.setProperty('--digital-meta-offset', Math.ceil(size * 0.45 + gap) + 'px');
+          }
         }
       }
 
@@ -1673,6 +1697,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
           size = Math.max(28, Math.floor(size * Math.min(0.9, ratio)));
           timeEl.style.setProperty(variableName, size + 'px');
         }
+        return size;
       }
 
       updateClock();

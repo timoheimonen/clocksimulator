@@ -80,6 +80,48 @@ def test_digital_embed_mode_defaults_dark_and_hides_controls(page: Page, app_url
     assert page.evaluate("() => document.querySelector('.toggle-wrapper').offsetWidth") == 0
 
 
+def test_digital_embed_time_is_viewport_centered_without_meta(page: Page, app_url: str) -> None:
+    page.set_viewport_size({"width": 800, "height": 300})
+    open_digital(page, app_url, {"embed": "true", "seconds": "hide"})
+    result = page.evaluate("""() => {
+        const rect = document.getElementById('digitalTime').getBoundingClientRect();
+        return {
+            centerX: rect.left + rect.width / 2,
+            centerY: rect.top + rect.height / 2,
+            viewportX: window.innerWidth / 2,
+            viewportY: window.innerHeight / 2,
+            metaHidden: document.getElementById('digitalMeta').hidden
+        };
+    }""")
+    assert result["metaHidden"] is True
+    assert abs(result["centerX"] - result["viewportX"]) <= 1
+    assert abs(result["centerY"] - result["viewportY"]) <= 1
+
+
+def test_digital_embed_with_meta_keeps_time_centered(page: Page, app_url: str) -> None:
+    page.set_viewport_size({"width": 900, "height": 320})
+    open_digital(page, app_url, {"embed": "true", "tz": "Europe/Helsinki", "daynight": "show"})
+    result = page.evaluate("""() => {
+        const timeRect = document.getElementById('digitalTime').getBoundingClientRect();
+        const metaRect = document.getElementById('digitalMeta').getBoundingClientRect();
+        return {
+            centerX: timeRect.left + timeRect.width / 2,
+            centerY: timeRect.top + timeRect.height / 2,
+            viewportX: window.innerWidth / 2,
+            viewportY: window.innerHeight / 2,
+            metaHidden: document.getElementById('digitalMeta').hidden,
+            label: document.getElementById('digitalLabel').textContent,
+            metaTop: metaRect.top,
+            timeBottom: timeRect.bottom
+        };
+    }""")
+    assert result["metaHidden"] is False
+    assert result["label"] == "Helsinki"
+    assert abs(result["centerX"] - result["viewportX"]) <= 1
+    assert abs(result["centerY"] - result["viewportY"]) <= 1
+    assert result["metaTop"] > result["timeBottom"]
+
+
 def test_digital_embed_theme_transparent(page: Page, app_url: str) -> None:
     open_digital(page, app_url, {"embed": "true", "theme": "transparent"})
     assert page.evaluate("() => document.documentElement.classList.contains('transparent-mode')") is True
