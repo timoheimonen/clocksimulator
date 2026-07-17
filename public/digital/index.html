@@ -1403,6 +1403,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       const digitalMeta = document.getElementById('digitalMeta');
       const digitalLabel = document.getElementById('digitalLabel');
       const dayNightIcon = document.getElementById('dayNightIcon');
+      const timeAnnounce = document.getElementById('timeAnnounce');
       const dayNightIconSvg = '<svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">' +
         '<g class="daynight-sun">' +
         '<circle cx="10" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="1"/>' +
@@ -1552,6 +1553,18 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         return hh + ':' + mm + (showSeconds ? ':' + ss : '') + suffix;
       }
 
+      function formatAnnouncementTime(t) {
+        let hours = t.hours;
+        let suffix = '';
+        if (useTwelveHour) {
+          suffix = hours >= 12 ? ' PM' : ' AM';
+          hours = hours % 12;
+          if (hours === 0) hours = 12;
+        }
+        return String(hours).padStart(2, '0') + ':' +
+          String(t.minutes).padStart(2, '0') + suffix;
+      }
+
       function datetimeValue(t) {
         return String(t.hours).padStart(2, '0') + ':' +
           String(t.minutes).padStart(2, '0') + ':' +
@@ -1571,7 +1584,6 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       const clocks = [];
       if (dashboardMode) {
         digitalContainer.style.display = 'none';
-        document.querySelector('main').style.display = 'none';
         const clockGrid = document.createElement('div');
         clockGrid.className = 'digital-grid';
         const n = validTimezones.length;
@@ -1609,12 +1621,11 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
             label: label,
             icon: icon,
             displayName: displayName(tz),
-            lastAnnounced: '',
             getTime: createTimeSource(tz)
           });
         }
 
-        document.body.insertBefore(clockGrid, document.querySelector('.embed-overlay'));
+        document.querySelector('main').insertBefore(clockGrid, timeAnnounce);
       } else {
         const singleDisplayName = displayName(timezone);
         const hasSingleMeta = !!singleDisplayName || showDayNight;
@@ -1624,12 +1635,12 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       }
 
       let updateTimer = null;
-      let lastSingleAnnounced = '';
+      let lastAnnouncementMinuteKey = '';
 
       function updateClock() {
         const now = new Date();
         if (dashboardMode) {
-          const parts = [];
+          const announcementParts = [];
           for (let i = 0; i < clocks.length; i++) {
             const c = clocks[i];
             const t = c.getTime(now);
@@ -1638,23 +1649,25 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
             c.timeEl.setAttribute('datetime', datetimeValue(t));
             c.cell.setAttribute('aria-label', c.displayName + ': ' + text);
             setDayNightIcon(c.icon, t.hours);
-            parts.push(c.displayName + ' ' + text);
+            announcementParts.push(c.displayName + ' ' + formatAnnouncementTime(t));
           }
-          if (!embedMode && parts.join(', ') !== lastSingleAnnounced) {
-            lastSingleAnnounced = parts.join(', ');
-            document.getElementById('timeAnnounce').textContent = lastSingleAnnounced;
+          const announcementMinuteKey = announcementParts.join(', ');
+          if (!embedMode && announcementMinuteKey !== lastAnnouncementMinuteKey) {
+            lastAnnouncementMinuteKey = announcementMinuteKey;
+            timeAnnounce.textContent = announcementMinuteKey;
           }
           fitDigitalText();
         } else {
           const t = getSingleTime(now);
           const text = formatTime(t);
+          const announcementTime = formatAnnouncementTime(t);
           digitalTime.textContent = text;
           digitalTime.setAttribute('datetime', datetimeValue(t));
           digitalContainer.setAttribute('aria-label', 'The time is ' + text);
           setDayNightIcon(dayNightIcon, t.hours);
-          if (!embedMode && text !== lastSingleAnnounced) {
-            lastSingleAnnounced = text;
-            document.getElementById('timeAnnounce').textContent = 'The time is ' + text;
+          if (!embedMode && announcementTime !== lastAnnouncementMinuteKey) {
+            lastAnnouncementMinuteKey = announcementTime;
+            timeAnnounce.textContent = 'The time is ' + announcementTime;
           }
           fitDigitalText();
         }
