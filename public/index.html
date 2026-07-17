@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Free online analog clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.3.4">
+  <meta name="version" content="1.3.5">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -1504,15 +1504,13 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       function computeTzOffset(tz) {
         const now = new Date();
         const fmt = {
-          hour12: false, year: 'numeric', month: 'numeric',
+          hourCycle: 'h23', year: 'numeric', month: 'numeric',
           day: 'numeric', hour: 'numeric', minute: 'numeric',
           second: 'numeric'
         };
         const tzTimeUtc = partsToUtc(
           new Intl.DateTimeFormat('en-US', Object.assign({ timeZone: tz }, fmt)), now);
-        const localTimeUtc = partsToUtc(
-          new Intl.DateTimeFormat('en-US', fmt), now);
-        return Math.round((tzTimeUtc - localTimeUtc) / 1000) * 1000;
+        return tzTimeUtc - (now.getTime() - now.getMilliseconds());
       }
 
       let tzOffset = timezone ? computeTzOffset(timezone) : 0;
@@ -1528,8 +1526,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           }
           const adj = new Date(nowMs + tzOffset);
           return {
-            hours: adj.getHours(), minutes: adj.getMinutes(),
-            seconds: adj.getSeconds(), millis: now.getMilliseconds()
+            hours: adj.getUTCHours(), minutes: adj.getUTCMinutes(),
+            seconds: adj.getUTCSeconds(), millis: now.getMilliseconds()
           };
         }
         return {
@@ -1695,7 +1693,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
               }
               const adj = new Date(nowMs + offset);
               return {
-                hours: adj.getHours(), minutes: adj.getMinutes()
+                hours: adj.getUTCHours(), minutes: adj.getUTCMinutes()
               };
             }
           };

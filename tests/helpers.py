@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 import os
 
 import pytest
@@ -17,12 +18,17 @@ def open_page(
     params: dict[str, str] | None = None,
     localStorage_items: dict[str, str] | None = None,
     path: str = "",
+    fixed_time: str = "2026-01-01T12:00:00Z",
 ) -> None:
-    page.add_init_script("localStorage.clear();")
     page.add_init_script("""
         (function() {
-            var fixed = Date.UTC(2026, 0, 1, 12, 0, 0, 0);
+            var storageItems = %s;
+            localStorage.clear();
+            Object.keys(storageItems).forEach(function(key) {
+                localStorage.setItem(key, storageItems[key]);
+            });
             var OrigDate = Date;
+            var fixed = OrigDate.parse(%s);
             window.Date = function() {
                 if (arguments.length) return new OrigDate(...arguments);
                 return new OrigDate(fixed);
@@ -32,12 +38,9 @@ def open_page(
             window.Date.now = function() { return fixed; };
             window.Date.parse = OrigDate.parse.bind(OrigDate);
             window.Date.UTC = OrigDate.UTC.bind(OrigDate);
+            window.__setMockDate = function(value) { fixed = OrigDate.parse(value); };
         })();
-    """)
-
-    if localStorage_items:
-        for key, value in localStorage_items.items():
-            page.add_init_script(f"localStorage.setItem({key!r}, {value!r});")
+    """ % (json.dumps(localStorage_items or {}), json.dumps(fixed_time)))
 
     url = app_url.rstrip("/") + path if path else app_url
     if params:

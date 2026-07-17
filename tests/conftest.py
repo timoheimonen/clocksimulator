@@ -75,3 +75,23 @@ def page(context: BrowserContext) -> Page:
     p = context.new_page()
     yield p
     p.close()
+
+
+@pytest.fixture(scope="session")
+def helsinki_context(browser) -> BrowserContext:
+    """Create a separate browser context using a DST-observing timezone."""
+    ctx = browser.new_context(
+        timezone_id="Europe/Helsinki",
+        locale="en-US",
+        viewport={"width": 1280, "height": 720},
+    )
+    yield ctx
+    ctx.close()
+
+
+@pytest.fixture
+def helsinki_page(helsinki_context: BrowserContext) -> Page:
+    """Return a fresh Helsinki-timezone page for each DST regression test."""
+    p = helsinki_context.new_page()
+    yield p
+    p.close()

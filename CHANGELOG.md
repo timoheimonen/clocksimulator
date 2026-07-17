@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.5 - Unreleased
+
+### Changed
+- Analog and digital timezone clocks, including dashboards, now stay accurate across the viewer's daylight-saving time changes.
+
 ## 1.3.4 - 2026-05-18
 
 ### Added
