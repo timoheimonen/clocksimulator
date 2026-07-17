@@ -1715,14 +1715,29 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         }
       });
 
+      function readStoredSettings() {
+        try {
+          const storedSettings = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
+          if (storedSettings && typeof storedSettings === 'object' && !Array.isArray(storedSettings)) {
+            return storedSettings;
+          }
+        } catch (e) { }
+        return {};
+      }
+
       function saveSettings() {
         if (!saveSettingsToggle.checked) return;
-        localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
-          theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
-          wakeLock: document.getElementById('wakeLockToggle').checked,
-          secondModeTick: true,
-          digitalShowSeconds: showSeconds
-        }));
+        const storedSettings = readStoredSettings();
+        try {
+          localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
+            theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
+            wakeLock: document.getElementById('wakeLockToggle').checked,
+            secondModeTick: typeof storedSettings.secondModeTick === 'boolean'
+              ? storedSettings.secondModeTick
+              : true,
+            digitalShowSeconds: showSeconds
+          }));
+        } catch (e) { }
       }
 
       themeToggle.addEventListener('change', function () {
@@ -1741,7 +1756,9 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         if (this.checked) {
           saveSettings();
         } else {
-          localStorage.removeItem('clocksimulator-user-settings');
+          try {
+            localStorage.removeItem('clocksimulator-user-settings');
+          } catch (e) { }
         }
       });
 

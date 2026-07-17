@@ -4,6 +4,7 @@
 
 ### Changed
 - Analog and digital timezone clocks, including dashboards, now stay accurate across the viewer's daylight-saving time changes.
+- Saved settings now preserve each clock's seconds preference when switching between the analog and digital pages.
 
 ## 1.3.4 - 2026-05-18
 

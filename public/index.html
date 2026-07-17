@@ -1597,7 +1597,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         document.querySelector('.second-mode-toggle').style.display = 'none';
       }
 
-      if (savedSettings) {
+      if (savedSettings && typeof savedSettings.secondModeTick === 'boolean') {
         secondModeTick = savedSettings.secondModeTick;
         secondModeToggle.checked = savedSettings.secondModeTick;
       }
@@ -1612,13 +1612,29 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         });
       }
 
+      function readStoredSettings() {
+        try {
+          const storedSettings = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
+          if (storedSettings && typeof storedSettings === 'object' && !Array.isArray(storedSettings)) {
+            return storedSettings;
+          }
+        } catch (e) { }
+        return {};
+      }
+
       function saveSettings() {
         if (!saveSettingsToggle.checked) return;
-        localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
-          theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
-          wakeLock: document.getElementById('wakeLockToggle').checked,
-          secondModeTick: secondModeTick
-        }));
+        const storedSettings = readStoredSettings();
+        try {
+          localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
+            theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
+            wakeLock: document.getElementById('wakeLockToggle').checked,
+            secondModeTick: secondModeTick,
+            digitalShowSeconds: typeof storedSettings.digitalShowSeconds === 'boolean'
+              ? storedSettings.digitalShowSeconds
+              : true
+          }));
+        } catch (e) { }
       }
 
       secondModeToggle.addEventListener('change', function () {
@@ -1846,7 +1862,9 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         if (this.checked) {
           saveSettings();
         } else {
-          localStorage.removeItem('clocksimulator-user-settings');
+          try {
+            localStorage.removeItem('clocksimulator-user-settings');
+          } catch (e) { }
         }
       });
 
