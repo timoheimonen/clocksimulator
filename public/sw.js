@@ -2,8 +2,8 @@ const CACHE_NAME = 'clocksimulator-v1.3.5';
 const ASSETS = [
   '/',
   '/digital/',
-  '/privacy.html',
-  '/TOS.html',
+  '/privacy',
+  '/TOS',
   '/sitemap.xml',
   '/manifest.json',
   '/apple-touch-icon.png',
@@ -11,6 +11,10 @@ const ASSETS = [
   '/android-chrome-512x512.png',
   '/og-image.png'
 ];
+const LEGACY_PAGE_ALIASES = {
+  '/privacy.html': '/privacy',
+  '/TOS.html': '/TOS'
+};
 
 self.addEventListener('install', function (event) {
   event.waitUntil(
@@ -43,11 +47,12 @@ self.addEventListener('fetch', function (event) {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(function () {
-        return caches.match(event.request, { ignoreSearch: true }).then(function (cached) {
+        const url = new URL(event.request.url);
+        const cacheKey = LEGACY_PAGE_ALIASES[url.pathname] || event.request;
+        return caches.match(cacheKey, { ignoreSearch: true }).then(function (cached) {
           if (cached) {
             return cached;
           }
-          const url = new URL(event.request.url);
           if (url.pathname === '/digital' || url.pathname.indexOf('/digital/') === 0) {
             return caches.match('/digital/');
           }

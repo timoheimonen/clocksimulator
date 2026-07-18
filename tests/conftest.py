@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from http import HTTPStatus
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import os
 import threading
@@ -30,6 +31,35 @@ def http_server() -> str:
     class Handler(SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=public_dir, **kwargs)
+
+        def send_head(self):
+            request_path, separator, query = self.path.partition("?")
+            redirect_paths = {
+                "/privacy.html": "/privacy",
+                "/TOS.html": "/TOS",
+            }
+            rewrite_paths = {
+                "/privacy": "/privacy.html",
+                "/TOS": "/TOS.html",
+            }
+            query_suffix = separator + query if separator else ""
+
+            if request_path in redirect_paths:
+                self.send_response(HTTPStatus.TEMPORARY_REDIRECT)
+                self.send_header("Location", redirect_paths[request_path] + query_suffix)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return None
+
+            if request_path in rewrite_paths:
+                original_path = self.path
+                self.path = rewrite_paths[request_path] + query_suffix
+                try:
+                    return super().send_head()
+                finally:
+                    self.path = original_path
+
+            return super().send_head()
 
         def log_message(self, format, *args):
             pass
