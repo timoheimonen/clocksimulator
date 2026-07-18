@@ -86,10 +86,9 @@ def assert_dialog_tab_order(page: Page, overlay_id: str) -> None:
         """overlayId => {
             var overlay = document.getElementById(overlayId);
             return Array.from(overlay.querySelectorAll(
-                'a[href], button, input, select, textarea, .help-panel pre, [tabindex]:not([tabindex="-1"])'
+                'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
             )).filter(function (el) {
-                return !el.disabled && el.getClientRects().length > 0 &&
-                    (!el.matches('.help-panel pre') || el.scrollWidth > el.clientWidth);
+                return !el.disabled && el.getClientRects().length > 0;
             }).length;
         }""",
         overlay_id,
@@ -100,10 +99,9 @@ def assert_dialog_tab_order(page: Page, overlay_id: str) -> None:
             """({ overlayId, index }) => {
                 var overlay = document.getElementById(overlayId);
                 var focusable = Array.from(overlay.querySelectorAll(
-                    'a[href], button, input, select, textarea, .help-panel pre, [tabindex]:not([tabindex="-1"])'
+                    'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
                 )).filter(function (el) {
-                    return !el.disabled && el.getClientRects().length > 0 &&
-                        (!el.matches('.help-panel pre') || el.scrollWidth > el.clientWidth);
+                    return !el.disabled && el.getClientRects().length > 0;
                 });
                 return document.activeElement === focusable[index];
             }""",
@@ -114,10 +112,9 @@ def assert_dialog_tab_order(page: Page, overlay_id: str) -> None:
                 """({ overlayId, index }) => {
                     var overlay = document.getElementById(overlayId);
                     var focusable = Array.from(overlay.querySelectorAll(
-                        'a[href], button, input, select, textarea, .help-panel pre, [tabindex]:not([tabindex="-1"])'
+                        'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
                     )).filter(function (el) {
-                        return !el.disabled && el.getClientRects().length > 0 &&
-                            (!el.matches('.help-panel pre') || el.scrollWidth > el.clientWidth);
+                        return !el.disabled && el.getClientRects().length > 0;
                     });
                     var active = document.activeElement;
                     var expected = focusable[index];
@@ -134,6 +131,26 @@ def assert_dialog_tab_order(page: Page, overlay_id: str) -> None:
         assert_visible_focus_indicator(page)
         if index < count - 1:
             page.keyboard.press("Tab")
+    page.keyboard.press("Tab")
+    assert page.evaluate(
+        """overlayId => {
+            var focusable = document.getElementById(overlayId).querySelectorAll(
+                'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            return document.activeElement === focusable[0];
+        }""",
+        overlay_id,
+    ) is True
+    page.keyboard.press("Shift+Tab")
+    assert page.evaluate(
+        """overlayId => {
+            var focusable = document.getElementById(overlayId).querySelectorAll(
+                'a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            return document.activeElement === focusable[focusable.length - 1];
+        }""",
+        overlay_id,
+    ) is True
 
 
 @pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
@@ -258,6 +275,87 @@ def test_every_dialog_control_has_keyboard_focus_indicator(
         assert_dialog_tab_order(page, overlay_id)
         page.keyboard.press("Escape")
         assert page.get_attribute("#" + overlay_id, "aria-hidden") == "true"
+
+
+@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
+def test_help_url_examples_are_named_focusable_regions(
+    page: Page,
+    app_url: str,
+    path: str,
+    title: str,
+    container_selector: str,
+) -> None:
+    open_clock(page, app_url, path)
+    page.evaluate("() => document.getElementById('helpLink').click()")
+    regions = page.locator("#helpOverlay pre")
+    expected_names = ["Timezone URL examples", "Dashboard URL examples"]
+    assert regions.count() == 2
+    assert regions.evaluate_all(
+        """elements => elements.map(function (element) {
+            return {
+                tabindex: element.getAttribute('tabindex'),
+                role: element.getAttribute('role'),
+                name: element.getAttribute('aria-label')
+            };
+        })"""
+    ) == [
+        {"tabindex": "0", "role": "region", "name": expected_names[0]},
+        {"tabindex": "0", "role": "region", "name": expected_names[1]},
+    ]
+    for name in expected_names:
+        assert page.get_by_role("region", name=name, exact=True).count() == 1
+
+
+@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
+@pytest.mark.parametrize("theme", ["light", "dark", "transparent"])
+def test_help_url_examples_scroll_with_keyboard_on_mobile(
+    page: Page,
+    app_url: str,
+    path: str,
+    title: str,
+    container_selector: str,
+    theme: str,
+) -> None:
+    page.set_viewport_size({"width": 320, "height": 640})
+    open_clock(page, app_url, path, {"theme": theme})
+    page.evaluate("() => document.getElementById('helpLink').click()")
+    expected_names = ["Timezone URL examples", "Dashboard URL examples"]
+    focused_names = []
+    for expected_name in expected_names:
+        for _ in range(20):
+            page.keyboard.press("Tab")
+            active = page.evaluate("""() => ({
+                tagName: document.activeElement.tagName,
+                name: document.activeElement.getAttribute('aria-label') || ''
+            })""")
+            if active["tagName"] == "PRE":
+                break
+        assert active == {"tagName": "PRE", "name": expected_name}
+        focused_names.append(active["name"])
+        assert page.evaluate(
+            "() => document.activeElement.scrollWidth > document.activeElement.clientWidth"
+        ) is True
+        assert page.evaluate("() => document.activeElement.matches(':focus-visible')") is True
+        assert_visible_focus_indicator(page)
+        for _ in range(3):
+            page.keyboard.press("ArrowRight")
+        page.wait_for_function("() => document.activeElement.scrollLeft > 0")
+    assert focused_names == expected_names
+
+
+@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
+def test_preview_iframes_stay_out_of_dialog_tab_order(
+    page: Page,
+    app_url: str,
+    path: str,
+    title: str,
+    container_selector: str,
+) -> None:
+    open_clock(page, app_url, path)
+    assert page.evaluate("""() => [
+        document.getElementById('embedPreview').getAttribute('tabindex'),
+        document.getElementById('dashboardPreview').getAttribute('tabindex')
+    ]""") == ["-1", "-1"]
 
 
 @pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)

@@ -1343,13 +1343,13 @@
       <p>Add <code>?tz=</code> to the URL with any <a
           href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener">IANA
           timezone</a>:</p>
-      <pre>clocksimulator.com/digital/?tz=America/New_York
+      <pre tabindex="0" role="region" aria-label="Timezone URL examples">clocksimulator.com/digital/?tz=America/New_York
 clocksimulator.com/digital/?tz=Europe/London
 clocksimulator.com/digital/?tz=Asia/Tokyo</pre>
       <h3>Multi-clock dashboard</h3>
       <p>Show multiple digital clocks at once by separating timezones with commas. Use <code>&amp;rows=</code> to
         control the grid layout:</p>
-      <pre>clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York
+      <pre tabindex="0" role="region" aria-label="Dashboard URL examples">clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York
 clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2</pre>
       <h3>Embedding</h3>
       <p>Embed the digital clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel
@@ -1877,7 +1877,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       }
 
       function trapFocus(overlay) {
-        const focusable = overlay.querySelectorAll('a[href], button, input, select, textarea, .help-panel pre, [tabindex]:not([tabindex="-1"])');
+        const focusable = overlay.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
         if (!focusable.length) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];

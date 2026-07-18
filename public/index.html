@@ -1376,14 +1376,14 @@ SOFTWARE.
       <p>Add <code>?tz=</code> to the URL with any <a
           href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener">IANA
           timezone</a>:</p>
-      <pre>clocksimulator.com/?tz=America/New_York
+      <pre tabindex="0" role="region" aria-label="Timezone URL examples">clocksimulator.com/?tz=America/New_York
 clocksimulator.com/?tz=Europe/London
 clocksimulator.com/?tz=Asia/Tokyo</pre>
       <h3>Multi-clock dashboard</h3>
       <p>Show multiple clocks at once by separating timezones with commas. This automatically enables
         <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:
       </p>
-      <pre>clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
+      <pre tabindex="0" role="region" aria-label="Dashboard URL examples">clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
 clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2 (dashboardMode)</pre>
       <p>You can also use the dashboard builder (<strong>&#9432;</strong> &rarr; <strong>Build dashboard</strong>) to
         visually add timezones and configure the grid.</p>
@@ -1985,7 +1985,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       }
 
       function trapFocus(overlay) {
-        const focusable = overlay.querySelectorAll('a[href], button, input, select, textarea, .help-panel pre, [tabindex]:not([tabindex="-1"])');
+        const focusable = overlay.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
         if (!focusable.length) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
