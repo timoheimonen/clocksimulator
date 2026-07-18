@@ -1571,12 +1571,25 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
       function partsToUtc(formatter, now) {
         const p = {};
+        let dayPeriod = '';
         formatter.formatToParts(now).forEach(function (part) {
-          p[part.type] = parseInt(part.value, 10);
+          if (part.type === 'dayPeriod') {
+            dayPeriod = part.value.trim().toLowerCase();
+          } else if (part.type === 'year' || part.type === 'month' ||
+            part.type === 'day' || part.type === 'hour' ||
+            part.type === 'minute' || part.type === 'second') {
+            p[part.type] = parseInt(part.value, 10);
+          }
         });
+        let hour = p.hour;
+        if (dayPeriod === 'am') {
+          hour = hour % 12;
+        } else if (dayPeriod === 'pm') {
+          hour = (hour % 12) + 12;
+        }
         let utc = Date.UTC(p.year, p.month - 1, p.day,
-          p.hour === 24 ? 0 : p.hour, p.minute, p.second);
-        if (p.hour === 24) utc += 86400000;
+          hour === 24 ? 0 : hour, p.minute, p.second);
+        if (hour === 24) utc += 86400000;
         return utc;
       }
 
