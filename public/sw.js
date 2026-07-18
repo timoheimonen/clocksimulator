@@ -30,7 +30,9 @@ self.addEventListener('activate', function (event) {
     caches.keys().then(function (keys) {
       return Promise.all(
         keys
-          .filter(function (key) { return key !== CACHE_NAME; })
+          .filter(function (key) {
+            return key !== CACHE_NAME && key.indexOf('clocksimulator-v') === 0;
+          })
           .map(function (key) { return caches.delete(key); })
       );
     })
@@ -66,8 +68,12 @@ self.addEventListener('fetch', function (event) {
   event.respondWith(
     caches.match(event.request).then(function (cached) {
       return cached || fetch(event.request).then(function (response) {
+        if (!response.ok) {
+          return response;
+        }
         return caches.open(CACHE_NAME).then(function (cache) {
-          cache.put(event.request, response.clone());
+          return cache.put(event.request, response.clone());
+        }).catch(function () { }).then(function () {
           return response;
         });
       });

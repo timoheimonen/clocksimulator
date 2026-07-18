@@ -1,10 +1,4 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-echo "=== Running clocksimulator tests ==="
-echo ""
-
-python -m pytest tests/ -v --tb=short
-
-echo ""
-echo "=== Tests complete ==="
+exec conda run -n clocksimulator python -m pytest "$@"

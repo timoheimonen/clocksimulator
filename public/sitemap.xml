@@ -13,13 +13,13 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://clocksimulator.com/privacy.html</loc>
+    <loc>https://clocksimulator.com/privacy</loc>
     <lastmod>2026-02-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://clocksimulator.com/TOS.html</loc>
+    <loc>https://clocksimulator.com/TOS</loc>
     <lastmod>2026-03-03</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>

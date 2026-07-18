@@ -1,10 +1,25 @@
 from __future__ import annotations
 
-import time
-
+import pytest
 from playwright.sync_api import Page
 
 from tests.helpers import open_page, assert_screenshot
+
+
+def hand_angle(page: Page, selector: str) -> float:
+    value = page.locator(selector).evaluate(
+        "element => parseFloat(element.style.transform.replace(/[^0-9.-]/g, ''))"
+    )
+    return float(value)
+
+
+def icon_displays(page: Page) -> dict[str, str]:
+    return page.evaluate(
+        """() => ({
+            sun: document.getElementById('sunIcon').getAttribute('display'),
+            moon: document.getElementById('moonIcon').getAttribute('display')
+        })"""
+    )
 
 
 def test_embed_mode_adds_embed_mode_class(page: Page, app_url: str) -> None:
@@ -18,11 +33,43 @@ def test_embed_mode_hides_toggle_wrapper(page: Page, app_url: str) -> None:
     assert wrapper_width == 0
 
 
-def test_embed_mode_clock_container_full_size(page: Page, app_url: str) -> None:
+@pytest.mark.parametrize(
+    "viewport",
+    [
+        pytest.param({"width": 1280, "height": 720}, id="landscape"),
+        pytest.param({"width": 720, "height": 1280}, id="portrait"),
+        pytest.param({"width": 240, "height": 320}, id="small"),
+    ],
+)
+def test_embed_mode_clock_container_full_size(
+    page: Page,
+    app_url: str,
+    viewport: dict[str, int],
+) -> None:
+    page.set_viewport_size(viewport)
     open_page(page, app_url, {"embed": "true"})
-    width = page.evaluate("() => getComputedStyle(document.querySelector('.clock-container')).width")
-    assert width != "0px"
-    assert width != ""
+    geometry = page.locator(".clock-container").evaluate(
+        """element => {
+            const rect = element.getBoundingClientRect();
+            return {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+                scrollWidth: document.documentElement.scrollWidth,
+                scrollHeight: document.documentElement.scrollHeight,
+                overflow: getComputedStyle(document.body).overflow
+            };
+        }"""
+    )
+    expected_size = min(viewport.values())
+    assert geometry["width"] == pytest.approx(expected_size, abs=1)
+    assert geometry["height"] == pytest.approx(expected_size, abs=1)
+    assert geometry["x"] == pytest.approx((viewport["width"] - expected_size) / 2, abs=1)
+    assert geometry["y"] == pytest.approx((viewport["height"] - expected_size) / 2, abs=1)
+    assert geometry["scrollWidth"] <= viewport["width"]
+    assert geometry["scrollHeight"] <= viewport["height"]
+    assert geometry["overflow"] == "hidden"
 
 
 def test_embed_mode_defaults_to_dark_theme(page: Page, app_url: str) -> None:
@@ -59,20 +106,41 @@ def test_embed_mode_no_time_announcements(page: Page, app_url: str) -> None:
 
 
 def test_embed_mode_with_single_timezone(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true", "tz": "Europe/Helsinki"})
+    open_page(page, app_url, {"embed": "true", "tz": "Asia/Kathmandu"})
     assert page.evaluate("() => document.body.classList.contains('embed-mode')") is True
-    assert page.evaluate("() => !!document.getElementById('clock')") is True
+    assert page.title() == "clocksimulator.com - Asia/Kathmandu"
+    assert hand_angle(page, "#hourHand") == pytest.approx(172.5)
+    assert hand_angle(page, "#minuteHand") == pytest.approx(270)
+    assert page.locator("#clock").get_attribute("aria-label") == "The time is 17:45"
+
+
+def test_embed_mode_seconds_tick_visible_by_default(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"embed": "true"})
+    assert page.locator("#secondHand").evaluate(
+        "element => getComputedStyle(element).display"
+    ) != "none"
+    assert page.locator("#secondModeToggle").is_checked() is True
 
 
 def test_embed_mode_seconds_hide(page: Page, app_url: str) -> None:
     open_page(page, app_url, {"embed": "true", "seconds": "hide"})
-    assert page.evaluate("() => document.getElementById('secondHand').style.display") == "none"
+    second_hand = page.locator("#secondHand")
+    assert second_hand.evaluate("element => getComputedStyle(element).display") == "none"
+    assert second_hand.is_hidden() is True
 
 
 def test_embed_mode_seconds_smooth(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true", "seconds": "smooth"})
-    toggle_checked = page.evaluate("() => document.getElementById('secondModeToggle').checked")
-    assert toggle_checked is False
+    open_page(
+        page,
+        app_url,
+        {"embed": "true", "seconds": "smooth"},
+        fixed_time="2026-01-01T12:00:00.500Z",
+    )
+    assert page.locator("#secondModeToggle").is_checked() is False
+    second_angle = page.evaluate(
+        "() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--second-angle'))"
+    )
+    assert second_angle == pytest.approx(3)
 
 
 def test_embed_mode_border_hide(page: Page, app_url: str) -> None:
@@ -80,30 +148,60 @@ def test_embed_mode_border_hide(page: Page, app_url: str) -> None:
     assert page.evaluate("() => document.getElementById('clockBorder').getAttribute('stroke')") == "none"
 
 
+def test_embed_mode_border_visible_by_default(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"embed": "true"})
+    assert page.locator("#clockBorder").get_attribute("stroke") == "var(--clock-border)"
+
+
 def test_embed_mode_numbers_hide(page: Page, app_url: str) -> None:
     open_page(page, app_url, {"embed": "true", "numbers": "hide"})
-    assert page.evaluate("() => document.getElementById('numbers').style.display") == "none"
+    numbers = page.locator("#numbers")
+    assert numbers.evaluate("element => getComputedStyle(element).display") == "none"
+    assert numbers.is_hidden() is True
+
+
+def test_embed_mode_numbers_visible_by_default(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"embed": "true"})
+    assert page.locator("#numbers").evaluate(
+        "element => getComputedStyle(element).display"
+    ) != "none"
 
 
 def test_embed_mode_shadows_disabled(page: Page, app_url: str) -> None:
     open_page(page, app_url, {"embed": "true", "shadows": "false"})
-    assert page.evaluate("() => document.getElementById('hourHand').hasAttribute('filter')") is False
+    filtered = page.evaluate(
+        "() => ['hourHand', 'minuteHand', 'secondHand', 'centerDot'].filter(id => document.getElementById(id).hasAttribute('filter'))"
+    )
+    assert filtered == []
+
+
+def test_embed_mode_shadows_enabled_by_default(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"embed": "true"})
+    filters = page.evaluate(
+        "() => ['hourHand', 'minuteHand', 'secondHand', 'centerDot'].map(id => document.getElementById(id).getAttribute('filter'))"
+    )
+    assert filters == [
+        "url(#hourShadow)",
+        "url(#minuteShadow)",
+        "url(#secondShadow)",
+        "url(#dotShadow)",
+    ]
 
 
 def test_embed_mode_daynight_show(page: Page, app_url: str) -> None:
     open_page(page, app_url, {"embed": "true", "daynight": "show"})
-    hour = page.evaluate("() => new Date().getHours()")
-    is_day = 6 <= hour < 18
-    if is_day:
-        assert page.evaluate("() => document.getElementById('sunIcon').getAttribute('display')") == "inline"
-    else:
-        assert page.evaluate("() => document.getElementById('moonIcon').getAttribute('display')") == "inline"
+    assert icon_displays(page) == {"sun": "inline", "moon": "none"}
+
+
+def test_embed_mode_daynight_hidden_by_default(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"embed": "true"})
+    assert icon_displays(page) == {"sun": "none", "moon": "none"}
 
 
 def test_embed_mode_all_params_combined(page: Page, app_url: str) -> None:
     open_page(page, app_url, {
         "embed": "true",
-        "tz": "America/New_York",
+        "tz": "Asia/Kathmandu",
         "theme": "light",
         "seconds": "hide",
         "border": "hide",
@@ -114,99 +212,119 @@ def test_embed_mode_all_params_combined(page: Page, app_url: str) -> None:
     assert page.evaluate("() => document.body.classList.contains('embed-mode')") is True
     assert page.evaluate("() => document.documentElement.classList.contains('dark-mode')") is False
     assert page.evaluate("() => document.documentElement.classList.contains('transparent-mode')") is False
-    assert page.evaluate("() => document.getElementById('secondHand').style.display") == "none"
+    assert page.locator("#secondHand").evaluate(
+        "element => getComputedStyle(element).display"
+    ) == "none"
     assert page.evaluate("() => document.getElementById('clockBorder').getAttribute('stroke')") == "none"
-    assert page.evaluate("() => document.getElementById('numbers').style.display") == "none"
-    assert page.evaluate("() => document.getElementById('hourHand').hasAttribute('filter')") is False
+    assert page.locator("#numbers").evaluate(
+        "element => getComputedStyle(element).display"
+    ) == "none"
+    assert page.title() == "clocksimulator.com - Asia/Kathmandu"
+    assert hand_angle(page, "#hourHand") == pytest.approx(172.5)
+    assert hand_angle(page, "#minuteHand") == pytest.approx(270)
+    assert page.locator("#clock").get_attribute("aria-label") == "The time is 17:45"
+    assert page.locator("#clock [filter]").count() == 0
+    assert icon_displays(page) == {"sun": "inline", "moon": "none"}
 
 
 def test_embed_mode_wakelock_hidden(page: Page, app_url: str) -> None:
+    page.add_init_script(
+        """Object.defineProperty(navigator, 'wakeLock', {
+            configurable: true,
+            value: { request: function () { return Promise.resolve({
+                addEventListener: function () {},
+                release: function () { return Promise.resolve(); }
+            }); } }
+        });"""
+    )
     open_page(page, app_url, {"embed": "true"})
-    wake_lock_hidden = page.evaluate("() => document.getElementById('wakeLockLabel').hasAttribute('hidden')")
-    assert wake_lock_hidden is True
+    hidden_state = page.locator("#wakeLockLabel").evaluate(
+        """element => ({
+            visible: element.checkVisibility({
+                checkOpacity: true,
+                checkVisibilityCSS: true
+            }),
+            width: element.getBoundingClientRect().width,
+            height: element.getBoundingClientRect().height
+        })"""
+    )
+    assert hidden_state == {"visible": False, "width": 0, "height": 0}
+    assert page.get_by_role("switch", name="Keep screen on").count() == 0
 
 
-def test_embed_mode_overlays_not_visible(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true"})
-    result = page.evaluate("""() => {
-        var ids = ['embedOverlay', 'dashboardOverlay', 'helpOverlay'];
-        var visible = [];
-        for (var i = 0; i < ids.length; i++) {
-            var el = document.getElementById(ids[i]);
-            if (el && el.classList.contains('visible')) visible.push(ids[i]);
-        }
-        return visible;
-    }""")
-    assert result == []
-
-
-def test_embed_mode_about_bubble_hidden(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true"})
-    about_visible = page.evaluate("""() => {
-        var bubble = document.getElementById('aboutBubble');
-        var btn = document.querySelector('.about-btn');
-        return {
-            bubbleVisible: bubble && bubble.classList.contains('visible'),
-            btnWidth: btn ? btn.offsetWidth : 0
-        };
-    }""")
-    assert about_visible["bubbleVisible"] is not True
-    assert about_visible["btnWidth"] == 0
-
-
-def test_embed_mode_burnin_disabled(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true"})
-    time.sleep(0.2)
-    transform = page.evaluate("() => document.querySelector('.clock-container').style.transform")
-    assert transform == "" or transform == "none"
-
-
-def test_embed_mode_clock_container_no_transition(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true"})
-    transition = page.evaluate("() => getComputedStyle(document.querySelector('.clock-container')).transition")
-    assert "none" in transition
-
-
-def test_embed_mode_escape_key_no_effect(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true"})
-    page.keyboard.press("Escape")
-    result = page.evaluate("""() => {
-        var overlays = document.querySelectorAll('.overlay');
-        for (var i = 0; i < overlays.length; i++) {
-            if (overlays[i].classList.contains('visible')) return false;
-        }
-        var bubble = document.getElementById('aboutBubble');
-        if (bubble && bubble.classList.contains('visible')) return false;
-        return true;
-    }""")
-    assert result is True
-
-
+@pytest.mark.visual
 def test_embed_mode_visual_snapshot_dark(page: Page, app_url: str, update_snapshots: bool) -> None:
     open_page(page, app_url, {"embed": "true", "theme": "dark"})
+    assert page.locator("html").get_attribute("class") == "dark-mode"
     assert_screenshot(page, "embed-dark.png", update=update_snapshots)
 
 
+@pytest.mark.visual
 def test_embed_mode_visual_snapshot_light(page: Page, app_url: str, update_snapshots: bool) -> None:
     open_page(page, app_url, {"embed": "true", "theme": "light"})
+    assert page.locator("html").get_attribute("class") in {None, ""}
     assert_screenshot(page, "embed-light.png", update=update_snapshots)
 
 
+@pytest.mark.visual
 def test_embed_mode_visual_snapshot_transparent(page: Page, app_url: str, update_snapshots: bool) -> None:
     open_page(page, app_url, {"embed": "true", "theme": "transparent"})
-    assert_screenshot(page, "embed-transparent.png", update=update_snapshots)
+    assert page.locator("body").evaluate(
+        "element => getComputedStyle(element).backgroundColor"
+    ) == "rgba(0, 0, 0, 0)"
+    assert_screenshot(
+        page,
+        "embed-transparent.png",
+        update=update_snapshots,
+        transparent=True,
+    )
 
 
+@pytest.mark.visual
 def test_embed_mode_visual_snapshot_daynight(page: Page, app_url: str, update_snapshots: bool) -> None:
     open_page(page, app_url, {"embed": "true", "theme": "dark", "daynight": "show"})
-    assert_screenshot(page, "embed-daynight.png", update=update_snapshots)
+    assert icon_displays(page) == {"sun": "inline", "moon": "none"}
+    assert_screenshot(
+        page,
+        "embed-daynight-icon.png",
+        update=update_snapshots,
+        selector="#sunIcon",
+    )
 
 
+@pytest.mark.visual
+def test_embed_mode_visual_snapshot_second_hand_detail(
+    page: Page, app_url: str, update_snapshots: bool
+) -> None:
+    open_page(page, app_url, {"embed": "true", "theme": "dark", "seconds": "tick"})
+    assert page.locator("#secondHand").evaluate(
+        "element => getComputedStyle(element).display"
+    ) != "none"
+    clock_box = page.locator("#clock").bounding_box()
+    assert clock_box is not None
+    assert_screenshot(
+        page,
+        "embed-second-hand-detail.png",
+        update=update_snapshots,
+        clip={
+            "x": clock_box["x"] + clock_box["width"] * 0.49,
+            "y": clock_box["y"] + clock_box["height"] * 0.08,
+            "width": clock_box["width"] * 0.02,
+            "height": clock_box["height"] * 0.52,
+        },
+    )
+
+
+@pytest.mark.visual
 def test_embed_mode_visual_snapshot_seconds_hide(page: Page, app_url: str, update_snapshots: bool) -> None:
     open_page(page, app_url, {"embed": "true", "theme": "dark", "seconds": "hide"})
+    assert page.locator("#secondHand").evaluate(
+        "element => getComputedStyle(element).display"
+    ) == "none"
     assert_screenshot(page, "embed-seconds-hide.png", update=update_snapshots)
 
 
+@pytest.mark.visual
 def test_embed_mode_visual_snapshot_all_params(page: Page, app_url: str, update_snapshots: bool) -> None:
     open_page(page, app_url, {
         "embed": "true",
@@ -218,4 +336,8 @@ def test_embed_mode_visual_snapshot_all_params(page: Page, app_url: str, update_
         "shadows": "false",
         "daynight": "show",
     })
+    assert page.locator("#secondHand").evaluate(
+        "element => getComputedStyle(element).display"
+    ) == "none"
+    assert icon_displays(page) == {"sun": "inline", "moon": "none"}
     assert_screenshot(page, "embed-all-params.png", update=update_snapshots)

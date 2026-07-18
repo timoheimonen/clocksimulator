@@ -5,547 +5,545 @@ import json
 import pytest
 from playwright.sync_api import Page, Route
 
-from tests.helpers import open_page, assert_screenshot
+from tests.helpers import (
+    assert_screenshot,
+    build_clock_url,
+    expected_clock_count,
+    install_test_clock,
+    navigate_clock_page,
+    seed_local_storage,
+)
 
 
-def _has_class(page: Page, cls: str) -> bool:
-    return page.evaluate(f"() => document.documentElement.classList.contains('{cls}')")
+PAGE_PATHS = [
+    pytest.param("", id="analog"),
+    pytest.param("/digital/", id="digital"),
+]
+
+THEME_PRIORITY_CASES = [
+    pytest.param(
+        {
+            "params": {"theme": "dark"},
+            "stored": "light",
+            "os_dark": False,
+            "expected": "dark",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="explicit-dark",
+    ),
+    pytest.param(
+        {
+            "params": {"theme": "light"},
+            "stored": "dark",
+            "os_dark": True,
+            "expected": "light",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="explicit-light",
+    ),
+    pytest.param(
+        {
+            "params": {"theme": "transparent"},
+            "stored": "dark",
+            "os_dark": True,
+            "expected": "transparent",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="explicit-transparent",
+    ),
+    pytest.param(
+        {
+            "params": {"embed": "true", "theme": "light"},
+            "stored": "dark",
+            "os_dark": True,
+            "expected": "light",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="explicit-light-over-embed-default",
+    ),
+    pytest.param(
+        {
+            "params": {"embed": "true", "theme": "transparent"},
+            "stored": "dark",
+            "os_dark": True,
+            "expected": "transparent",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="explicit-transparent-over-embed-default",
+    ),
+    pytest.param(
+        {
+            "params": {"embed": "true"},
+            "stored": "light",
+            "os_dark": False,
+            "expected": "dark",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="embed-default",
+    ),
+    pytest.param(
+        {
+            "stored": "dark",
+            "os_dark": False,
+            "expected": "dark",
+            "head_reads": 1,
+            "final_reads": 2,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="stored-dark",
+    ),
+    pytest.param(
+        {
+            "stored": "light",
+            "os_dark": True,
+            "expected": "light",
+            "head_reads": 1,
+            "final_reads": 2,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="stored-light",
+    ),
+    pytest.param(
+        {
+            "stored": "transparent",
+            "os_dark": False,
+            "expected": "light",
+            "head_reads": 1,
+            "final_reads": 2,
+            "head_media": 1,
+            "final_media": 2,
+        },
+        id="stored-transparent-falls-back-to-os",
+    ),
+    pytest.param(
+        {
+            "stored": "dark",
+            "os_dark": False,
+            "expected": "dark",
+            "head_reads": 1,
+            "final_reads": 2,
+            "head_media": 0,
+            "final_media": 0,
+            "bare_query": True,
+        },
+        id="bare-query-uses-storage",
+    ),
+    pytest.param(
+        {
+            "params": {"tz": "UTC"},
+            "stored": "dark",
+            "os_dark": False,
+            "expected": "light",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 1,
+            "final_media": 2,
+        },
+        id="unrelated-param-skips-storage",
+    ),
+    pytest.param(
+        {
+            "params": {"theme": "sepia"},
+            "stored": "light",
+            "os_dark": True,
+            "expected": "dark",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 1,
+            "final_media": 2,
+        },
+        id="invalid-theme-skips-storage",
+    ),
+    pytest.param(
+        {
+            "params": {"embed": "true", "theme": "sepia"},
+            "stored": "light",
+            "os_dark": False,
+            "expected": "dark",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="invalid-theme-keeps-embed-default",
+    ),
+    pytest.param(
+        {
+            "storage_value": "{invalid-json",
+            "os_dark": True,
+            "expected": "dark",
+            "head_reads": 1,
+            "final_reads": 2,
+            "head_media": 1,
+            "final_media": 2,
+        },
+        id="invalid-json-falls-back-to-os",
+    ),
+    pytest.param(
+        {
+            "storage_error": True,
+            "os_dark": False,
+            "expected": "light",
+            "head_reads": 1,
+            "final_reads": 2,
+            "head_media": 1,
+            "final_media": 2,
+        },
+        id="storage-exception-falls-back-to-os",
+    ),
+]
+
+OS_RESYNC_CASES = [
+    pytest.param(
+        {
+            "os_dark": True,
+            "os_dark_after_head": False,
+            "head": "dark",
+            "final": "light",
+            "head_reads": 1,
+            "final_reads": 2,
+            "head_media": 1,
+            "final_media": 2,
+        },
+        id="os-only-resynchronizes",
+    ),
+    pytest.param(
+        {
+            "params": {"theme": "light"},
+            "os_dark": False,
+            "os_dark_after_head": True,
+            "head": "light",
+            "final": "light",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="explicit-theme-does-not-resynchronize",
+    ),
+    pytest.param(
+        {
+            "params": {"embed": "true"},
+            "os_dark": False,
+            "os_dark_after_head": True,
+            "head": "dark",
+            "final": "dark",
+            "head_reads": 0,
+            "final_reads": 0,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="embed-default-does-not-resynchronize",
+    ),
+    pytest.param(
+        {
+            "stored": "light",
+            "os_dark": False,
+            "os_dark_after_head": True,
+            "head": "light",
+            "final": "light",
+            "head_reads": 1,
+            "final_reads": 2,
+            "head_media": 0,
+            "final_media": 0,
+        },
+        id="stored-theme-does-not-resynchronize",
+    ),
+]
 
 
-def _open_with_theme_environment(
+def theme_name(page: Page) -> str:
+    return page.evaluate("""() => document.documentElement.classList.contains('dark-mode')
+        ? 'dark'
+        : document.documentElement.classList.contains('transparent-mode')
+            ? 'transparent'
+            : 'light'
+    """)
+
+
+def open_with_theme_probe(
     page: Page,
     app_url: str,
-    params: dict[str, str] | None = None,
-    local_storage_items: dict[str, str] | None = None,
-    os_dark: bool = False,
-    os_dark_after_head: bool | None = None,
-    storage_get_error: bool = False,
-    bare_query: bool = False,
-) -> dict[str, dict[str, bool | int]]:
-    page.goto(app_url.rstrip("/") + "/robots.txt")
-    page.evaluate(
-        """async () => {
-            var registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(registrations.map(function (registration) {
-                return registration.unregister();
-            }));
-        }"""
-    )
-    page.goto("about:blank")
-
+    path: str,
+    case: dict[str, object],
+) -> dict[str, object]:
+    os_dark = bool(case.get("os_dark", False))
+    os_dark_after_head = bool(case.get("os_dark_after_head", os_dark))
+    storage_error = bool(case.get("storage_error", False))
     override = """<script>
-        (function () {
-          window.__settingsReadCount = 0;
-          var originalGetItem = Storage.prototype.getItem;
-          Storage.prototype.getItem = function (key) {
-            if (key === 'clocksimulator-user-settings') {
-              window.__settingsReadCount += 1;
-              if (%s) {
-                throw new DOMException('Storage access blocked', 'SecurityError');
-              }
+      (function () {
+        window.__themeProbe = {
+          reads: 0,
+          writes: 0,
+          mediaReads: 0,
+          transitions: []
+        };
+        window.__recordTheme = function () {
+          var value = document.documentElement.classList.contains('dark-mode')
+            ? 'dark'
+            : document.documentElement.classList.contains('transparent-mode')
+              ? 'transparent'
+              : 'light';
+          var values = window.__themeProbe.transitions;
+          if (!values.length || values[values.length - 1] !== value) values.push(value);
+          return value;
+        };
+        new MutationObserver(window.__recordTheme).observe(document.documentElement, {
+          attributes: true,
+          attributeFilter: ['class']
+        });
+        var originalGetItem = Storage.prototype.getItem;
+        var originalSetItem = Storage.prototype.setItem;
+        var originalRemoveItem = Storage.prototype.removeItem;
+        Storage.prototype.getItem = function (key) {
+          if (key === 'clocksimulator-user-settings') {
+            window.__themeProbe.reads += 1;
+            if (%s) throw new DOMException('Storage access blocked', 'SecurityError');
+          }
+          return originalGetItem.call(this, key);
+        };
+        Storage.prototype.setItem = function (key, value) {
+          if (key === 'clocksimulator-user-settings') window.__themeProbe.writes += 1;
+          return originalSetItem.call(this, key, value);
+        };
+        Storage.prototype.removeItem = function (key) {
+          if (key === 'clocksimulator-user-settings') window.__themeProbe.writes += 1;
+          return originalRemoveItem.call(this, key);
+        };
+        Object.defineProperty(window, 'matchMedia', {
+          configurable: true,
+          value: function (query) {
+            var matches = false;
+            if (query === '(prefers-color-scheme: dark)') {
+              window.__themeProbe.mediaReads += 1;
+              matches = window.__themeProbe.mediaReads === 1 ? %s : %s;
             }
-            return originalGetItem.call(this, key);
-          };
-          window.__colorSchemeReadCount = 0;
-          Object.defineProperty(window, 'matchMedia', {
-            writable: true,
-            value: function (query) {
-              var matches = false;
-              if (query === '(prefers-color-scheme: dark)') {
-                window.__colorSchemeReadCount += 1;
-                matches = window.__colorSchemeReadCount === 1 ? %s : %s;
-              }
-              return {
-                matches: matches,
-                media: query,
-                onchange: null,
-                addEventListener: function () {},
-                removeEventListener: function () {}
-              };
-            }
-          });
-          window.__themeAtDOMContentLoaded = null;
-          document.addEventListener('DOMContentLoaded', function () {
-            window.__themeAtDOMContentLoaded = {
-              dark: document.documentElement.classList.contains('dark-mode'),
-              transparent: document.documentElement.classList.contains('transparent-mode'),
-              checked: document.getElementById('themeToggle').checked,
-              settingsReads: window.__settingsReadCount
+            return {
+              matches: matches,
+              media: query,
+              onchange: null,
+              addEventListener: function () {},
+              removeEventListener: function () {}
             };
-          });
-        })();
-      </script>""" % (
-        json.dumps(storage_get_error),
+          }
+        });
+        window.__themeAtDOMContentLoaded = null;
+        document.addEventListener('DOMContentLoaded', function () {
+          window.__themeAtDOMContentLoaded = {
+            theme: window.__recordTheme(),
+            checked: document.getElementById('themeToggle').checked,
+            reads: window.__themeProbe.reads,
+            writes: window.__themeProbe.writes,
+            mediaReads: window.__themeProbe.mediaReads,
+            transitions: window.__themeProbe.transitions.slice()
+          };
+        });
+      })();
+    </script>""" % (
+        json.dumps(storage_error),
         json.dumps(os_dark),
-        json.dumps(os_dark if os_dark_after_head is None else os_dark_after_head),
+        json.dumps(os_dark_after_head),
     )
     head_probe = """<script>
-        window.__themeAfterHead = {
-          dark: document.documentElement.classList.contains('dark-mode'),
-          transparent: document.documentElement.classList.contains('transparent-mode'),
-          settingsReads: window.__settingsReadCount
-        };
-      </script>"""
+      window.__themeAfterHead = {
+        theme: window.__recordTheme(),
+        reads: window.__themeProbe.reads,
+        writes: window.__themeProbe.writes,
+        mediaReads: window.__themeProbe.mediaReads
+      };
+    </script>"""
 
     def route_handler(route: Route) -> None:
         if route.request.resource_type != "document":
             route.continue_()
             return
         response = route.fetch()
-        body = response.text().replace("<head>", "<head>" + override, 1)
-        body = body.replace("</head>", head_probe + "</head>", 1)
+        body = response.text()
+        if "<head>" in body:
+            body = body.replace("<head>", "<head>" + override, 1)
+            body = body.replace("</head>", head_probe + "</head>", 1)
         route.fulfill(response=response, body=body.encode())
+
+    stored_items: dict[str, str] = {}
+    if "storage_value" in case:
+        stored_items["clocksimulator-user-settings"] = str(case["storage_value"])
+    elif "stored" in case:
+        stored_items["clocksimulator-user-settings"] = json.dumps(
+            {"theme": case["stored"], "unrelated": "preserved"}
+        )
+
+    install_test_clock(page)
+    seed_local_storage(page, app_url, stored_items)
+    params = case.get("params")
+    assert params is None or isinstance(params, dict)
+    target = build_clock_url(app_url, path, params)
+    if case.get("bare_query"):
+        target += "?"
 
     page.route("**/*", route_handler)
     try:
-        target_url = app_url.rstrip("/") + "/?" if bare_query else app_url
-        open_page(
-            page,
-            target_url,
-            params=params,
-            localStorage_items=local_storage_items,
-        )
-        return page.evaluate(
-            """() => ({
-                head: window.__themeAfterHead,
-                domcontentloaded: window.__themeAtDOMContentLoaded
-            })"""
-        )
+        navigate_clock_page(page, target, expected_clock_count(params))
+        return page.evaluate("""() => ({
+          head: window.__themeAfterHead,
+          domcontentloaded: window.__themeAtDOMContentLoaded,
+          finalTheme: window.__recordTheme(),
+          finalWrites: window.__themeProbe.writes
+        })""")
     finally:
         page.unroute("**/*", route_handler)
 
 
-def _assert_theme_probe(
-    result: dict[str, dict[str, bool | int]],
+def assert_theme_probe(
+    result: dict[str, object],
+    case: dict[str, object],
     head_theme: str,
     final_theme: str,
-    head_settings_reads: int,
-    final_settings_reads: int,
 ) -> None:
-    assert result == {
-        "head": {
-            "dark": head_theme == "dark",
-            "transparent": head_theme == "transparent",
-            "settingsReads": head_settings_reads,
-        },
-        "domcontentloaded": {
-            "dark": final_theme == "dark",
-            "transparent": final_theme == "transparent",
-            "checked": final_theme == "dark",
-            "settingsReads": final_settings_reads,
-        },
+    assert result["head"] == {
+        "theme": head_theme,
+        "reads": case["head_reads"],
+        "writes": 0,
+        "mediaReads": case["head_media"],
     }
+    assert result["domcontentloaded"] == {
+        "theme": final_theme,
+        "checked": final_theme == "dark",
+        "reads": case["final_reads"],
+        "writes": 0,
+        "mediaReads": case["final_media"],
+        "transitions": [head_theme]
+        if head_theme == final_theme
+        else [head_theme, final_theme],
+    }
+    assert result["finalTheme"] == final_theme
+    assert result["finalWrites"] == 0
 
 
-def test_theme_dark_param(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"theme": "dark"})
-    assert _has_class(page, "dark-mode") is True
-
-
-def test_theme_light_param(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"theme": "light"})
-    assert _has_class(page, "dark-mode") is False
-    assert _has_class(page, "transparent-mode") is False
-
-
-def test_theme_transparent_param(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"theme": "transparent"})
-    assert _has_class(page, "transparent-mode") is True
-
-
-def test_theme_dark_css_variables(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"theme": "dark"})
-    bg = page.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()")
-    assert bg == "#000000"
-
-
-def test_theme_light_css_variables(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"theme": "light"})
-    bg = page.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()")
-    assert bg == "#f0f0f0"
-
-
-def test_theme_transparent_css_variables(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"theme": "transparent"})
-    bg = page.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--bg').trim()")
-    assert bg == "transparent"
-
-
-def test_embed_mode_default_dark(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true"})
-    assert _has_class(page, "dark-mode") is True
-
-
-def test_embed_mode_theme_light_override(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true", "theme": "light"})
-    assert _has_class(page, "dark-mode") is False
-    assert _has_class(page, "transparent-mode") is False
-
-
-def test_embed_mode_theme_transparent_override(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true", "theme": "transparent"})
-    assert _has_class(page, "transparent-mode") is True
-
-
-def test_saved_settings_theme_dark(page: Page, app_url: str) -> None:
-    open_page(
-        page,
-        app_url,
-        localStorage_items={"clocksimulator-user-settings": '{"theme":"dark","wakeLock":false,"secondModeTick":true}'},
-    )
-    assert _has_class(page, "dark-mode") is True
-
-
-def test_saved_settings_theme_light(page: Page, app_url: str) -> None:
-    open_page(
-        page,
-        app_url,
-        localStorage_items={"clocksimulator-user-settings": '{"theme":"light","wakeLock":false,"secondModeTick":true}'},
-    )
-    assert _has_class(page, "dark-mode") is False
-
-
-def test_os_dark_preference_applied(page: Page, app_url: str) -> None:
-    page.add_init_script("""
-        Object.defineProperty(window, 'matchMedia', {
-            writable: true,
-            value: function(query) {
-                return {
-                    matches: query === '(prefers-color-scheme: dark)',
-                    media: query,
-                    onchange: null,
-                    addEventListener: function() {},
-                    removeEventListener: function() {},
-                };
-            },
-        });
-    """)
-    open_page(page, app_url)
-    assert _has_class(page, "dark-mode") is True
-
-
-def test_os_light_preference_applied(page: Page, app_url: str) -> None:
-    """When OS prefers light mode and no theme is set, dark-mode should not be applied.
-    Intercept HTML to inject matchMedia mock before inline scripts execute."""
-
-    def handle_route(route):
-        resp = route.fetch()
-        body = resp.text()
-        override = "<script>Object.defineProperty(window,'matchMedia',{writable:true,value:function(q){return{matches:q.includes('light'),media:q,onchange:null,addEventListener:function(){},removeEventListener:function(){}}}})</script>"
-        body = body.replace("<head>", "<head>" + override, 1)
-        route.fulfill(response=resp, body=body.encode())
-
-    def route_handler(route):
-        if route.request.resource_type == "document":
-            handle_route(route)
-        else:
-            route.continue_()
-
-    page.add_init_script("localStorage.clear();")
-    page.route("**/*", route_handler)
-    page.goto(app_url)
-    page.wait_for_load_state("domcontentloaded")
-    assert _has_class(page, "dark-mode") is False
-    page.unroute("**/*", route_handler)
-
-
-def test_theme_param_overrides_saved_settings(page: Page, app_url: str) -> None:
-    open_page(
-        page,
-        app_url,
-        params={"theme": "light"},
-        localStorage_items={"clocksimulator-user-settings": '{"theme":"dark","wakeLock":false,"secondModeTick":true}'},
-    )
-    assert _has_class(page, "dark-mode") is False
-
-
-def test_theme_param_overrides_os_preference(page: Page, app_url: str) -> None:
-    page.add_init_script("""
-        Object.defineProperty(window, 'matchMedia', {
-            writable: true,
-            value: function(query) {
-                return {
-                    matches: query === '(prefers-color-scheme: dark)',
-                    media: query,
-                    onchange: null,
-                    addEventListener: function() {},
-                    removeEventListener: function() {},
-                };
-            },
-        });
-    """)
-    open_page(page, app_url, {"theme": "light"})
-    assert _has_class(page, "dark-mode") is False
-
-
-@pytest.mark.parametrize(
-    ("params", "stored_theme", "os_dark", "expected_dark"),
-    [
-        pytest.param({"tz": "UTC"}, "dark", False, False, id="single-os-light"),
-        pytest.param({"tz": "UTC"}, "light", True, True, id="single-os-dark"),
-        pytest.param(
-            {"tz": "UTC,Europe/Helsinki"},
-            "dark",
-            False,
-            False,
-            id="dashboard-os-light",
-        ),
-        pytest.param(
-            {"tz": "UTC,Europe/Helsinki"},
-            "light",
-            True,
-            True,
-            id="dashboard-os-dark",
-        ),
-    ],
-)
-def test_parameterized_url_uses_os_theme_without_fouc_or_settings_read(
+@pytest.mark.cross_browser
+@pytest.mark.parametrize("path", PAGE_PATHS)
+@pytest.mark.parametrize("case", THEME_PRIORITY_CASES)
+def test_theme_priority_and_fouc_matrix(
     page: Page,
     app_url: str,
-    params: dict[str, str],
-    stored_theme: str,
-    os_dark: bool,
-    expected_dark: bool,
+    path: str,
+    case: dict[str, object],
 ) -> None:
-    state = _open_with_theme_environment(
-        page,
-        app_url,
-        params=params,
-        local_storage_items={
-            "clocksimulator-user-settings": json.dumps({"theme": stored_theme})
-        },
-        os_dark=os_dark,
-    )
-    expected_theme = "dark" if expected_dark else "light"
-    _assert_theme_probe(state, expected_theme, expected_theme, 0, 0)
+    result = open_with_theme_probe(page, app_url, path, case)
+    expected = str(case["expected"])
+    assert_theme_probe(result, case, expected, expected)
 
 
-def test_main_script_resynchronizes_theme_if_os_preference_changes(
-    page: Page, app_url: str
-) -> None:
-    state = _open_with_theme_environment(
-        page,
-        app_url,
-        params={"tz": "UTC"},
-        os_dark=True,
-        os_dark_after_head=False,
-    )
-    _assert_theme_probe(state, "dark", "light", 0, 0)
-
-
-@pytest.mark.parametrize(
-    ("theme", "stored_theme", "os_dark"),
-    [
-        pytest.param("dark", "light", False, id="dark"),
-        pytest.param("light", "dark", True, id="light"),
-        pytest.param("transparent", "dark", True, id="transparent"),
-    ],
-)
-def test_explicit_theme_has_priority_without_fouc_or_settings_read(
+@pytest.mark.cross_browser
+@pytest.mark.parametrize("path", PAGE_PATHS)
+@pytest.mark.parametrize("case", OS_RESYNC_CASES)
+def test_os_theme_resynchronizes_only_without_stronger_source(
     page: Page,
     app_url: str,
+    path: str,
+    case: dict[str, object],
+) -> None:
+    result = open_with_theme_probe(page, app_url, path, case)
+    assert_theme_probe(result, case, str(case["head"]), str(case["final"]))
+
+
+@pytest.mark.cross_browser
+@pytest.mark.parametrize("path", PAGE_PATHS)
+@pytest.mark.parametrize(
+    ("theme", "expected_bg"),
+    [
+        pytest.param("light", "#f0f0f0", id="light"),
+        pytest.param("dark", "#000000", id="dark"),
+        pytest.param("transparent", "transparent", id="transparent"),
+    ],
+)
+def test_theme_classes_and_base_rendering(
+    page: Page,
+    app_url: str,
+    path: str,
     theme: str,
-    stored_theme: str,
-    os_dark: bool,
+    expected_bg: str,
 ) -> None:
-    state = _open_with_theme_environment(
-        page,
-        app_url,
-        params={"theme": theme},
-        local_storage_items={
-            "clocksimulator-user-settings": json.dumps({"theme": stored_theme})
-        },
-        os_dark=os_dark,
-    )
-    _assert_theme_probe(state, theme, theme, 0, 0)
+    install_test_clock(page)
+    seed_local_storage(page, app_url)
+    navigate_clock_page(page, build_clock_url(app_url, path, {"theme": theme}))
+    assert theme_name(page) == theme
+    assert page.locator("html").evaluate(
+        "element => getComputedStyle(element).getPropertyValue('--bg').trim()"
+    ) == expected_bg
+    assert page.locator("#themeToggle").is_checked() is (theme == "dark")
 
 
-def test_embed_default_has_priority_without_fouc_or_settings_read(
-    page: Page, app_url: str
-) -> None:
-    state = _open_with_theme_environment(
-        page,
-        app_url,
-        params={"embed": "true"},
-        local_storage_items={
-            "clocksimulator-user-settings": json.dumps({"theme": "light"})
-        },
-        os_dark=False,
-    )
-    _assert_theme_probe(state, "dark", "dark", 0, 0)
-
-
+@pytest.mark.cross_browser
+@pytest.mark.parametrize("path", PAGE_PATHS)
 @pytest.mark.parametrize(
-    ("stored_theme", "os_dark", "expected_dark"),
+    ("initial_theme", "expected_theme"),
     [
-        pytest.param("dark", False, True, id="stored-dark"),
-        pytest.param("light", True, False, id="stored-light"),
+        pytest.param("light", "dark", id="light-to-dark"),
+        pytest.param("transparent", "dark", id="transparent-to-dark"),
     ],
 )
-def test_parameterless_url_uses_saved_theme_before_os_without_fouc(
+def test_theme_switch_updates_class_and_checked_state(
     page: Page,
     app_url: str,
-    stored_theme: str,
-    os_dark: bool,
-    expected_dark: bool,
+    path: str,
+    initial_theme: str,
+    expected_theme: str,
 ) -> None:
-    state = _open_with_theme_environment(
-        page,
-        app_url,
-        local_storage_items={
-            "clocksimulator-user-settings": json.dumps({"theme": stored_theme})
-        },
-        os_dark=os_dark,
-    )
-    expected_theme = "dark" if expected_dark else "light"
-    _assert_theme_probe(state, expected_theme, expected_theme, 1, 2)
+    install_test_clock(page)
+    seed_local_storage(page, app_url)
+    navigate_clock_page(page, build_clock_url(app_url, path, {"theme": initial_theme}))
+    switch = page.locator("#themeToggle")
+    page.evaluate("() => document.getElementById('themeToggle').click()")
+    assert theme_name(page) == expected_theme
+    assert switch.is_checked() is True
 
 
-def test_bare_query_uses_saved_theme_without_fouc(page: Page, app_url: str) -> None:
-    state = _open_with_theme_environment(
-        page,
-        app_url,
-        local_storage_items={
-            "clocksimulator-user-settings": json.dumps({"theme": "dark"})
-        },
-        os_dark=False,
-        bare_query=True,
-    )
-    _assert_theme_probe(state, "dark", "dark", 1, 2)
-
-
-@pytest.mark.parametrize("os_dark", [False, True], ids=["os-light", "os-dark"])
-def test_invalid_saved_json_falls_back_to_os_without_fouc(
-    page: Page, app_url: str, os_dark: bool
-) -> None:
-    state = _open_with_theme_environment(
-        page,
-        app_url,
-        local_storage_items={"clocksimulator-user-settings": "{invalid-json"},
-        os_dark=os_dark,
-    )
-    expected_theme = "dark" if os_dark else "light"
-    _assert_theme_probe(state, expected_theme, expected_theme, 1, 2)
-
-
-@pytest.mark.parametrize("os_dark", [False, True], ids=["os-light", "os-dark"])
-def test_storage_exception_falls_back_to_os_without_fouc(
-    page: Page, app_url: str, os_dark: bool
-) -> None:
-    state = _open_with_theme_environment(
-        page,
-        app_url,
-        os_dark=os_dark,
-        storage_get_error=True,
-    )
-    expected_theme = "dark" if os_dark else "light"
-    _assert_theme_probe(state, expected_theme, expected_theme, 1, 2)
-
-
+@pytest.mark.visual
+@pytest.mark.chromium_only
 @pytest.mark.parametrize(
-    ("stored_theme", "os_dark"),
+    ("theme", "name", "transparent"),
     [
-        pytest.param("dark", False, id="os-light"),
-        pytest.param("light", True, id="os-dark"),
+        pytest.param("dark", "theme-dark.png", False, id="dark"),
+        pytest.param("light", "theme-light.png", False, id="light"),
+        pytest.param("transparent", "theme-transparent.png", True, id="transparent"),
     ],
 )
-def test_invalid_theme_param_uses_os_without_fouc_or_settings_read(
+def test_theme_visual_snapshot(
     page: Page,
     app_url: str,
-    stored_theme: str,
-    os_dark: bool,
+    update_snapshots: bool,
+    theme: str,
+    name: str,
+    transparent: bool,
 ) -> None:
-    state = _open_with_theme_environment(
+    install_test_clock(page)
+    seed_local_storage(page, app_url)
+    navigate_clock_page(page, build_clock_url(app_url, "", {"theme": theme}))
+    assert theme_name(page) == theme
+    assert page.get_by_role("img", name="The time is 12:00").count() == 1
+    assert_screenshot(
         page,
-        app_url,
-        params={"theme": "invalid"},
-        local_storage_items={
-            "clocksimulator-user-settings": json.dumps({"theme": stored_theme})
-        },
-        os_dark=os_dark,
+        name,
+        update=update_snapshots,
+        transparent=transparent,
     )
-    expected_theme = "dark" if os_dark else "light"
-    _assert_theme_probe(state, expected_theme, expected_theme, 0, 0)
-
-
-def test_invalid_theme_param_uses_embed_default_without_settings_read(
-    page: Page, app_url: str
-) -> None:
-    state = _open_with_theme_environment(
-        page,
-        app_url,
-        params={"embed": "true", "theme": "invalid"},
-        local_storage_items={
-            "clocksimulator-user-settings": json.dumps({"theme": "light"})
-        },
-        os_dark=False,
-    )
-    _assert_theme_probe(state, "dark", "dark", 0, 0)
-
-
-def test_theme_toggle_changes_class(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"theme": "light"})
-    assert _has_class(page, "dark-mode") is False
-    page.evaluate("() => document.getElementById('themeToggle').click()")
-    assert _has_class(page, "dark-mode") is True
-
-
-def test_theme_toggle_removes_transparent_mode(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"theme": "transparent"})
-    assert _has_class(page, "transparent-mode") is True
-    page.evaluate("() => document.getElementById('themeToggle').click()")
-    assert _has_class(page, "transparent-mode") is False
-    assert _has_class(page, "dark-mode") is True
-
-
-def test_theme_transparent_in_embed_mode(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"embed": "true", "theme": "transparent"})
-    assert _has_class(page, "transparent-mode") is True
-    assert _has_class(page, "dark-mode") is False
-
-
-def test_theme_dashboard_dark(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"tz": "UTC,Europe/Helsinki", "theme": "dark"})
-    assert _has_class(page, "dark-mode") is True
-    assert page.evaluate("() => !!document.querySelector('.clock-grid')") is True
-
-
-def test_theme_no_fouc_dark_mode(page: Page, app_url: str) -> None:
-    """Theme class must exist at DOMContentLoaded, before full load."""
-    page.add_init_script("""
-        window.__themeAtDOMContentLoaded = null;
-        document.addEventListener('DOMContentLoaded', () => {
-            window.__themeAtDOMContentLoaded = document.documentElement.classList.contains('dark-mode');
-        });
-    """)
-    open_page(page, app_url, {"theme": "dark"})
-    theme_at_domcp = page.evaluate("() => window.__themeAtDOMContentLoaded")
-    assert theme_at_domcp is True
-
-
-def test_theme_no_fouc_embed_mode(page: Page, app_url: str) -> None:
-    """Embed dark mode must be applied at DOMContentLoaded."""
-    page.add_init_script("""
-        window.__embedDarkAtDOMContentLoaded = null;
-        document.addEventListener('DOMContentLoaded', () => {
-            window.__embedDarkAtDOMContentLoaded = document.documentElement.classList.contains('dark-mode');
-        });
-    """)
-    open_page(page, app_url, {"embed": "true"})
-    embed_dark_at_domcp = page.evaluate("() => window.__embedDarkAtDOMContentLoaded")
-    assert embed_dark_at_domcp is True
-
-
-def test_theme_visual_snapshot_dark(page: Page, app_url: str, update_snapshots: bool) -> None:
-    open_page(page, app_url, {"theme": "dark"})
-    assert_screenshot(page, "theme-dark.png", update=update_snapshots)
-
-
-def test_theme_visual_snapshot_light(page: Page, app_url: str, update_snapshots: bool) -> None:
-    open_page(page, app_url, {"theme": "light"})
-    assert_screenshot(page, "theme-light.png", update=update_snapshots)
-
-
-def test_theme_visual_snapshot_transparent(page: Page, app_url: str, update_snapshots: bool) -> None:
-    open_page(page, app_url, {"theme": "transparent"})
-    assert_screenshot(page, "theme-transparent.png", update=update_snapshots)

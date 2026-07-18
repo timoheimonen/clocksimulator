@@ -118,6 +118,10 @@ SOFTWARE.
       box-sizing: border-box;
     }
 
+    [hidden] {
+      display: none !important;
+    }
+
     body {
       background: var(--bg);
       display: flex;
@@ -175,8 +179,11 @@ SOFTWARE.
     .toggle-label input {
       position: absolute;
       opacity: 0;
-      width: 0;
-      height: 0;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      cursor: inherit;
     }
 
     .toggle-slider {
@@ -471,6 +478,7 @@ SOFTWARE.
     }
 
     .clock-container svg {
+      display: block;
       width: 100%;
       height: 100%;
     }
@@ -917,6 +925,7 @@ SOFTWARE.
 
     .help-panel table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
       margin: 4px 0 8px;
       font-size: 12px;
@@ -927,6 +936,7 @@ SOFTWARE.
       text-align: left;
       padding: 8px;
       border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+      overflow-wrap: anywhere;
     }
 
     .help-panel th {
@@ -975,16 +985,12 @@ SOFTWARE.
       if (!hasParams) {
         try {
           const s = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
-          if (s && (s.theme === 'dark' || s.theme === 'light' || s.theme === 'transparent')) {
+          if (s && (s.theme === 'dark' || s.theme === 'light')) {
             savedTheme = s.theme;
           }
         } catch (e) { }
         if (savedTheme === 'dark') {
           document.documentElement.classList.add('dark-mode');
-          return;
-        }
-        if (savedTheme === 'transparent') {
-          document.documentElement.classList.add('transparent-mode');
           return;
         }
         if (savedTheme === 'light') {
@@ -1073,8 +1079,8 @@ SOFTWARE.
         <br>
         Made by Timo Heimonen<br>
         <a href="mailto:timo.heimonen@proton.me">timo.heimonen@proton.me</a><br>
-        <a href="https://clocksimulator.com/privacy.html">Privacy</a> &middot; <a
-          href="https://clocksimulator.com/TOS.html">Terms</a> &middot;
+        <a href="https://clocksimulator.com/privacy">Privacy</a> &middot; <a
+          href="https://clocksimulator.com/TOS">Terms</a> &middot;
         <a href="https://github.com/timoheimonen/clocksimulator" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
@@ -1106,7 +1112,7 @@ SOFTWARE.
         <g id="ticks" class="ticks"></g>
         <g id="numbers" class="numbers"></g>
 
-        <g id="sunIcon" class="sun-icon" display="none">
+        <g id="sunIcon" class="sun-icon" display="none" aria-hidden="true">
           <circle cx="100" cy="52" r="3" fill="none" stroke="var(--number)" stroke-width="1" opacity="0.55" />
           <line x1="100" y1="45.5" x2="100" y2="47" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
             opacity="0.55" />
@@ -1125,7 +1131,7 @@ SOFTWARE.
           <line x1="103.6" y1="48.4" x2="104.6" y2="47.4" stroke="var(--number)" stroke-width="1" stroke-linecap="round"
             opacity="0.55" />
         </g>
-        <g id="moonIcon" class="moon-icon" display="none">
+        <g id="moonIcon" class="moon-icon" display="none" aria-hidden="true">
           <path d="M103.5 48.5a5 5 0 1 1-4.5 8 4 4 0 0 0 4.5-8Z" fill="var(--number)" opacity="0.55" />
         </g>
 
@@ -1216,11 +1222,11 @@ SOFTWARE.
         </div>
         <div class="embed-field">
           <label for="embedWidth">Width (px)</label>
-          <input type="number" id="embedWidth" value="200" min="50" max="1000">
+          <input type="number" id="embedWidth" value="200" min="50" max="1000" required>
         </div>
         <div class="embed-field">
           <label for="embedHeight">Height (px)</label>
-          <input type="number" id="embedHeight" value="200" min="50" max="1000">
+          <input type="number" id="embedHeight" value="200" min="50" max="1000" required>
         </div>
       </div>
       <div class="embed-preview-wrap">
@@ -1290,6 +1296,13 @@ SOFTWARE.
           <select id="dashboardNumbers">
             <option value="show">Show</option>
             <option value="hide">Hide</option>
+          </select>
+        </div>
+        <div class="embed-field">
+          <label for="dashboardShadows">Shadows</label>
+          <select id="dashboardShadows">
+            <option value="true">Show</option>
+            <option value="false">Hide</option>
           </select>
         </div>
         <div class="embed-field">
@@ -1391,8 +1404,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       <p>Embed the clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel
         (<strong>&#9432;</strong> &rarr; <strong>Embed this analog clock</strong>) to configure and copy the code.</p>
       <h3>Privacy</h3>
-      <p>Read the privacy policy at <a href="/privacy.html">/privacy.html</a> and the terms of service at <a
-          href="/TOS.html">/TOS.html</a>.</p>
+      <p>Read the privacy policy at <a href="/privacy">/privacy</a> and the terms of service at <a
+          href="/TOS">/TOS</a>.</p>
       <h3>Sustainability</h3>
       <p>This web app runs on sustainable energy and achieves an <strong>A+ carbon rating</strong> (&lt;0.01g CO2 per
         visit). <a href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">View
@@ -1553,7 +1566,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         activeTheme = 'dark';
       }
       if (!activeTheme && savedSettings &&
-        (savedSettings.theme === 'dark' || savedSettings.theme === 'light' || savedSettings.theme === 'transparent')) {
+        (savedSettings.theme === 'dark' || savedSettings.theme === 'light')) {
         activeTheme = savedSettings.theme;
       }
       if (!activeTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -1612,7 +1625,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const now = new Date();
         const nowMs = now.getTime();
         if (timezone) {
-          if (nowMs - lastOffsetCalc > OFFSET_RECALC_MS) {
+          if (nowMs - lastOffsetCalc >= OFFSET_RECALC_MS) {
             tzOffset = computeTzOffset(timezone);
             lastOffsetCalc = nowMs;
           }
@@ -1717,15 +1730,18 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       function saveSettings() {
         if (!saveSettingsToggle.checked) return;
         const storedSettings = readStoredSettings();
+        const wakeLockIntent = 'wakeLock' in navigator && !embedMode
+          ? document.getElementById('wakeLockToggle').checked
+          : typeof storedSettings.wakeLock === 'boolean' ? storedSettings.wakeLock : false;
         try {
-          localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
+          localStorage.setItem('clocksimulator-user-settings', JSON.stringify(Object.assign({}, storedSettings, {
             theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
-            wakeLock: document.getElementById('wakeLockToggle').checked,
+            wakeLock: wakeLockIntent,
             secondModeTick: secondModeTick,
             digitalShowSeconds: typeof storedSettings.digitalShowSeconds === 'boolean'
               ? storedSettings.digitalShowSeconds
               : true
-          }));
+          })));
         } catch (e) { }
       }
 
@@ -1772,10 +1788,6 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           svgClone.setAttribute('aria-label', displayName + ' clock');
           cell.appendChild(svgClone);
 
-          svgClone.querySelectorAll('[filter]').forEach(function (el) {
-            el.removeAttribute('filter');
-          });
-
           const label = document.createElement('div');
           label.className = 'clock-label';
           label.textContent = displayName;
@@ -1795,7 +1807,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             moonIcon: svgClone.querySelector('.moon-icon'),
             getTime: function (now) {
               const nowMs = now.getTime();
-              if (nowMs - lastCalc > OFFSET_RECALC_MS) {
+              if (nowMs - lastCalc >= OFFSET_RECALC_MS) {
                 offset = computeTzOffset(tz);
                 lastCalc = nowMs;
               }
@@ -2019,16 +2031,15 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           overlay.removeEventListener('keydown', activeTrapHandler);
           activeTrapHandler = null;
         }
-        if (previousFocus) {
-          previousFocus.focus();
-          previousFocus = null;
-        }
+        const focusTarget = previousFocus;
+        previousFocus = null;
+        if (focusTarget && focusTarget.isConnected) focusTarget.focus();
       }
 
       function openPanel(e, overlay) {
         if (e) e.preventDefault();
         previousFocus = document.activeElement;
-        if (aboutBubble.contains(previousFocus)) {
+        if ((e && aboutBubble.contains(e.currentTarget)) || aboutBubble.contains(previousFocus)) {
           previousFocus = aboutBtn;
         }
         closeAboutBubble();
@@ -2073,11 +2084,19 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
       function copyWithFlash(text, btn) {
         if (!btn.dataset.copyOriginal) btn.dataset.copyOriginal = btn.textContent;
-        navigator.clipboard.writeText(text).then(function () {
-          flashCopyButton(btn, 'Copied!');
-        }).catch(function () {
+        if (!navigator.clipboard || typeof navigator.clipboard.writeText !== 'function') {
           flashCopyButton(btn, 'Failed');
-        });
+          return;
+        }
+        try {
+          Promise.resolve(navigator.clipboard.writeText(text)).then(function () {
+            flashCopyButton(btn, 'Copied!');
+          }).catch(function () {
+            flashCopyButton(btn, 'Failed');
+          });
+        } catch (e) {
+          flashCopyButton(btn, 'Failed');
+        }
       }
 
       document.addEventListener('keydown', function (e) {
@@ -2226,43 +2245,65 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           setInterval(updateFavicon, FAVICON_UPDATE_MS);
         }, msToNextMinute);
 
-        if ('wakeLock' in navigator) {
+        if ('wakeLock' in navigator && !embedMode) {
           let wakeLockSentinel = null;
-          let wakeLockEnabled = false;
+          let wakeLockRequest = null;
+          let wakeLockEnabled = Boolean(savedSettings && savedSettings.wakeLock === true);
           const wakeLockToggle = document.getElementById('wakeLockToggle');
           const wakeLockLabel = document.getElementById('wakeLockLabel');
 
           wakeLockLabel.removeAttribute('hidden');
-          wakeLockToggle.checked = false;
+          wakeLockToggle.checked = wakeLockEnabled;
+
+          function releaseWakeLock(sentinel) {
+            try {
+              const releaseResult = sentinel.release();
+              if (releaseResult && typeof releaseResult.catch === 'function') {
+                releaseResult.catch(function () { });
+              }
+            } catch (e) { }
+          }
 
           function requestWakeLock() {
-            if (!wakeLockEnabled) return;
-            navigator.wakeLock.request('screen').then(function (sentinel) {
+            if (!wakeLockEnabled || wakeLockSentinel || wakeLockRequest ||
+              document.visibilityState !== 'visible') return;
+            let request;
+            try {
+              request = navigator.wakeLock.request('screen');
+            } catch (e) {
+              return;
+            }
+            wakeLockRequest = request;
+            Promise.resolve(request).then(function (sentinel) {
+              const requestIsCurrent = wakeLockRequest === request;
+              if (requestIsCurrent) wakeLockRequest = null;
+              sentinel.addEventListener('release', function () {
+                if (wakeLockSentinel === sentinel) {
+                  wakeLockSentinel = null;
+                }
+              });
+              if (!requestIsCurrent || !wakeLockEnabled ||
+                document.visibilityState !== 'visible' || wakeLockSentinel) {
+                releaseWakeLock(sentinel);
+                return;
+              }
               wakeLockSentinel = sentinel;
               wakeLockToggle.checked = true;
-              sentinel.addEventListener('release', function () {
-                wakeLockSentinel = null;
-              });
             }).catch(function () {
-              if (document.visibilityState === 'visible') {
-                wakeLockToggle.checked = false;
-                wakeLockEnabled = false;
-              }
+              if (wakeLockRequest === request) wakeLockRequest = null;
             });
           }
 
-          if (savedSettings && savedSettings.wakeLock) {
-            wakeLockEnabled = true;
-            requestWakeLock();
-          }
+          if (wakeLockEnabled) requestWakeLock();
 
           wakeLockToggle.addEventListener('change', function () {
             wakeLockEnabled = this.checked;
             if (wakeLockEnabled) {
               requestWakeLock();
             } else if (wakeLockSentinel) {
-              wakeLockSentinel.release();
+              const sentinel = wakeLockSentinel;
               wakeLockSentinel = null;
+              releaseWakeLock(sentinel);
             }
             saveSettings();
           });
@@ -2293,10 +2334,12 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           let burnInInterval = null;
 
           function startBurnIn() {
+            if (burnInInterval !== null) return;
             burnInInterval = setInterval(applyBurnInShift, BURN_IN_INTERVAL_MS);
           }
 
           function stopBurnIn() {
+            if (burnInInterval === null) return;
             clearInterval(burnInInterval);
             burnInInterval = null;
           }
@@ -2362,9 +2405,17 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         }
 
         function updateEmbed() {
+          if (!embedWidthInput.checkValidity()) {
+            embedWidthInput.reportValidity();
+            return;
+          }
+          if (!embedHeightInput.checkValidity()) {
+            embedHeightInput.reportValidity();
+            return;
+          }
           const qs = buildEmbedParams();
-          const w = parseInt(embedWidthInput.value) || 200;
-          const h = parseInt(embedHeightInput.value) || 200;
+          const w = embedWidthInput.valueAsNumber;
+          const h = embedHeightInput.valueAsNumber;
           const isRound = embedShapeSelect.value === 'round';
           const radius = isRound ? ' border-radius:50%;' : '';
           embedPreview.src = localBase + qs;
@@ -2443,6 +2494,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         dashboardThemeSelect.value = document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light';
         const dashboardSecondsSelect = document.getElementById('dashboardSeconds');
         const dashboardNumbersSelect = document.getElementById('dashboardNumbers');
+        const dashboardShadowsSelect = document.getElementById('dashboardShadows');
         const dashboardDayNightSelect = document.getElementById('dashboardDayNight');
         const dashboardBorderSelect = document.getElementById('dashboardBorder');
         const dashboardPreview = document.getElementById('dashboardPreview');
@@ -2515,6 +2567,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           if (rows !== '0') p.push('rows=' + rows);
           appendCommonParams(p, dashboardThemeSelect.value, dashboardSecondsSelect.value,
             dashboardBorderSelect.value, dashboardDayNightSelect.value, dashboardNumbersSelect.value);
+          if (dashboardShadowsSelect.value === 'false') p.push('shadows=false');
           return '?' + p.join('&');
         }
 
@@ -2560,6 +2613,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         dashboardThemeSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardSecondsSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardNumbersSelect.addEventListener('change', debouncedDashboardPreview);
+        dashboardShadowsSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardDayNightSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardBorderSelect.addEventListener('change', debouncedDashboardPreview);
 

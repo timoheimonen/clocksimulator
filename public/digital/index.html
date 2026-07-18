@@ -131,9 +131,16 @@
 
     .toggle-label input {
       position: absolute;
+      inset: 0;
       opacity: 0;
-      width: 0;
-      height: 0;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      cursor: inherit;
+    }
+
+    [hidden] {
+      display: none !important;
     }
 
     .toggle-slider {
@@ -573,6 +580,8 @@
     .digital-cell .digital-time {
       font-size: var(--cell-font-size, 10dvh);
       line-height: 0.95;
+      min-width: 0;
+      overflow: hidden;
     }
 
     .digital-cell .digital-meta {
@@ -727,6 +736,10 @@
       padding: 16px;
       background: rgba(128, 128, 128, 0.08);
       border-radius: 8px;
+    }
+
+    .embed-preview-wrap.transparent-preview {
+      background: #1f2937;
     }
 
     .embed-preview-wrap iframe {
@@ -933,6 +946,7 @@
 
     .help-panel table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
       margin: 4px 0 8px;
       font-size: 12px;
@@ -943,6 +957,7 @@
       text-align: left;
       padding: 8px;
       border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+      overflow-wrap: anywhere;
     }
 
     .help-panel th {
@@ -1018,7 +1033,7 @@
       if (!activeTheme && !hasParams) {
         try {
           const s = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
-          if (s && (s.theme === 'dark' || s.theme === 'light' || s.theme === 'transparent')) {
+          if (s && (s.theme === 'dark' || s.theme === 'light')) {
             activeTheme = s.theme;
           }
         } catch (e) { }
@@ -1109,8 +1124,8 @@
         <br>
         Made by Timo Heimonen<br>
         <a href="mailto:timo.heimonen@proton.me">timo.heimonen@proton.me</a><br>
-        <a href="https://clocksimulator.com/privacy.html">Privacy</a> &middot; <a
-          href="https://clocksimulator.com/TOS.html">Terms</a> &middot;
+        <a href="https://clocksimulator.com/privacy">Privacy</a> &middot; <a
+          href="https://clocksimulator.com/TOS">Terms</a> &middot;
         <a href="https://github.com/timoheimonen/clocksimulator" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
@@ -1119,7 +1134,7 @@
   <main>
     <h1 class="sr-only">Online Digital Clock</h1>
     <p class="sr-only">Free fullscreen digital clock with timezone dashboards, OBS embeds, no ads, no tracking, and offline PWA support.</p>
-    <div class="digital-container" id="digitalContainer">
+    <div class="digital-container" id="digitalContainer" role="group">
       <time id="digitalTime" class="digital-time" datetime=""></time>
       <div class="digital-meta" id="digitalMeta">
         <span class="daynight-mark" id="dayNightIcon" aria-hidden="true"></span>
@@ -1185,11 +1200,11 @@
         </div>
         <div class="embed-field">
           <label for="embedWidth">Width (px)</label>
-          <input type="number" id="embedWidth" value="360" min="120" max="1600">
+          <input type="number" id="embedWidth" value="360" min="120" max="1600" required>
         </div>
         <div class="embed-field">
           <label for="embedHeight">Height (px)</label>
-          <input type="number" id="embedHeight" value="160" min="80" max="1000">
+          <input type="number" id="embedHeight" value="160" min="80" max="1000" required>
         </div>
       </div>
       <div class="embed-preview-wrap">
@@ -1355,8 +1370,8 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       <p>Embed the digital clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel
         (<strong>&#9432;</strong> &rarr; <strong>Embed this digital clock</strong>) to configure and copy the code.</p>
       <h3>Privacy</h3>
-      <p>Read the privacy policy at <a href="/privacy.html">/privacy.html</a> and the terms of service at <a
-          href="/TOS.html">/TOS.html</a>.</p>
+      <p>Read the privacy policy at <a href="/privacy">/privacy</a> and the terms of service at <a
+          href="/TOS">/TOS</a>.</p>
       <h3>Sustainability</h3>
       <p>This web app runs on sustainable energy and achieves an <strong>A+ carbon rating</strong> (&lt;0.01g CO2 per
         visit). <a href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">View
@@ -1479,10 +1494,13 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         '<g class="daynight-moon"><path d="M13.5 6.5a5 5 0 1 1-4.5 8 4 4 0 0 0 4.5-8Z" fill="currentColor"/></g>' +
         '</svg>';
       const themeToggle = document.getElementById('themeToggle');
+      const wakeLockToggle = document.getElementById('wakeLockToggle');
+      const wakeLockLabel = document.getElementById('wakeLockLabel');
       const secondModeToggle = document.getElementById('secondModeToggle');
       const saveSettingsToggle = document.getElementById('saveSettingsToggle');
       const saveSettingsLabel = document.getElementById('saveSettingsLabel');
       let savedSettings = null;
+      let wakeLockEnabled = false;
       dayNightIcon.innerHTML = dayNightIconSvg;
 
       if (!hasParams) {
@@ -1495,6 +1513,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       if (savedSettings) {
         saveSettingsToggle.checked = true;
       }
+      wakeLockEnabled = !!(savedSettings && savedSettings.wakeLock === true);
 
       if (hasParams) {
         saveSettingsToggle.disabled = true;
@@ -1513,7 +1532,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         activeTheme = 'dark';
       }
       if (!activeTheme && savedSettings &&
-        (savedSettings.theme === 'dark' || savedSettings.theme === 'light' || savedSettings.theme === 'transparent')) {
+        (savedSettings.theme === 'dark' || savedSettings.theme === 'light')) {
         activeTheme = savedSettings.theme;
       }
       if (!activeTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -1590,7 +1609,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         let lastCalc = Date.now();
         return function (now) {
           const nowMs = now.getTime();
-          if (tz && nowMs - lastCalc > OFFSET_RECALC_MS) {
+          if (tz && nowMs - lastCalc >= OFFSET_RECALC_MS) {
             offset = computeTzOffset(tz);
             lastCalc = nowMs;
           }
@@ -1675,6 +1694,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
           const tz = validTimezones[i];
           const cell = document.createElement('div');
           cell.className = borderParam === 'show' ? 'digital-cell bordered' : 'digital-cell';
+          cell.setAttribute('role', 'group');
           const timeEl = document.createElement('time');
           timeEl.className = 'digital-time';
           timeEl.setAttribute('datetime', '');
@@ -1762,10 +1782,10 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       function fitDigitalText() {
         if (dashboardMode) {
           for (let i = 0; i < clocks.length; i++) {
-            fitOne(clocks[i].timeEl, clocks[i].cell, '--cell-font-size', 0.42);
+            fitOne(clocks[i].timeEl, clocks[i].cell, '--cell-font-size', 0.42, 12);
           }
         } else {
-          const size = fitOne(digitalTime, digitalContainer, '--digital-font-size', 0.54);
+          const size = fitOne(digitalTime, digitalContainer, '--digital-font-size', 0.54, 28);
           if (size) {
             const gap = Math.max(8, Math.min(window.innerHeight * 0.035, 18));
             digitalContainer.style.setProperty('--digital-meta-offset', Math.ceil(size * 0.45 + gap) + 'px');
@@ -1773,7 +1793,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         }
       }
 
-      function fitOne(timeEl, box, variableName, heightRatio) {
+      function fitOne(timeEl, box, variableName, heightRatio, minimumSize) {
         if (!timeEl || !box || !timeEl.textContent) return;
         const boxRect = box.getBoundingClientRect();
         if (!boxRect.width || !boxRect.height) return;
@@ -1784,12 +1804,12 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
           (parseFloat(boxStyle.borderRightWidth) || 0);
         const availableWidth = Math.max(0, boxRect.width - horizontalInset) || boxRect.width;
         let size = Math.floor(boxRect.height * heightRatio);
-        size = Math.max(38, Math.min(size, 260));
+        size = Math.max(minimumSize, Math.min(size, 260));
         timeEl.style.setProperty(variableName, size + 'px');
         let targetWidth = availableWidth * 0.96;
-        for (let i = 0; i < 24 && timeEl.scrollWidth > targetWidth && size > 28; i++) {
+        for (let i = 0; i < 24 && timeEl.scrollWidth > targetWidth && size > minimumSize; i++) {
           const ratio = (targetWidth * 0.98) / timeEl.scrollWidth;
-          size = Math.max(28, Math.floor(size * Math.min(0.9, ratio)));
+          size = Math.max(minimumSize, Math.floor(size * Math.min(0.9, ratio)));
           timeEl.style.setProperty(variableName, size + 'px');
         }
         return size;
@@ -1818,15 +1838,14 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       function saveSettings() {
         if (!saveSettingsToggle.checked) return;
         const storedSettings = readStoredSettings();
+        storedSettings.theme = document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light';
+        storedSettings.wakeLock = wakeLockEnabled;
+        storedSettings.secondModeTick = typeof storedSettings.secondModeTick === 'boolean'
+          ? storedSettings.secondModeTick
+          : true;
+        storedSettings.digitalShowSeconds = showSeconds;
         try {
-          localStorage.setItem('clocksimulator-user-settings', JSON.stringify({
-            theme: document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light',
-            wakeLock: document.getElementById('wakeLockToggle').checked,
-            secondModeTick: typeof storedSettings.secondModeTick === 'boolean'
-              ? storedSettings.secondModeTick
-              : true,
-            digitalShowSeconds: showSeconds
-          }));
+          localStorage.setItem('clocksimulator-user-settings', JSON.stringify(storedSettings));
         } catch (e) { }
       }
 
@@ -1911,16 +1930,15 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
           overlay.removeEventListener('keydown', activeTrapHandler);
           activeTrapHandler = null;
         }
-        if (previousFocus) {
-          previousFocus.focus();
-          previousFocus = null;
-        }
+        const focusTarget = previousFocus;
+        previousFocus = null;
+        if (focusTarget && focusTarget.isConnected) focusTarget.focus();
       }
 
       function openPanel(e, overlay) {
         if (e) e.preventDefault();
         previousFocus = document.activeElement;
-        if (aboutBubble.contains(previousFocus)) {
+        if ((e && aboutBubble.contains(e.currentTarget)) || aboutBubble.contains(previousFocus)) {
           previousFocus = aboutBtn;
         }
         closeAboutBubble();
@@ -2088,43 +2106,58 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
           setInterval(updateFavicon, FAVICON_UPDATE_MS);
         }, msToNextMinute);
 
-        if ('wakeLock' in navigator) {
+        if ('wakeLock' in navigator && !embedMode) {
           let wakeLockSentinel = null;
-          let wakeLockEnabled = false;
-          const wakeLockToggle = document.getElementById('wakeLockToggle');
-          const wakeLockLabel = document.getElementById('wakeLockLabel');
+          let wakeLockRequest = null;
 
           wakeLockLabel.removeAttribute('hidden');
-          wakeLockToggle.checked = false;
+          wakeLockToggle.checked = wakeLockEnabled;
+
+          function releaseWakeLock(sentinel) {
+            try {
+              const releaseResult = sentinel.release();
+              if (releaseResult && typeof releaseResult.catch === 'function') {
+                releaseResult.catch(function () { });
+              }
+            } catch (e) { }
+          }
 
           function requestWakeLock() {
-            if (!wakeLockEnabled) return;
-            navigator.wakeLock.request('screen').then(function (sentinel) {
+            if (!wakeLockEnabled || document.visibilityState !== 'visible' ||
+              wakeLockSentinel || wakeLockRequest) return;
+            let request;
+            try {
+              request = navigator.wakeLock.request('screen');
+            } catch (e) {
+              return;
+            }
+            wakeLockRequest = request;
+            Promise.resolve(request).then(function (sentinel) {
+              if (wakeLockRequest === request) wakeLockRequest = null;
+              if (!wakeLockEnabled || document.visibilityState !== 'visible') {
+                releaseWakeLock(sentinel);
+                return;
+              }
               wakeLockSentinel = sentinel;
               wakeLockToggle.checked = true;
               sentinel.addEventListener('release', function () {
-                wakeLockSentinel = null;
+                if (wakeLockSentinel === sentinel) wakeLockSentinel = null;
               });
             }).catch(function () {
-              if (document.visibilityState === 'visible') {
-                wakeLockToggle.checked = false;
-                wakeLockEnabled = false;
-              }
+              if (wakeLockRequest === request) wakeLockRequest = null;
             });
           }
 
-          if (savedSettings && savedSettings.wakeLock) {
-            wakeLockEnabled = true;
-            requestWakeLock();
-          }
+          if (wakeLockEnabled) requestWakeLock();
 
           wakeLockToggle.addEventListener('change', function () {
             wakeLockEnabled = this.checked;
             if (wakeLockEnabled) {
               requestWakeLock();
             } else if (wakeLockSentinel) {
-              wakeLockSentinel.release();
+              const sentinel = wakeLockSentinel;
               wakeLockSentinel = null;
+              releaseWakeLock(sentinel);
             }
             saveSettings();
           });
@@ -2155,10 +2188,12 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
           let burnInInterval = null;
 
           function startBurnIn() {
+            if (burnInInterval !== null) return;
             burnInInterval = setInterval(applyBurnInShift, BURN_IN_INTERVAL_MS);
           }
 
           function stopBurnIn() {
+            if (burnInInterval === null) return;
             clearInterval(burnInInterval);
             burnInInterval = null;
           }
@@ -2220,12 +2255,19 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         }
 
         function updateEmbed() {
+          if (!embedWidthInput.checkValidity() || !embedHeightInput.checkValidity()) {
+            const invalidInput = !embedWidthInput.checkValidity() ? embedWidthInput : embedHeightInput;
+            invalidInput.reportValidity();
+            return;
+          }
           const qs = buildEmbedParams();
-          const w = parseInt(embedWidthInput.value) || 360;
-          const h = parseInt(embedHeightInput.value) || 160;
+          const w = embedWidthInput.valueAsNumber;
+          const h = embedHeightInput.valueAsNumber;
           embedPreview.src = localBase + qs;
           embedPreview.width = Math.min(w, 240);
           embedPreview.height = Math.min(h, 110);
+          embedPreview.parentElement.classList.toggle(
+            'transparent-preview', embedThemeSelect.value === 'transparent');
           const transparent = embedThemeSelect.value === 'transparent' ? ' allowtransparency="true"' : '';
           const code = '<iframe src="' + prodBase + qs + '" title="Digital clock"\n' +
             '  width="' + w + '" height="' + h + '"' + transparent + '\n' +

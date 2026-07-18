@@ -10,6 +10,11 @@
 - Keyboard focus, dashboard timezone fields, generated embeds, and reduced-motion behavior are now more accessible across both clock pages.
 - Help dialog URL examples can now be reached and scrolled with a keyboard and are clearly identified for screen readers on both clock pages.
 - Offline reloads now keep the Privacy Policy and Terms of Service pages open instead of showing the analog clock.
+- Clock controls, dialogs, status messages, and time displays now work more reliably with keyboards and screen readers across browsers.
+- Saved settings, screen-on mode, burn-in protection, and timezone updates now handle interruptions and repeated actions more reliably.
+- Embedded clocks, dashboard layouts, and previews now fit small displays better while preserving their intended contrast and appearance.
+- The analog dashboard builder now lets you show or hide clock-hand shadows.
+- Offline updates now retain only successful site files, and legal-page links use their clean public addresses consistently.
 
 ## 1.3.4 - 2026-05-18
 
