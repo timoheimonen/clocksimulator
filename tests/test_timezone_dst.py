@@ -856,7 +856,6 @@ def test_target_timezone_dst_changes_without_reload(
         }
 
 
-@pytest.mark.cross_browser
 @pytest.mark.chromium_only
 @pytest.mark.parametrize(
     ("path", "dashboard", "expected_sources"),

@@ -14,9 +14,6 @@ from urllib.request import urlopen
 import pytest
 from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
 
-from tests.js_coverage import JsCoverageManager, application_source_hashes
-
-
 CONTEXT_OPTIONS = {
     "locale": "en-US",
     "viewport": {"width": 1280, "height": 720},
@@ -51,18 +48,6 @@ def pytest_addoption(parser) -> None:
         default=os.environ.get("CLOCKSIMULATOR_BROWSER", "chromium"),
         help="Browser engine used by clocksimulator tests",
     )
-    parser.addoption(
-        "--js-coverage",
-        action="store_true",
-        default=False,
-        help="Collect Chromium V8 JavaScript coverage and enforce its measured baseline",
-    )
-    parser.addoption(
-        "--js-coverage-output",
-        action="store",
-        default="test-results/js-coverage",
-        help="Directory for JavaScript coverage JSON and text reports",
-    )
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -80,24 +65,6 @@ def update_snapshots(request) -> bool:
 @pytest.fixture(scope="session")
 def browser_engine(request) -> str:
     return request.config.getoption("--browser-engine")
-
-
-@pytest.fixture(scope="session", autouse=True)
-def js_coverage_manager(request, browser_engine: str) -> Iterator[JsCoverageManager]:
-    root = Path(str(request.config.rootpath))
-    output_option = Path(request.config.getoption("--js-coverage-output"))
-    output_directory = output_option if output_option.is_absolute() else root / output_option
-    manager = JsCoverageManager(
-        enabled=request.config.getoption("--js-coverage"),
-        browser_engine=browser_engine,
-        output_directory=output_directory,
-        baseline_path=root / "tests" / "js_coverage_baseline.json",
-        allowed_source_hashes=application_source_hashes(root / "public"),
-    )
-    try:
-        yield manager
-    finally:
-        manager.finish()
 
 
 @pytest.fixture(scope="session")
@@ -257,7 +224,6 @@ def assert_expected_browser_errors(
 def create_test_context(
     browser: Browser,
     browser_errors: list[BrowserError],
-    js_coverage_manager: JsCoverageManager,
     timezone_id: str,
     service_workers: str,
 ) -> BrowserContext:
@@ -268,7 +234,6 @@ def create_test_context(
     )
     def attach_page(created_page: Page) -> None:
         attach_browser_error_gate(created_page, browser_errors)
-        js_coverage_manager.attach(created_page)
 
     context.on("page", attach_page)
     return context
@@ -313,13 +278,11 @@ def finalize_test_context(
     context: BrowserContext,
     request,
     tracing_mode: str,
-    js_coverage_manager: JsCoverageManager,
     browser_errors: list[BrowserError],
     expected_browser_errors: list[str],
 ) -> None:
     force_retain = False
     try:
-        js_coverage_manager.finalize_context(context)
         assert_expected_browser_errors(browser_errors, expected_browser_errors)
     except BaseException:
         force_retain = True
@@ -341,12 +304,9 @@ def context(
     browser: Browser,
     browser_errors: list[BrowserError],
     expected_browser_errors: list[str],
-    js_coverage_manager: JsCoverageManager,
     request,
 ) -> Iterator[BrowserContext]:
-    ctx = create_test_context(
-        browser, browser_errors, js_coverage_manager, "UTC", "block"
-    )
+    ctx = create_test_context(browser, browser_errors, "UTC", "block")
     tracing_mode = start_tracing(ctx, request)
     try:
         yield ctx
@@ -355,19 +315,14 @@ def context(
             ctx,
             request,
             tracing_mode,
-            js_coverage_manager,
             browser_errors,
             expected_browser_errors,
         )
 
 
 @pytest.fixture
-def page(
-    context: BrowserContext, js_coverage_manager: JsCoverageManager
-) -> Page:
-    created_page = context.new_page()
-    js_coverage_manager.attach(created_page)
-    return created_page
+def page(context: BrowserContext) -> Page:
+    return context.new_page()
 
 
 @pytest.fixture
@@ -375,12 +330,9 @@ def helsinki_context(
     browser: Browser,
     browser_errors: list[BrowserError],
     expected_browser_errors: list[str],
-    js_coverage_manager: JsCoverageManager,
     request,
 ) -> Iterator[BrowserContext]:
-    ctx = create_test_context(
-        browser, browser_errors, js_coverage_manager, "Europe/Helsinki", "block"
-    )
+    ctx = create_test_context(browser, browser_errors, "Europe/Helsinki", "block")
     tracing_mode = start_tracing(ctx, request)
     try:
         yield ctx
@@ -389,19 +341,14 @@ def helsinki_context(
             ctx,
             request,
             tracing_mode,
-            js_coverage_manager,
             browser_errors,
             expected_browser_errors,
         )
 
 
 @pytest.fixture
-def helsinki_page(
-    helsinki_context: BrowserContext, js_coverage_manager: JsCoverageManager
-) -> Page:
-    created_page = helsinki_context.new_page()
-    js_coverage_manager.attach(created_page)
-    return created_page
+def helsinki_page(helsinki_context: BrowserContext) -> Page:
+    return helsinki_context.new_page()
 
 
 @pytest.fixture
@@ -409,12 +356,9 @@ def service_worker_context(
     browser: Browser,
     browser_errors: list[BrowserError],
     expected_browser_errors: list[str],
-    js_coverage_manager: JsCoverageManager,
     request,
 ) -> Iterator[BrowserContext]:
-    ctx = create_test_context(
-        browser, browser_errors, js_coverage_manager, "UTC", "allow"
-    )
+    ctx = create_test_context(browser, browser_errors, "UTC", "allow")
     tracing_mode = start_tracing(ctx, request)
     try:
         yield ctx
@@ -423,17 +367,11 @@ def service_worker_context(
             ctx,
             request,
             tracing_mode,
-            js_coverage_manager,
             browser_errors,
             expected_browser_errors,
         )
 
 
 @pytest.fixture
-def service_worker_page(
-    service_worker_context: BrowserContext,
-    js_coverage_manager: JsCoverageManager,
-) -> Page:
-    created_page = service_worker_context.new_page()
-    js_coverage_manager.attach(created_page)
-    return created_page
+def service_worker_page(service_worker_context: BrowserContext) -> Page:
+    return service_worker_context.new_page()

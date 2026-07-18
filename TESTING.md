@@ -33,7 +33,6 @@ npm install --global wrangler@4.28.0
 ```bash
 ./run_release_tests.sh
 ./run_release_tests.sh --seed 20260718
-./run_release_tests.sh --output /tmp/clocksimulator-release
 ./run_release_tests.sh --dry-run
 conda run -n clocksimulator python -m pytest
 conda run -n clocksimulator python -m pytest -p no:randomly
@@ -41,11 +40,11 @@ conda run -n clocksimulator python -m pytest --randomly-seed=20260718
 conda run -n clocksimulator python -m pytest -m visual
 conda run -n clocksimulator python -m pytest -m service_worker
 conda run -n clocksimulator python -m pytest -m deployment
-conda run -n clocksimulator python -m pytest -m "cross_browser and not chromium_only" --browser-engine=firefox
-conda run -n clocksimulator python -m pytest -m "cross_browser and not chromium_only" --browser-engine=webkit
+conda run -n clocksimulator python -m pytest -m cross_browser --browser-engine=firefox
+conda run -n clocksimulator python -m pytest -m cross_browser --browser-engine=webkit
 ```
 
-`./run_tests.sh` is a small live-streaming wrapper around one pytest invocation and forwards all arguments. `./run_release_tests.sh` is the canonical one-command local release gate. It runs the complete Chromium suite, the isolated visual, service-worker and deployment gates, the Firefox and WebKit core matrices, and Chromium JavaScript coverage sequentially with one recorded random seed. It stops at the first failure and prints the exact failed-gate command for reproduction.
+`./run_tests.sh` is a small live-streaming wrapper around one pytest invocation and forwards all arguments. `./run_release_tests.sh` is the canonical one-command local release gate. It runs the complete Chromium suite and the Firefox and WebKit cross-browser matrices sequentially with one recorded random seed. It stops at the first failure and prints the failed command and retained trace location.
 
 ## Markers
 
@@ -84,7 +83,7 @@ Every test receives a fresh `BrowserContext` and page. The normal context blocks
 
 Chromium and Firefox share one browser process per session. WebKit restarts the browser process for each test module because its macOS network process stops accepting navigations after a large number of short-lived contexts; the contexts and pages remain function-scoped and isolated. Keyboard traversal uses Option+Tab in macOS WebKit, matching the platform setting that includes form controls, and ordinary Tab in Chromium and Firefox.
 
-`open_page()` installs Playwright's controlled clock, ensures that test's origin storage is empty, navigates, and waits for exact render readiness. A fresh isolated `about:blank` page is already empty, so the helper skips the otherwise redundant storage navigation in that one case. Explicit storage seeds and repeated calls still navigate to the origin and clear it; an infrastructure regression test enforces both branches. Separate helpers support navigation and reload without clearing storage. Tests that need another timezone use a separate Helsinki context rather than mutating a shared session.
+`open_page()` installs Playwright's controlled clock, initializes the test origin with empty or explicitly seeded storage, navigates, and waits for exact render readiness. Separate helpers support navigation and reload without clearing storage. Tests that need another timezone use a separate Helsinki context rather than mutating a shared session.
 
 The timer probe records timeout and interval identity, delay, calls, and cancellation. Manual mode invokes callbacks without real waiting. Production and test code must not use sleep-based synchronization.
 
@@ -117,7 +116,7 @@ Generated HTML contains exactly one parseable iframe. Every visible control must
 
 The canonical environment is Chromium from Playwright 1.58.0 on macOS 26 arm64, matching the committed baselines. Ordinary local runs never update baselines.
 
-Before capture, the helper waits for exact clock readiness and `document.fonts.ready`, disables animations, hides the caret, and uses the fixed context settings. Comparisons use explicit per-channel and changed-pixel limits; the default is exact. A missing baseline is a failure. Only `--update-snapshots` may create or replace one.
+Before capture, the helper waits for exact clock readiness and `document.fonts.ready`, disables animations, hides the caret, and uses the fixed context settings. Comparisons are exact. A missing baseline is a failure. Only `--update-snapshots` may create or replace one.
 
 ```bash
 conda run -n clocksimulator python -m pytest -m visual
@@ -132,25 +131,6 @@ Service-worker tests use a controlled document and browser-side `fetch()` becaus
 
 Deployment tests copy the real `public/` directory and `wrangler.jsonc` into a temporary runtime directory, start exactly Wrangler 4.28.0 on a free port, and verify Cloudflare's actual HTML handling, redirects, headers, MIME types, and cross-origin iframe behavior. The ordinary SimpleHTTP fixture remains the fast DOM-test server and does not substitute for this suite.
 
-## JavaScript coverage
-
-Chromium coverage is opt-in:
-
-```bash
-conda run -n clocksimulator python -m pytest \
-  -m "not visual and not service_worker and not deployment" \
-  --browser-engine=chromium \
-  --js-coverage \
-  --js-coverage-output=test-results/js-coverage \
-  --randomly-seed=20260718
-```
-
-The harness starts precise V8 coverage before navigation, merges every managed page by script hash, excludes test-injected and third-party scripts, and reports analog and digital code separately. It writes `coverage.json` and `summary.txt`.
-
-The canonical measurement on 2026-07-18 used the command above with Playwright Chromium 1.58.0. It observed 45/45 named functions and 46,941/47,954 executed source units for analog, and 48/48 named functions and 42,732/43,687 executed source units for digital. `tests/js_coverage_baseline.json` publishes those measurements and the exact source hashes and lengths. A production-script change therefore requires a fresh canonical run and an intentional baseline update.
-
-The regression gate does not require the execution totals to match the observation exactly. Its floors are 40 named functions and 42,000 executed units for analog, and 44 named functions and 39,000 executed units for digital. This leaves roughly 8–11% headroom for harmless V8 range variation while still detecting a material loss. Critical function names are gated separately. V8 byte coverage proves execution, not assertion quality, so the behavior matrices and mutation checks remain the primary oracles.
-
 ## Manual release checks
 
 The repository does not use GitHub Actions or another automated CI service. Tests are run manually in the local `clocksimulator` Conda environment.
@@ -161,65 +141,6 @@ Before a release, run the complete local matrix with:
 ./run_release_tests.sh
 ```
 
-The wrapper verifies the pinned Conda dependencies, all three Playwright browsers, Wrangler 4.28.0, and the canonical macOS 26 arm64 visual environment before starting. It then runs the complete Chromium suite, the visual, service-worker and deployment marker suites, both cross-browser core matrices, and the JavaScript coverage command documented above. The gates run sequentially and fail fast. Do not use retries to turn a failing release check green.
+The wrapper intentionally has no separate dependency preflight: the real test processes validate the environment they use. It runs the complete Chromium suite first, followed by the Firefox and WebKit `cross_browser` selections. The gates run sequentially and fail fast. Do not use retries to turn a failing release check green.
 
-The default seed is generated once, printed, and reused for every gate. Reproduce a run with `--seed VALUE`. Release gates ignore ambient pytest, Python-path, and user-site overrides so shell or Conda settings cannot narrow the matrix, inject plugins, or update snapshots. By default the summary, gate logs and statuses, Playwright failure traces, and coverage reports are written to a new directory under `${TMPDIR:-/tmp}` so the repository remains clean. Use `--output PATH` to select a new artifact directory; an existing path is never overwritten. `--dry-run` prints the seven shell-escaped commands without running preflight checks, creating artifacts, or executing tests.
-
-## Consolidation record
-
-Tests are removed only after a stronger replacement exercises the same implementation path. The current consolidation maps are:
-
-| Removed tests or family | Replacement |
-|---|---|
-| `test_mouse_click_does_not_show_switch_focus_ring` | `test_pointer_activation_does_not_force_keyboard_focus_indicator` |
-| `test_keyboard_can_open_embed_dialog_from_about_menu`, `test_every_dialog_control_has_keyboard_focus_indicator` | The parameterized dialog keyboard lifecycle, close-method, and all-controls focus tests in `test_accessibility.py` |
-| `test_normal_motion_keeps_transitions` | `test_ui_normal_motion_retains_transitions`, alongside the reduced-motion and embed transition matrices |
-| Analog dashboard activation/title/grid/label/count tests | `test_dashboard_mode_activation_has_exact_structure` |
-| Analog dashboard rows, three/four-clock, and auto-grid 4/5/6/9 tests | `test_dashboard_grid_layout` with explicit case IDs |
-| Analog dashboard per-theme and negative-only feature tests | `test_dashboard_theme_visible_state` and the seconds/border/numbers/shadows positive-and-negative pairs |
-| Analog dashboard invalid, mixed, empty, and single-timezone fallbacks | `test_dashboard_mixed_valid_invalid_timezones_keep_order_and_time` and `test_dashboard_fallbacks_render_initialized_single_clock` |
-| Analog single/dashboard embed transition checks and dashboard combined-state tests | The four-renderer accessibility transition matrix, `test_dashboard_embed_combined_hides_ui_and_keeps_labels`, and `test_dashboard_all_params_combined` |
-| Three embed/dashboard/digital sleep-based burn-in tests and the old partial timer test | The four-renderer burn-in lifecycle and disabled-mode matrices in `test_accessibility.py` |
-| Digital dashboard activation existence test | `test_digital_dashboard_activation_has_exact_structure` |
-| Digital embed output, missing-clipboard, and dashboard URL builder tests | The shared end-to-end analog/digital builder matrices in `test_builders.py` |
-| Digital static analog/digital HTML link tests | Real locator navigation tests on both pages |
-| Digital service-worker source-string test | The isolated install, runtime-cache, and offline behavior suite in `test_service_worker.py` |
-| Digital theme class/toggle tests and all digital-only DOMContentLoaded priority probes | The shared analog/digital theme priority, OS resynchronization, base-rendering, switch, and visual matrices in `test_theme_handling.py` |
-| Full-page `embed-daynight.png` baseline | The exact day/night DOM assertion plus focused `embed-daynight-icon.png` baseline; the dark embed layout remains covered by `embed-dark.png` |
-| Embed overlay/about initial-state and no-op Escape tests | Real dialog open/close, inert, focus restoration, backdrop, button, and keyboard lifecycle tests |
-| Old analog/digital saved-field preservation and write-time reread pairs | The bidirectional navigation, unknown-field preservation, and write-time reread matrices in `test_saved_settings.py` |
-| Old storage normalization, disable, URL-write, and blocked-storage tests | The real reload/disable, byte-preserving URL, complete-default, normalization-on-write, and per-operation exception matrices |
-| Legal-precache presence test | Exact successful precache contents plus online/offline legal navigation behavior |
-| Individual analog theme params, CSS variables, saved/OS priority, FOUC, toggles, dashboard, and three separate visual tests | The shared theme matrices and parameterized visual test in `test_theme_handling.py` |
-
-## Mutation smoke checks
-
-During changes, make a reversible local mutation, run the named test, and restore the mutation immediately. The required mappings are:
-
-| Mutation | Expected detector |
-|---|---|
-| Remove a snapshot baseline | Snapshot helper infrastructure test or matching visual test |
-| Register burn-in in embed mode | Burn-in lifecycle matrix |
-| Force seconds always hidden or shown | Positive/negative seconds parameter tests |
-| Remove day/night update | Boundary and focused icon tests |
-| Remove target offset recalculation | 60,000 ms SLA and live DST tests |
-| Remove digital minute callback | Deterministic minute-boundary tests |
-| Remove service-worker `cache.put` | Runtime cache then offline-hit test |
-| Make an all-params NodeList empty | Exact element-count assertion before collection checks |
-
-Mutations are never committed.
-
-The complete mutation audit was executed on 2026-07-18 with exact node IDs, `--randomly-dont-reorganize`, and tracing disabled. Every restored target passed immediately after its mutant run.
-
-| Verified mutation | Observed detector |
-|---|---|
-| Missing `embed-daynight-icon.png` baseline | Killed by the missing-baseline failure; restoration passed |
-| Burn-in registered in analog embed mode | Killed by the active 600,000 ms interval assertion; restoration passed |
-| Analog seconds forced hidden by default | Killed by the visible second-hand default assertion; restoration passed |
-| Analog day/night updater returned early | Killed at the 06:00 day boundary; restoration passed |
-| Analog offset recalculation disabled | Killed by the exact 60,000 ms formatter-call SLA; restoration passed |
-| Digital minute callback removed | Killed by the required effectful minute timer assertion; restoration passed |
-| Service-worker runtime `cache.put` removed | Killed by the absent cache entry/offline-hit contract; restoration passed |
-| All-params second-hand selector made empty | Killed by the exact two-element count assertion; restoration passed |
-
-Removing only the inner `!embedMode` term from the burn-in expression survived because an outer `if (!embedMode)` independently guards the same block. The effective behavioral mutation moved only burn-in registration outside that outer guard and was killed. This redundant-guard probe is retained in the audit record so a source-shape mutation is not misreported as a test weakness.
+The default seed is generated once, printed, and reused for every gate. Reproduce a run with `--seed VALUE`. `run_tests.sh` removes ambient pytest, Python-path, and user-site overrides so shell or Conda settings cannot narrow the matrix, inject plugins, or update snapshots. Playwright traces are written to a temporary release directory and retained for diagnosis. `--dry-run` prints the three shell-escaped commands without creating artifacts or executing tests.

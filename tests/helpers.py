@@ -334,8 +334,7 @@ def open_page(
     fixed_time: str = DEFAULT_FIXED_TIME,
 ) -> None:
     install_test_clock(page, fixed_time)
-    if page.url != "about:blank" or localStorage_items is not None:
-        seed_local_storage(page, app_url, localStorage_items, clear=True)
+    seed_local_storage(page, app_url, localStorage_items, clear=True)
     navigate_clock_page(
         page,
         build_clock_url(app_url, path, params),
@@ -357,24 +356,27 @@ def _write_diff_artifact(
     actual: Image.Image,
     baseline: Image.Image | None,
     diff_path: Path,
-    channel_tolerance: int,
 ) -> None:
     diff_path.parent.mkdir(parents=True, exist_ok=True)
     if baseline is None or actual.size != baseline.size or actual.mode != baseline.mode:
         actual.convert("RGBA").save(diff_path)
         return
 
-    diff = ImageChops.difference(actual, baseline)
+    mask = _changed_pixel_mask(actual, baseline)
+    grey = Image.new("RGBA", actual.size, (128, 128, 128, 255))
+    red = Image.new("RGBA", actual.size, (255, 0, 0, 255))
+    Image.composite(red, grey, mask).save(diff_path)
+
+
+def _changed_pixel_mask(actual: Image.Image, baseline: Image.Image) -> Image.Image:
     channel_masks = [
-        channel.point(lambda value: 255 if value > channel_tolerance else 0)
-        for channel in diff.split()
+        channel.point(lambda value: 255 if value else 0)
+        for channel in ImageChops.difference(actual, baseline).split()
     ]
     mask = channel_masks[0]
     for channel_mask in channel_masks[1:]:
         mask = ImageChops.lighter(mask, channel_mask)
-    grey = Image.new("RGBA", actual.size, (128, 128, 128, 255))
-    red = Image.new("RGBA", actual.size, (255, 0, 0, 255))
-    Image.composite(red, grey, mask).save(diff_path)
+    return mask
 
 
 def _assert_transparent_image(image: Image.Image, name: str) -> None:
@@ -402,8 +404,6 @@ def assert_image_snapshot(
     actual: Image.Image,
     name: str,
     update: bool = False,
-    channel_tolerance: int = 0,
-    max_changed_pixels: int = 0,
     baseline_dir: Path | str = SCREENSHOTS_DIR,
     transparent: bool = False,
 ) -> None:
@@ -433,36 +433,27 @@ def assert_image_snapshot(
         _assert_transparent_image(baseline, name)
 
     if actual.size != baseline.size:
-        _write_diff_artifact(actual, baseline, diff_path, channel_tolerance)
+        _write_diff_artifact(actual, baseline, diff_path)
         pytest.fail(
             f"Screenshot size mismatch for {name}: expected {baseline.size}, got {actual.size}. "
             "Run with --update-snapshots to regenerate the baseline."
         )
 
     if actual.mode != baseline.mode:
-        _write_diff_artifact(actual, baseline, diff_path, channel_tolerance)
+        _write_diff_artifact(actual, baseline, diff_path)
         pytest.fail(
             f"Screenshot color mode mismatch for {name}: "
             f"expected {baseline.mode}, got {actual.mode}."
         )
 
-    diff = ImageChops.difference(actual, baseline)
-    channel_masks = [
-        channel.point(lambda value: 255 if value > channel_tolerance else 0)
-        for channel in diff.split()
-    ]
-    mask = channel_masks[0]
-    for channel_mask in channel_masks[1:]:
-        mask = ImageChops.lighter(mask, channel_mask)
-    unchanged_pixels = mask.histogram()[0]
-    total_pixels = actual.width * actual.height
-    changed_pixels = total_pixels - unchanged_pixels
+    mask = _changed_pixel_mask(actual, baseline)
+    changed_pixels = mask.histogram()[255]
 
-    if changed_pixels > max_changed_pixels:
-        _write_diff_artifact(actual, baseline, diff_path, channel_tolerance)
+    if changed_pixels:
+        total_pixels = actual.width * actual.height
+        _write_diff_artifact(actual, baseline, diff_path)
         pytest.fail(
             f"Screenshot mismatch for {name}: {changed_pixels}/{total_pixels} pixels differ "
-            f"with channel tolerance {channel_tolerance}; maximum is {max_changed_pixels}. "
             f"Diff saved to {diff_path.name}."
         )
 
@@ -474,8 +465,6 @@ def assert_screenshot(
     page: Page,
     name: str,
     update: bool = False,
-    channel_tolerance: int = 0,
-    max_changed_pixels: int = 0,
     transparent: bool = False,
     selector: str | None = None,
     clip: dict[str, float] | None = None,
@@ -502,8 +491,6 @@ def assert_screenshot(
         actual,
         name,
         update=update,
-        channel_tolerance=channel_tolerance,
-        max_changed_pixels=max_changed_pixels,
         baseline_dir=baseline_dir,
         transparent=transparent,
     )

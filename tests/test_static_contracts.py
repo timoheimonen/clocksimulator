@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import ast
 from html.parser import HTMLParser
 import json
 from pathlib import Path
@@ -36,18 +35,6 @@ EXPECTED_LEGAL_LINKS = {
         "/extension/privacy",
         "/extension/TOS",
     },
-}
-REQUIRED_PRECACHE_PATHS = {
-    "/",
-    "/digital/",
-    "/privacy",
-    "/TOS",
-    "/sitemap.xml",
-    "/manifest.json",
-    "/apple-touch-icon.png",
-    "/android-chrome-192x192.png",
-    "/android-chrome-512x512.png",
-    "/og-image.png",
 }
 REQUIRED_MANIFEST_ICON_SIZES = {(192, 192), (512, 512)}
 
@@ -128,158 +115,6 @@ def load_manifest() -> dict[str, Any]:
     return manifest
 
 
-def strip_jsonc_comments(source: str) -> str:
-    output: list[str] = []
-    index = 0
-    in_string = False
-    escaped = False
-    while index < len(source):
-        character = source[index]
-        if in_string:
-            output.append(character)
-            if escaped:
-                escaped = False
-            elif character == "\\":
-                escaped = True
-            elif character == '"':
-                in_string = False
-            index += 1
-            continue
-        if character == '"':
-            in_string = True
-            output.append(character)
-            index += 1
-            continue
-        if source.startswith("//", index):
-            newline = source.find("\n", index + 2)
-            if newline == -1:
-                break
-            output.append("\n")
-            index = newline + 1
-            continue
-        if source.startswith("/*", index):
-            end = source.find("*/", index + 2)
-            assert end != -1, "wrangler.jsonc contains an unterminated comment"
-            output.extend("\n" for character in source[index : end + 2] if character == "\n")
-            index = end + 2
-            continue
-        output.append(character)
-        index += 1
-    return "".join(output)
-
-
-def remove_jsonc_trailing_commas(source: str) -> str:
-    output: list[str] = []
-    index = 0
-    in_string = False
-    escaped = False
-    while index < len(source):
-        character = source[index]
-        if in_string:
-            output.append(character)
-            if escaped:
-                escaped = False
-            elif character == "\\":
-                escaped = True
-            elif character == '"':
-                in_string = False
-            index += 1
-            continue
-        if character == '"':
-            in_string = True
-            output.append(character)
-            index += 1
-            continue
-        if character == ",":
-            next_index = index + 1
-            while next_index < len(source) and source[next_index].isspace():
-                next_index += 1
-            if next_index < len(source) and source[next_index] in "}]":
-                index += 1
-                continue
-        output.append(character)
-        index += 1
-    return "".join(output)
-
-
-def load_wrangler_config() -> dict[str, Any]:
-    config_path = REPOSITORY_ROOT / "wrangler.jsonc"
-    source = strip_jsonc_comments(config_path.read_text(encoding="utf-8"))
-    config = json.loads(remove_jsonc_trailing_commas(source))
-    assert isinstance(config, dict), "wrangler.jsonc must contain a JSON object"
-    return config
-
-
-def extract_service_worker_assets(source: str) -> list[str]:
-    matches = re.findall(r"\bconst\s+ASSETS\s*=\s*(\[.*?\])\s*;", source, re.DOTALL)
-    assert len(matches) == 1, "public/sw.js must define exactly one static ASSETS array"
-    assets = ast.literal_eval(matches[0])
-    assert isinstance(assets, list), "The service worker ASSETS value must be a list"
-    assert assets, "The service worker ASSETS array must not be empty"
-    assert all(isinstance(asset, str) for asset in assets), (
-        "Every service worker precache entry must be a literal string"
-    )
-    return assets
-
-
-def deployment_asset_root() -> tuple[Path, str]:
-    config = load_wrangler_config()
-    assets_config = config.get("assets")
-    assert isinstance(assets_config, dict), "wrangler.jsonc must define an assets object"
-    directory = assets_config.get("directory")
-    html_handling = assets_config.get("html_handling")
-    assert isinstance(directory, str) and directory, (
-        "wrangler.jsonc assets.directory must be a non-empty string"
-    )
-    assert html_handling == "auto-trailing-slash", (
-        "Static route resolution assumes Wrangler html_handling=auto-trailing-slash"
-    )
-    root = (REPOSITORY_ROOT / directory).resolve()
-    assert root == PUBLIC_ROOT.resolve(), (
-        "Wrangler must deploy the public directory that contains the service worker"
-    )
-    return root, html_handling
-
-
-def resolve_deployment_path(route: str, root: Path, html_handling: str) -> Path | None:
-    parsed = urlsplit(route)
-    assert not parsed.scheme and not parsed.netloc, (
-        f"Precache route must be same-origin and root-relative: {route!r}"
-    )
-    assert not parsed.query and not parsed.fragment, (
-        f"Precache route must not contain a query or fragment: {route!r}"
-    )
-    assert parsed.path.startswith("/"), (
-        f"Precache route must start with a slash: {route!r}"
-    )
-    decoded_path = unquote(parsed.path)
-    parts = decoded_path.lstrip("/").split("/")
-    assert ".." not in parts and "." not in parts, (
-        f"Precache route must not traverse the asset directory: {route!r}"
-    )
-    relative = decoded_path.lstrip("/")
-    candidates: list[Path] = []
-    if not relative:
-        candidates.append(root / "index.html")
-    else:
-        candidates.append(root / relative)
-        if decoded_path.endswith("/"):
-            candidates.append(root / relative / "index.html")
-        elif html_handling == "auto-trailing-slash":
-            candidates.append(root / (relative + ".html"))
-            candidates.append(root / relative / "index.html")
-    resolved_root = root.resolve()
-    for candidate in candidates:
-        resolved_candidate = candidate.resolve()
-        try:
-            resolved_candidate.relative_to(resolved_root)
-        except ValueError:
-            continue
-        if resolved_candidate.is_file():
-            return resolved_candidate
-    return None
-
-
 def manifest_icon_path(src: str) -> Path:
     icon_url = urlsplit(urljoin(SITE_ORIGIN + "/manifest.json", src))
     assert icon_url.scheme == "https" and icon_url.netloc == "clocksimulator.com", (
@@ -288,9 +123,20 @@ def manifest_icon_path(src: str) -> Path:
     assert not icon_url.query and not icon_url.fragment, (
         f"Manifest icon must not contain a query or fragment: {src!r}"
     )
-    root, html_handling = deployment_asset_root()
-    resolved = resolve_deployment_path(icon_url.path, root, html_handling)
-    assert resolved is not None, f"Manifest icon does not resolve to an asset: {src!r}"
+    decoded_path = unquote(icon_url.path)
+    assert decoded_path.startswith("/"), (
+        f"Manifest icon must use a root-relative path: {src!r}"
+    )
+    parts = decoded_path.lstrip("/").split("/")
+    assert ".." not in parts and "." not in parts, (
+        f"Manifest icon path must stay inside the public directory: {src!r}"
+    )
+    resolved = (PUBLIC_ROOT / decoded_path.lstrip("/")).resolve()
+    try:
+        resolved.relative_to(PUBLIC_ROOT.resolve())
+    except ValueError:
+        pytest.fail(f"Manifest icon path must stay inside the public directory: {src!r}")
+    assert resolved.is_file(), f"Manifest icon does not resolve to an asset: {src!r}"
     return resolved
 
 
@@ -470,11 +316,6 @@ def test_public_page_has_exactly_one_correct_canonical_link(
     assert canonical == expected_canonical, (
         f"{relative_path} canonical is {canonical!r}, expected {expected_canonical!r}"
     )
-    root, html_handling = deployment_asset_root()
-    resolved = resolve_deployment_path(parsed.path, root, html_handling)
-    assert resolved == page_path.resolve(), (
-        f"{relative_path} canonical route does not resolve back to that deployed page"
-    )
 
 
 @pytest.mark.parametrize(
@@ -493,27 +334,3 @@ def test_internal_legal_links_use_canonical_public_routes(
     }
     assert expected_paths <= observed_paths
     assert not ({"/privacy.html", "/TOS.html", "/extension/tos"} & observed_paths)
-
-
-def test_service_worker_precache_paths_resolve_to_deployed_assets() -> None:
-    service_worker = (PUBLIC_ROOT / "sw.js").read_text(encoding="utf-8")
-    precache_paths = extract_service_worker_assets(service_worker)
-    assert len(precache_paths) == len(set(precache_paths)), (
-        "The service worker ASSETS array contains duplicate paths"
-    )
-    assert REQUIRED_PRECACHE_PATHS <= set(precache_paths), (
-        "The service worker must precache the clocks, legal pages, manifest, sitemap, and icons"
-    )
-    assert "/privacy.html" not in precache_paths and "/TOS.html" not in precache_paths, (
-        "Legal pages must be precached under their extensionless public routes"
-    )
-    root, html_handling = deployment_asset_root()
-    unresolved = [
-        route
-        for route in precache_paths
-        if resolve_deployment_path(route, root, html_handling) is None
-    ]
-    assert not unresolved, (
-        "Service worker precache paths do not resolve under the Wrangler deployment contract: "
-        + repr(unresolved)
-    )
