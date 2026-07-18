@@ -64,6 +64,8 @@ SOFTWARE.
       --center-dot: #d63031;
       --toggle-bg: #bbb;
       --toggle-knob: #fff;
+      --focus-ring: #005fcc;
+      --focus-ring-contrast: #ffffff;
       --second-angle: 0deg;
     }
 
@@ -92,6 +94,8 @@ SOFTWARE.
       --center-dot: #ef4444;
       --toggle-bg: #262626;
       --toggle-knob: #e5e5e5;
+      --focus-ring: #8ec5ff;
+      --focus-ring-contrast: #000000;
     }
 
     html.transparent-mode {
@@ -104,6 +108,8 @@ SOFTWARE.
       --minute-hand: #444444;
       --second-hand: #d63031;
       --center-dot: #d63031;
+      --focus-ring: #ffffff;
+      --focus-ring-contrast: #000000;
     }
 
     * {
@@ -207,6 +213,12 @@ SOFTWARE.
 
     .toggle-label input:checked~.toggle-slider::before {
       transform: translateX(18px);
+    }
+
+    .toggle-label input:focus-visible~.toggle-slider {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px var(--focus-ring-contrast) !important;
     }
 
     .theme-toggle {
@@ -630,9 +642,21 @@ SOFTWARE.
 
     .embed-field input:focus,
     .embed-field select:focus,
-    .dashboard-tz-input-row input:focus {
-      outline: none;
+    .dashboard-tz-input-row input:focus,
+    .embed-code:focus {
       border-color: rgba(128, 128, 128, 0.6);
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    .embed-field input:focus-visible,
+    .embed-field select:focus-visible,
+    .dashboard-tz-input-row input:focus-visible,
+    .embed-code:focus-visible,
+    .help-panel pre:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px var(--focus-ring-contrast);
     }
 
     .embed-field select option {
@@ -743,6 +767,7 @@ SOFTWARE.
 
     .dashboard-tz-input-row input {
       flex: 1;
+      min-width: 0;
     }
 
     .dashboard-add-btn {
@@ -809,6 +834,31 @@ SOFTWARE.
         max-width: none;
         text-align: left;
         flex-basis: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body,
+      .toggle-wrapper,
+      .toggle-label,
+      .toggle-slider,
+      .toggle-slider::before,
+      .theme-icon,
+      .wake-lock-icon,
+      .second-mode-icon,
+      .toggle-label[data-tooltip]::after,
+      .about-btn[data-tooltip]::after,
+      .about-btn,
+      .about-bubble,
+      .clock-container,
+      .clock-grid,
+      .overlay,
+      .modal-panel,
+      .modal-panel-close,
+      .embed-copy-btn,
+      .dashboard-add-btn,
+      .tz-chip-remove {
+        transition: none;
       }
     }
 
@@ -1174,7 +1224,7 @@ SOFTWARE.
         </div>
       </div>
       <div class="embed-preview-wrap">
-        <iframe id="embedPreview" width="120" height="120" title="Clock preview"></iframe>
+        <iframe id="embedPreview" width="120" height="120" title="Clock preview" tabindex="-1"></iframe>
       </div>
       <div class="embed-code-wrap">
         <textarea class="embed-code" id="embedCode" readonly rows="3" aria-label="Embed code"></textarea>
@@ -1201,9 +1251,12 @@ SOFTWARE.
           </svg>
         </button>
       </div>
-      <div class="dashboard-tz-input-row">
-        <input type="text" id="dashboardTzInput" placeholder="e.g. Europe/Helsinki">
-        <button class="dashboard-add-btn" id="dashboardAddBtn">Add</button>
+      <div class="embed-field dashboard-tz-field">
+        <label for="dashboardTzInput">Timezone</label>
+        <div class="dashboard-tz-input-row">
+          <input type="text" id="dashboardTzInput" placeholder="e.g. Europe/Helsinki">
+          <button class="dashboard-add-btn" id="dashboardAddBtn">Add</button>
+        </div>
       </div>
       <div class="tz-chips" id="tzChips"></div>
       <div class="embed-controls">
@@ -1255,7 +1308,7 @@ SOFTWARE.
         </div>
       </div>
       <div class="embed-preview-wrap dashboard-preview-wrap">
-        <iframe id="dashboardPreview" width="280" height="160" title="Dashboard preview"></iframe>
+        <iframe id="dashboardPreview" width="280" height="160" title="Dashboard preview" tabindex="-1"></iframe>
       </div>
       <div class="embed-code-wrap">
         <textarea class="embed-code" id="dashboardUrl" readonly rows="2" aria-label="Dashboard URL"></textarea>
@@ -1312,8 +1365,8 @@ SOFTWARE.
       </table>
       <h3>Screen burn-in protection</h3>
       <p>To protect OLED and AMOLED displays, the clock subtly shifts its position every 10 minutes in a slow circular
-        pattern. Dark Mode further reduces the risk of burn-in. Protection does not apply in embedded mode. Use
-        <code>?burnin=false</code> to disable.
+        pattern. Dark Mode further reduces the risk of burn-in. Protection does not apply in embedded mode or when your
+        device prefers reduced motion. Use <code>?burnin=false</code> to disable.
       </p>
       <h3>Install as app (PWA)</h3>
       <p>This site works as a Progressive Web App. You can install it on your phone or computer for a full-screen clock
@@ -1932,7 +1985,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       }
 
       function trapFocus(overlay) {
-        const focusable = overlay.querySelectorAll('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const focusable = overlay.querySelectorAll('a[href], button, input, select, textarea, .help-panel pre, [tabindex]:not([tabindex="-1"])');
         if (!focusable.length) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
@@ -2208,7 +2261,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           });
         }
 
-        const burninEnabled = burninParam !== 'false' && !embedMode;
+        const burninEnabled = burninParam !== 'false' && !embedMode && !reducedMotion;
 
         if (burninEnabled) {
           const container = dashboardMode ? document.querySelector('.clock-grid') : document.querySelector('.clock-container');
@@ -2307,7 +2360,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           embedPreview.style.borderRadius = isRound ? '50%' : '0';
           embedPreview.style.overflow = 'hidden';
           const transparent = embedThemeSelect.value === 'transparent' ? ' allowtransparency="true"' : '';
-          const code = '<iframe src="' + prodBase + qs + '"\n' +
+          const code = '<iframe src="' + prodBase + qs + '" title="Analog clock"\n' +
             '  width="' + w + '" height="' + h + '"' + transparent + '\n' +
             '  style="border:none;' + radius + ' overflow:hidden;">\n' +
             '</iframe>';
