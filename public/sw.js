@@ -43,11 +43,16 @@ self.addEventListener('fetch', function (event) {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(function () {
-        const url = new URL(event.request.url);
-        if (url.pathname === '/digital' || url.pathname.indexOf('/digital/') === 0) {
-          return caches.match('/digital/');
-        }
-        return caches.match('/');
+        return caches.match(event.request, { ignoreSearch: true }).then(function (cached) {
+          if (cached) {
+            return cached;
+          }
+          const url = new URL(event.request.url);
+          if (url.pathname === '/digital' || url.pathname.indexOf('/digital/') === 0) {
+            return caches.match('/digital/');
+          }
+          return caches.match('/');
+        });
       })
     );
     return;

@@ -8,6 +8,7 @@
 - Digital clocks now announce the time to screen readers no more than once per minute; dashboard announcements remain accessible, while embedded clocks stay silent.
 - Shared analog and digital clock links now choose their theme predictably from the link, the embed default, or the viewer's device color preference, without saved settings overriding URL options.
 - Keyboard focus, dashboard timezone fields, generated embeds, and reduced-motion behavior are now more accessible across both clock pages.
+- Offline reloads now keep the Privacy Policy and Terms of Service pages open instead of showing the analog clock.
 
 ## 1.3.4 - 2026-05-18
 
