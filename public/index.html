@@ -900,8 +900,12 @@ SOFTWARE.
   </style>
   <script>
     (function () {
-      var params = new URLSearchParams(window.location.search);
-      var theme = params.get('theme');
+      const params = new URLSearchParams(window.location.search);
+      const hasParams = params.toString() !== '';
+      const themeValue = params.get('theme');
+      const theme = themeValue === 'dark' || themeValue === 'light' || themeValue === 'transparent'
+        ? themeValue
+        : null;
       if (theme === 'dark') {
         document.documentElement.classList.add('dark-mode');
         return;
@@ -917,14 +921,29 @@ SOFTWARE.
         document.documentElement.classList.add('dark-mode');
         return;
       }
-      try {
-        var s = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
-        if (s && s.theme === 'dark') {
+      let savedTheme = null;
+      if (!hasParams) {
+        try {
+          const s = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
+          if (s && (s.theme === 'dark' || s.theme === 'light' || s.theme === 'transparent')) {
+            savedTheme = s.theme;
+          }
+        } catch (e) { }
+        if (savedTheme === 'dark') {
           document.documentElement.classList.add('dark-mode');
-        } else if (!s && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.documentElement.classList.add('dark-mode');
+          return;
         }
-      } catch (e) { }
+        if (savedTheme === 'transparent') {
+          document.documentElement.classList.add('transparent-mode');
+          return;
+        }
+        if (savedTheme === 'light') {
+          return;
+        }
+      }
+      if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.documentElement.classList.add('dark-mode');
+      }
     })();
   </script>
 </head>
@@ -1439,7 +1458,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       const timezone = validTimezones.length >= 1 ? validTimezones[0] : null;
 
       const embedMode = params.get('embed') === 'true';
-      const themeParam = params.get('theme');
+      const themeValue = params.get('theme');
+      const themeParam = themeValue === 'dark' || themeValue === 'light' || themeValue === 'transparent'
+        ? themeValue
+        : null;
       const secondsParam = params.get('seconds');
       const borderParam = params.get('border');
       const daynightParam = params.get('daynight');
@@ -1473,16 +1495,20 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const fl = document.getElementById('favicon');
         if (fl) fl.remove();
       }
-      const activeTheme = themeParam || (!embedMode && savedSettings && savedSettings.theme);
-      if (activeTheme === 'dark') {
-        document.documentElement.classList.add('dark-mode');
-        themeToggle.checked = true;
-      } else if (activeTheme === 'transparent') {
-        document.documentElement.classList.add('transparent-mode');
-      } else if (!activeTheme && !embedMode && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark-mode');
-        themeToggle.checked = true;
+      let activeTheme = themeParam;
+      if (!activeTheme && embedMode) {
+        activeTheme = 'dark';
       }
+      if (!activeTheme && savedSettings &&
+        (savedSettings.theme === 'dark' || savedSettings.theme === 'light' || savedSettings.theme === 'transparent')) {
+        activeTheme = savedSettings.theme;
+      }
+      if (!activeTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        activeTheme = 'dark';
+      }
+      document.documentElement.classList.toggle('dark-mode', activeTheme === 'dark');
+      document.documentElement.classList.toggle('transparent-mode', activeTheme === 'transparent');
+      themeToggle.checked = activeTheme === 'dark';
 
       if (dashboardMode) {
         document.title = 'clocksimulator.com - Dashboard';

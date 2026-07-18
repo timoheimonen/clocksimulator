@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+import json
 import os
 import time
 
 import pytest
-from playwright.sync_api import Page
+from playwright.sync_api import Page, Route
 
 from tests.helpers import open_page, assert_screenshot
+
+
+SETTINGS_KEY = "clocksimulator-user-settings"
 
 
 def open_digital(
@@ -21,6 +25,126 @@ def open_digital(
 
 def digital_text(page: Page) -> str:
     return page.evaluate("() => document.getElementById('digitalTime').textContent")
+
+
+def open_digital_theme_probe(
+    page: Page,
+    app_url: str,
+    params: dict[str, str] | None = None,
+    storage_value: str | None = None,
+    os_dark: bool = False,
+    fail_storage_read: bool = False,
+    bare_query: bool = False,
+) -> dict[str, bool | int]:
+    page.goto(app_url.rstrip("/") + "/robots.txt")
+    page.evaluate(
+        """async () => {
+            var registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(function (registration) {
+                return registration.unregister();
+            }));
+        }"""
+    )
+    page.goto("about:blank")
+
+    override = """<script>
+        (function () {
+            var settingsKey = %s;
+            var osDark = %s;
+            var failStorageRead = %s;
+            window.__digitalSettingsReads = 0;
+            var originalGetItem = Storage.prototype.getItem;
+            Storage.prototype.getItem = function (key) {
+                if (key === settingsKey) {
+                    window.__digitalSettingsReads += 1;
+                    if (failStorageRead) {
+                        throw new DOMException('Storage unavailable', 'SecurityError');
+                    }
+                }
+                return originalGetItem.call(this, key);
+            };
+            Object.defineProperty(window, 'matchMedia', {
+                configurable: true,
+                writable: true,
+                value: function (query) {
+                    return {
+                        matches: query === '(prefers-color-scheme: dark)' && osDark,
+                        media: query,
+                        onchange: null,
+                        addEventListener: function () {},
+                        removeEventListener: function () {},
+                        addListener: function () {},
+                        removeListener: function () {}
+                    };
+                }
+            });
+            window.__digitalThemeAtDOMContentLoaded = null;
+            document.addEventListener('DOMContentLoaded', function () {
+                var root = document.documentElement;
+                window.__digitalThemeAtDOMContentLoaded = {
+                    headDark: window.__digitalThemeAfterHead.dark,
+                    headTransparent: window.__digitalThemeAfterHead.transparent,
+                    headSettingsReads: window.__digitalThemeAfterHead.settingsReads,
+                    dark: root.classList.contains('dark-mode'),
+                    transparent: root.classList.contains('transparent-mode'),
+                    checked: document.getElementById('themeToggle').checked,
+                    settingsReads: window.__digitalSettingsReads
+                };
+            });
+        })();
+    </script>""" % (
+        json.dumps(SETTINGS_KEY),
+        str(os_dark).lower(),
+        str(fail_storage_read).lower(),
+    )
+    head_probe = """<script>
+        window.__digitalThemeAfterHead = {
+            dark: document.documentElement.classList.contains('dark-mode'),
+            transparent: document.documentElement.classList.contains('transparent-mode'),
+            settingsReads: window.__digitalSettingsReads
+        };
+    </script>"""
+
+    def route_handler(route: Route) -> None:
+        if route.request.resource_type == "document":
+            response = route.fetch()
+            body = response.text().replace("<head>", "<head>" + override, 1)
+            body = body.replace("</head>", head_probe + "</head>", 1)
+            route.fulfill(response=response, body=body.encode())
+        else:
+            route.continue_()
+
+    page.route("**/*", route_handler)
+    try:
+        local_storage_items = {SETTINGS_KEY: storage_value} if storage_value is not None else None
+        if bare_query:
+            page.add_init_script(
+                """(function () {
+                    var storageItems = %s;
+                    localStorage.clear();
+                    Object.keys(storageItems).forEach(function (key) {
+                        localStorage.setItem(key, storageItems[key]);
+                    });
+                })();""" % json.dumps(local_storage_items or {})
+            )
+            page.goto(app_url.rstrip("/") + "/digital/?")
+            page.wait_for_load_state("domcontentloaded")
+            page.wait_for_function(
+                "() => document.documentElement.style.getPropertyValue('--app-height') !== ''"
+            )
+        else:
+            open_digital(page, app_url, params, local_storage_items)
+        return page.evaluate("() => window.__digitalThemeAtDOMContentLoaded")
+    finally:
+        page.unroute("**/*", route_handler)
+
+
+def assert_digital_theme_state(result: dict[str, bool | int], expected_theme: str) -> None:
+    assert result["headDark"] is (expected_theme == "dark")
+    assert result["headTransparent"] is (expected_theme == "transparent")
+    assert result["dark"] is (expected_theme == "dark")
+    assert result["transparent"] is (expected_theme == "transparent")
+    assert result["checked"] is (expected_theme == "dark")
 
 
 def start_advancing_date(page: Page) -> None:
@@ -174,6 +298,197 @@ def test_digital_theme_transparent(page: Page, app_url: str) -> None:
     open_digital(page, app_url, {"theme": "transparent"})
     assert page.evaluate("() => document.documentElement.classList.contains('transparent-mode')") is True
     assert page.evaluate("() => getComputedStyle(document.getElementById('digitalTime')).color") == "rgb(250, 250, 250)"
+
+
+@pytest.mark.parametrize(
+    ("params", "saved_theme", "os_dark", "expected_theme"),
+    [
+        ({"tz": "UTC"}, "dark", False, "light"),
+        ({"tz": "UTC"}, "light", True, "dark"),
+        ({"tz": "UTC,Europe/Helsinki"}, "dark", False, "light"),
+        ({"tz": "UTC,Europe/Helsinki", "rows": "2"}, "light", True, "dark"),
+    ],
+    ids=["single-os-light", "single-os-dark", "dashboard-os-light", "dashboard-os-dark"],
+)
+def test_digital_parameterized_url_uses_os_theme_without_storage_read_at_domcontentloaded(
+    page: Page,
+    app_url: str,
+    params: dict[str, str],
+    saved_theme: str,
+    os_dark: bool,
+    expected_theme: str,
+) -> None:
+    result = open_digital_theme_probe(
+        page,
+        app_url,
+        params=params,
+        storage_value=json.dumps({"theme": saved_theme}),
+        os_dark=os_dark,
+    )
+    assert_digital_theme_state(result, expected_theme)
+    assert result["headSettingsReads"] == 0
+    assert result["settingsReads"] == 0
+
+
+@pytest.mark.parametrize(
+    ("theme", "saved_theme", "os_dark"),
+    [
+        ("dark", "light", False),
+        ("light", "dark", True),
+        ("transparent", "dark", True),
+    ],
+)
+def test_digital_explicit_theme_overrides_saved_and_os_theme_at_domcontentloaded(
+    page: Page,
+    app_url: str,
+    theme: str,
+    saved_theme: str,
+    os_dark: bool,
+) -> None:
+    result = open_digital_theme_probe(
+        page,
+        app_url,
+        params={"theme": theme},
+        storage_value=json.dumps({"theme": saved_theme}),
+        os_dark=os_dark,
+    )
+    assert_digital_theme_state(result, theme)
+    assert result["headSettingsReads"] == 0
+    assert result["settingsReads"] == 0
+
+
+@pytest.mark.parametrize("theme", ["light", "transparent"])
+def test_digital_explicit_theme_overrides_embed_default_at_domcontentloaded(
+    page: Page,
+    app_url: str,
+    theme: str,
+) -> None:
+    result = open_digital_theme_probe(
+        page,
+        app_url,
+        params={"embed": "true", "theme": theme},
+        storage_value=json.dumps({"theme": "dark"}),
+        os_dark=True,
+    )
+    assert_digital_theme_state(result, theme)
+    assert result["headSettingsReads"] == 0
+    assert result["settingsReads"] == 0
+
+
+def test_digital_embed_default_overrides_fallbacks_at_domcontentloaded(page: Page, app_url: str) -> None:
+    result = open_digital_theme_probe(
+        page,
+        app_url,
+        params={"embed": "true"},
+        storage_value=json.dumps({"theme": "light"}),
+        os_dark=False,
+    )
+    assert_digital_theme_state(result, "dark")
+    assert result["headSettingsReads"] == 0
+    assert result["settingsReads"] == 0
+
+
+@pytest.mark.parametrize(
+    ("saved_theme", "os_dark"),
+    [("dark", False), ("light", True)],
+)
+def test_digital_parameterless_url_prefers_saved_theme_at_domcontentloaded(
+    page: Page,
+    app_url: str,
+    saved_theme: str,
+    os_dark: bool,
+) -> None:
+    result = open_digital_theme_probe(
+        page,
+        app_url,
+        storage_value=json.dumps({"theme": saved_theme}),
+        os_dark=os_dark,
+    )
+    assert_digital_theme_state(result, saved_theme)
+    assert result["headSettingsReads"] == 1
+    assert result["settingsReads"] == 2
+
+
+def test_digital_bare_query_uses_saved_theme_at_domcontentloaded(page: Page, app_url: str) -> None:
+    result = open_digital_theme_probe(
+        page,
+        app_url,
+        storage_value=json.dumps({"theme": "dark"}),
+        os_dark=False,
+        bare_query=True,
+    )
+    assert_digital_theme_state(result, "dark")
+    assert result["headSettingsReads"] == 1
+    assert result["settingsReads"] == 2
+
+
+@pytest.mark.parametrize(
+    ("storage_value", "fail_storage_read", "os_dark", "expected_theme"),
+    [
+        ("{", False, False, "light"),
+        ("{", False, True, "dark"),
+        (json.dumps({"theme": "light"}), True, False, "light"),
+        (json.dumps({"theme": "light"}), True, True, "dark"),
+    ],
+    ids=["invalid-json-os-light", "invalid-json-os-dark", "exception-os-light", "exception-os-dark"],
+)
+def test_digital_invalid_or_unavailable_storage_uses_os_theme_at_domcontentloaded(
+    page: Page,
+    app_url: str,
+    storage_value: str,
+    fail_storage_read: bool,
+    os_dark: bool,
+    expected_theme: str,
+) -> None:
+    result = open_digital_theme_probe(
+        page,
+        app_url,
+        storage_value=storage_value,
+        os_dark=os_dark,
+        fail_storage_read=fail_storage_read,
+    )
+    assert_digital_theme_state(result, expected_theme)
+    assert result["headSettingsReads"] == 1
+    assert result["settingsReads"] == 2
+
+
+@pytest.mark.parametrize(
+    ("saved_theme", "os_dark", "expected_theme"),
+    [("dark", False, "light"), ("light", True, "dark")],
+)
+def test_digital_invalid_theme_param_uses_os_without_storage_read_at_domcontentloaded(
+    page: Page,
+    app_url: str,
+    saved_theme: str,
+    os_dark: bool,
+    expected_theme: str,
+) -> None:
+    result = open_digital_theme_probe(
+        page,
+        app_url,
+        params={"theme": "sepia"},
+        storage_value=json.dumps({"theme": saved_theme}),
+        os_dark=os_dark,
+    )
+    assert_digital_theme_state(result, expected_theme)
+    assert result["headSettingsReads"] == 0
+    assert result["settingsReads"] == 0
+
+
+def test_digital_invalid_theme_param_uses_embed_default_at_domcontentloaded(
+    page: Page,
+    app_url: str,
+) -> None:
+    result = open_digital_theme_probe(
+        page,
+        app_url,
+        params={"embed": "true", "theme": "sepia"},
+        storage_value=json.dumps({"theme": "light"}),
+        os_dark=False,
+    )
+    assert_digital_theme_state(result, "dark")
+    assert result["headSettingsReads"] == 0
+    assert result["settingsReads"] == 0
 
 
 def test_digital_embed_mode_defaults_dark_and_hides_controls(page: Page, app_url: str) -> None:

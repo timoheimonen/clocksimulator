@@ -6,6 +6,7 @@
 - Analog and digital timezone clocks, including dashboards, now stay accurate across the viewer's daylight-saving time changes.
 - Saved settings now preserve each clock's seconds preference when switching between the analog and digital pages.
 - Digital clocks now announce the time to screen readers no more than once per minute; dashboard announcements remain accessible, while embedded clocks stay silent.
+- Shared analog and digital clock links now choose their theme predictably from the link, the embed default, or the viewer's device color preference, without saved settings overriding URL options.
 
 ## 1.3.4 - 2026-05-18
 

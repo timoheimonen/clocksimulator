@@ -954,31 +954,33 @@
   </style>
   <script>
     (function () {
-      var params = new URLSearchParams(window.location.search);
-      var theme = params.get('theme');
-      if (theme === 'dark') {
-        document.documentElement.classList.add('dark-mode');
-        return;
+      const params = new URLSearchParams(window.location.search);
+      const hasParams = Boolean(params.toString());
+      const themeParam = params.get('theme');
+      const explicitTheme = themeParam === 'dark' || themeParam === 'light' || themeParam === 'transparent'
+        ? themeParam
+        : null;
+      const embedMode = params.get('embed') === 'true';
+      let activeTheme = explicitTheme;
+      if (!activeTheme && embedMode) {
+        activeTheme = 'dark';
       }
-      if (theme === 'transparent') {
+      if (!activeTheme && !hasParams) {
+        try {
+          const s = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
+          if (s && (s.theme === 'dark' || s.theme === 'light' || s.theme === 'transparent')) {
+            activeTheme = s.theme;
+          }
+        } catch (e) { }
+      }
+      if (!activeTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        activeTheme = 'dark';
+      }
+      if (activeTheme === 'dark') {
+        document.documentElement.classList.add('dark-mode');
+      } else if (activeTheme === 'transparent') {
         document.documentElement.classList.add('transparent-mode');
-        return;
       }
-      if (theme === 'light') {
-        return;
-      }
-      if (params.get('embed') === 'true') {
-        document.documentElement.classList.add('dark-mode');
-        return;
-      }
-      try {
-        var s = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
-        if (s && s.theme === 'dark') {
-          document.documentElement.classList.add('dark-mode');
-        } else if (!s && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-          document.documentElement.classList.add('dark-mode');
-        }
-      } catch (e) { }
     })();
   </script>
 </head>
@@ -1384,6 +1386,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       setAppHeight();
 
       const params = new URLSearchParams(window.location.search);
+      const hasParams = Boolean(params.toString());
       const tzParam = params.get('tz');
       const tzList = tzParam ? tzParam.split(',').filter(Boolean) : [];
       const validTimezones = tzList.filter(isValidTimezone);
@@ -1391,6 +1394,9 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       const timezone = validTimezones.length >= 1 ? validTimezones[0] : null;
       const embedMode = params.get('embed') === 'true';
       const themeParam = params.get('theme');
+      const explicitTheme = themeParam === 'dark' || themeParam === 'light' || themeParam === 'transparent'
+        ? themeParam
+        : null;
       const secondsParam = params.get('seconds');
       const formatParam = params.get('format');
       const borderParam = params.get('border');
@@ -1425,7 +1431,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       let savedSettings = null;
       dayNightIcon.innerHTML = dayNightIconSvg;
 
-      if (!params.toString()) {
+      if (!hasParams) {
         try {
           savedSettings = JSON.parse(localStorage.getItem('clocksimulator-user-settings'));
         } catch (e) {
@@ -1436,7 +1442,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         saveSettingsToggle.checked = true;
       }
 
-      if (params.toString()) {
+      if (hasParams) {
         saveSettingsToggle.disabled = true;
         saveSettingsLabel.classList.add('disabled');
         saveSettingsLabel.dataset.tooltip = 'Not available when URL parameters are active';
@@ -1448,16 +1454,20 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         if (fl) fl.remove();
       }
 
-      const activeTheme = themeParam || (!embedMode && savedSettings && savedSettings.theme);
-      if (activeTheme === 'dark') {
-        document.documentElement.classList.add('dark-mode');
-        themeToggle.checked = true;
-      } else if (activeTheme === 'transparent') {
-        document.documentElement.classList.add('transparent-mode');
-      } else if (!activeTheme && !embedMode && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        document.documentElement.classList.add('dark-mode');
-        themeToggle.checked = true;
+      let activeTheme = explicitTheme;
+      if (!activeTheme && embedMode) {
+        activeTheme = 'dark';
       }
+      if (!activeTheme && savedSettings &&
+        (savedSettings.theme === 'dark' || savedSettings.theme === 'light' || savedSettings.theme === 'transparent')) {
+        activeTheme = savedSettings.theme;
+      }
+      if (!activeTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        activeTheme = 'dark';
+      }
+      document.documentElement.classList.toggle('dark-mode', activeTheme === 'dark');
+      document.documentElement.classList.toggle('transparent-mode', activeTheme === 'transparent');
+      themeToggle.checked = activeTheme === 'dark';
 
       let showSeconds = secondsParam !== 'hide';
       if (savedSettings && typeof savedSettings.digitalShowSeconds === 'boolean') {
