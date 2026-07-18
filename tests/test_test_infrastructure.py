@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 from pathlib import Path
+import shlex
+import signal
+import subprocess
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -30,9 +35,493 @@ from tests.js_coverage import (
 )
 
 
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+TEST_WRAPPER = REPOSITORY_ROOT / "run_tests.sh"
+RELEASE_WRAPPER = REPOSITORY_ROOT / "run_release_tests.sh"
+
+
 def save_image(path: Path, mode: str, size: tuple[int, int], color) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     Image.new(mode, size, color).save(path)
+
+
+def run_release_wrapper(
+    arguments: list[str],
+    cwd: Path,
+    *,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [str(RELEASE_WRAPPER), *arguments],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+        env=env,
+    )
+
+
+def release_dry_run_commands(stdout: str) -> list[tuple[str, list[str]]]:
+    commands = []
+    for line in stdout.splitlines():
+        if not line.startswith("DRY-RUN ["):
+            continue
+        prefix, command_text = line.split("] ", 1)
+        commands.append((prefix.removeprefix("DRY-RUN ["), shlex.split(command_text)))
+    return commands
+
+
+def write_executable(path: Path, body: str) -> None:
+    path.write_text("#!/bin/sh\n" + body, encoding="utf-8")
+    path.chmod(0o755)
+
+
+def fake_release_environment(
+    tmp_path: Path,
+    *,
+    gate_status: int,
+    gate_sleep: int = 0,
+) -> dict[str, str]:
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    write_executable(
+        fake_bin / "conda",
+        """if printf '%s' "$*" | grep -q 'python -m pytest'; then
+    export PYTEST_ADDOPTS='--collect-only --update-snapshots'
+    export PYTEST_PLUGINS='unexpected_plugin'
+    export PYTEST_DISABLE_PLUGIN_AUTOLOAD=0
+    export PYTHONOPTIMIZE=2
+    export PYTHONPATH=/poisoned/python/path
+    export PYTHONUSERBASE=/poisoned/user/base
+    export PYTHONNOUSERSITE=0
+    shift 4
+    exec "$@"
+fi
+printf 'Python=3.12.0 pytest=9.0.2 Playwright=1.58.0 Pillow=12.0.0\n'
+""",
+    )
+    write_executable(
+        fake_bin / "python",
+        """if [ "${PYTEST_ADDOPTS+set}" = set ] || [ "${PYTEST_PLUGINS+set}" = set ] || [ "${PYTHONOPTIMIZE+set}" = set ] || [ "${PYTHONPATH+set}" = set ] || [ "${PYTHONUSERBASE+set}" = set ]; then
+    exit 90
+fi
+if [ "${PYTEST_DISABLE_PLUGIN_AUTOLOAD:-}" != 1 ] || [ "${PYTHONNOUSERSITE:-}" != 1 ]; then
+    exit 91
+fi
+case " $* " in
+    *" -p pytest_playwright.pytest_playwright -p pytest_randomly "*) ;;
+    *) exit 92 ;;
+esac
+if [ "${FAKE_GATE_SLEEP:-0}" -gt 0 ]; then
+    exec sleep "$FAKE_GATE_SLEEP"
+fi
+printf 'synthetic gate result\n'
+exit "${FAKE_GATE_STATUS:-7}"
+""",
+    )
+    write_executable(fake_bin / "node", "exit 0\n")
+    write_executable(fake_bin / "wrangler", "printf '4.28.0\\n'\n")
+    write_executable(
+        fake_bin / "uname",
+        """case "$1" in
+    -s) printf 'Darwin\n' ;;
+    -m) printf 'arm64\n' ;;
+esac
+""",
+    )
+    write_executable(fake_bin / "sw_vers", "printf '26.0\n'\n")
+    write_executable(
+        fake_bin / "git",
+        """if [ "$1" = rev-parse ]; then
+    printf '0123456789abcdef\n'
+elif [ "$1" = status ] && [ -e "${FAKE_OUTPUT_PATH:-}" ]; then
+    printf '?? release-output\n'
+fi
+""",
+    )
+    environment = os.environ.copy()
+    environment.update(
+        {
+            "PATH": str(fake_bin) + os.pathsep + environment["PATH"],
+            "PYTEST_ADDOPTS": "--collect-only --update-snapshots",
+            "PYTEST_PLUGINS": "unexpected_plugin",
+            "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "0",
+            "PYTHONOPTIMIZE": "2",
+            "PYTHONPATH": "/poisoned/python/path",
+            "PYTHONUSERBASE": "/poisoned/user/base",
+            "PYTHONNOUSERSITE": "0",
+            "FAKE_GATE_STATUS": str(gate_status),
+            "FAKE_GATE_SLEEP": str(gate_sleep),
+            "FAKE_OUTPUT_PATH": str(tmp_path / "release-output"),
+        }
+    )
+    return environment
+
+
+def wait_for_path(path: Path, timeout: float = 5.0) -> None:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if path.exists():
+            return
+        time.sleep(0.01)
+    pytest.fail("Timed out waiting for path: " + str(path))
+
+
+def test_test_wrapper_runs_from_repository_and_streams_conda_output(
+    tmp_path: Path,
+) -> None:
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    write_executable(
+        fake_bin / "conda",
+        "printf 'cwd=%s\\nargs=%s\\n' \"$PWD\" \"$*\"\n",
+    )
+    environment = os.environ.copy()
+    environment["PATH"] = str(fake_bin) + os.pathsep + environment["PATH"]
+
+    result = subprocess.run(
+        [str(TEST_WRAPPER), "--collect-only"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+        env=environment,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == [
+        "cwd=" + str(REPOSITORY_ROOT),
+        "args=run --no-capture-output -n clocksimulator env -u PYTEST_ADDOPTS "
+        "-u PYTEST_PLUGINS -u PYTEST_DISABLE_PLUGIN_AUTOLOAD -u PYTHONOPTIMIZE "
+        "-u PYTHONPATH -u PYTHONUSERBASE PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 "
+        "PYTHONNOUSERSITE=1 python -m pytest -p "
+        "pytest_playwright.pytest_playwright -p pytest_randomly --collect-only",
+    ]
+
+
+def test_release_wrapper_is_executable_and_runs_from_outside_repository(
+    tmp_path: Path,
+) -> None:
+    syntax = subprocess.run(
+        ["bash", "-n", str(RELEASE_WRAPPER)],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
+    )
+    assert syntax.returncode == 0, syntax.stderr
+    assert os.access(RELEASE_WRAPPER, os.X_OK) is True
+
+    output_path = tmp_path / "release artifacts"
+    result = run_release_wrapper(
+        [
+            "--dry-run",
+            "--seed",
+            "20260718",
+            "--output",
+            str(output_path),
+        ],
+        tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Seed: 20260718" in result.stdout
+    assert "Artifacts: " + str(output_path) in result.stdout
+    assert output_path.exists() is False
+
+
+def test_release_wrapper_dry_run_defines_exact_gate_matrix(tmp_path: Path) -> None:
+    output_path = tmp_path / "release-output"
+    result = run_release_wrapper(
+        ["--dry-run", "--seed=20260718", "--output=" + str(output_path)],
+        tmp_path,
+    )
+
+    assert result.returncode == 0, result.stderr
+    commands = release_dry_run_commands(result.stdout)
+    assert [slug for slug, _ in commands] == [
+        "chromium-full",
+        "visual",
+        "service-worker",
+        "deployment",
+        "firefox",
+        "webkit",
+        "js-coverage",
+    ]
+
+    sanitized_prefix = [
+        "env",
+        "-u",
+        "PYTEST_ADDOPTS",
+        "-u",
+        "PYTEST_PLUGINS",
+        "-u",
+        "PYTEST_DISABLE_PLUGIN_AUTOLOAD",
+        "-u",
+        "PYTHONOPTIMIZE",
+        str(TEST_WRAPPER),
+    ]
+    expected_gate_arguments = {
+        "chromium-full": [
+            "--browser-engine=chromium",
+            "--randomly-seed=20260718",
+        ],
+        "visual": [
+            "-m",
+            "visual",
+            "--browser-engine=chromium",
+            "--randomly-seed=20260718",
+        ],
+        "service-worker": [
+            "-m",
+            "service_worker",
+            "--browser-engine=chromium",
+            "--randomly-seed=20260718",
+        ],
+        "deployment": [
+            "-m",
+            "deployment",
+            "--browser-engine=chromium",
+            "--randomly-seed=20260718",
+        ],
+        "firefox": [
+            "-m",
+            "cross_browser and not chromium_only",
+            "--browser-engine=firefox",
+            "--randomly-seed=20260718",
+        ],
+        "webkit": [
+            "-m",
+            "cross_browser and not chromium_only",
+            "--browser-engine=webkit",
+            "--randomly-seed=20260718",
+        ],
+        "js-coverage": [
+            "-m",
+            "not visual and not service_worker and not deployment",
+            "--browser-engine=chromium",
+            "--js-coverage",
+            "--js-coverage-output=" + str(output_path / "js-coverage"),
+            "--randomly-seed=20260718",
+        ],
+    }
+
+    for slug, command in commands:
+        assert command == [
+            *sanitized_prefix,
+            *expected_gate_arguments[slug],
+            "--output=" + str(output_path / "playwright" / slug),
+            "--tracing=retain-on-failure",
+        ]
+
+
+@pytest.mark.parametrize("equals_form", [False, True], ids=("split", "equals"))
+def test_release_wrapper_accepts_both_option_forms(
+    tmp_path: Path, equals_form: bool
+) -> None:
+    output_path = tmp_path / ("release output " + str(equals_form))
+    if equals_form:
+        arguments = [
+            "--dry-run",
+            "--seed=00123",
+            "--output=" + str(output_path),
+        ]
+    else:
+        arguments = [
+            "--dry-run",
+            "--seed",
+            "00123",
+            "--output",
+            "./" + output_path.name,
+        ]
+
+    result = run_release_wrapper(arguments, tmp_path)
+
+    assert result.returncode == 0, result.stderr
+    assert "Seed: 00123" in result.stdout
+    assert "Artifacts: " + str(output_path) in result.stdout
+    assert len(release_dry_run_commands(result.stdout)) == 7
+    assert output_path.exists() is False
+
+
+@pytest.mark.parametrize(
+    ("arguments", "expected_error"),
+    [
+        pytest.param(["--dry-run", "--unknown"], "Unknown argument", id="unknown"),
+        pytest.param(["--dry-run", "--seed"], "--seed requires a value", id="seed-missing"),
+        pytest.param(["--seed", "--dry-run"], "--seed requires a value before the next option", id="seed-next-option"),
+        pytest.param(["--dry-run", "--output"], "--output requires a value", id="output-missing"),
+        pytest.param(["--output", "--dry-run"], "--output requires a value before the next option", id="output-next-option"),
+        pytest.param(["--dry-run", "--seed=abc"], "--seed must be a non-negative integer", id="seed-invalid"),
+        pytest.param(["--dry-run", "--seed="], "--seed must not be empty", id="seed-empty"),
+        pytest.param(["--dry-run", "--output="], "--output must not be empty", id="output-empty"),
+        pytest.param(
+            ["--dry-run", "--output=missing/../existing"],
+            "--output must not contain . or .. path components",
+            id="output-parent-component",
+        ),
+        pytest.param(
+            ["--dry-run", "--output=missing/."],
+            "--output must not contain . or .. path components",
+            id="output-current-component",
+        ),
+        pytest.param(
+            ["--dry-run", "--output=./"],
+            "--output must identify a new directory",
+            id="output-leading-current-only",
+        ),
+    ],
+)
+def test_release_wrapper_rejects_invalid_arguments(
+    tmp_path: Path, arguments: list[str], expected_error: str
+) -> None:
+    result = run_release_wrapper(arguments, tmp_path)
+
+    assert result.returncode == 2
+    assert expected_error in result.stderr
+    assert "Usage: ./run_release_tests.sh" in result.stderr
+    assert "DRY-RUN [" not in result.stdout
+    assert (tmp_path / "--dry-run").exists() is False
+
+
+def test_release_wrapper_anchors_relative_tmpdir_to_invocation_directory(
+    tmp_path: Path,
+) -> None:
+    environment = os.environ.copy()
+    environment["TMPDIR"] = "relative-temp"
+
+    result = run_release_wrapper(
+        ["--dry-run", "--seed=20260718"],
+        tmp_path,
+        env=environment,
+    )
+
+    expected_root = tmp_path / "relative-temp"
+    assert result.returncode == 0, result.stderr
+    assert (
+        "Artifacts: " + str(expected_root / "clocksimulator-release.DRY-RUN-20260718")
+        in result.stdout
+    )
+    assert expected_root.exists() is False
+
+
+def test_release_wrapper_never_reuses_an_existing_output_directory(
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "existing-output"
+    output_path.mkdir()
+    marker_path = output_path / "keep.txt"
+    marker_path.write_text("keep", encoding="utf-8")
+
+    result = run_release_wrapper(
+        ["--seed=20260718", "--output=" + str(output_path)],
+        tmp_path,
+    )
+
+    assert result.returncode == 1
+    assert "Output path already exists: " + str(output_path) in result.stderr
+    assert marker_path.read_text(encoding="utf-8") == "keep"
+    assert list(output_path.iterdir()) == [marker_path]
+
+
+def test_release_wrapper_sanitizes_pytest_environment_and_records_failure(
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "release-output"
+    poisoned_environment = fake_release_environment(tmp_path, gate_status=7)
+
+    result = run_release_wrapper(
+        ["--seed=20260718", "--output=" + str(output_path)],
+        tmp_path,
+        env=poisoned_environment,
+    )
+
+    assert result.returncode == 7
+    assert result.stdout.count("==>") == 1
+    assert "FAILED: Chromium full suite" in result.stderr
+    assert "Re-run:" in result.stderr
+    assert str(REPOSITORY_ROOT / "run_tests.sh") in result.stderr
+    assert (output_path / "logs" / "chromium-full.log").read_text(
+        encoding="utf-8"
+    ) == "synthetic gate result\n"
+    assert (output_path / "logs" / "visual.log").exists() is False
+    summary = (output_path / "summary.txt").read_text(encoding="utf-8")
+    assert "Dirty worktree: no" in summary
+    assert "FAIL\tchromium-full\t" in summary
+    assert "RESULT\tFAIL\t" in summary
+    assert "gate=chromium-full exit=7" in summary
+
+
+def test_release_wrapper_records_all_successful_gates(tmp_path: Path) -> None:
+    output_path = tmp_path / "release-output"
+    environment = fake_release_environment(tmp_path, gate_status=0)
+
+    result = run_release_wrapper(
+        ["--seed=20260718", "--output=" + str(output_path)],
+        tmp_path,
+        env=environment,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.count("==>") == 7
+    assert "Release test matrix PASSED" in result.stdout
+    summary = (output_path / "summary.txt").read_text(encoding="utf-8")
+    for slug in (
+        "chromium-full",
+        "visual",
+        "service-worker",
+        "deployment",
+        "firefox",
+        "webkit",
+        "js-coverage",
+    ):
+        assert "PASS\t" + slug + "\t" in summary
+        assert (output_path / "logs" / (slug + ".log")).read_text(
+            encoding="utf-8"
+        ) == "synthetic gate result\n"
+        assert (output_path / "logs" / (slug + ".status")).read_text(
+            encoding="utf-8"
+        ) == "0\t0\n"
+    assert sum(line.startswith("PASS\t") for line in summary.splitlines()) == 7
+    assert "RESULT\tPASS\t" in summary
+
+
+def test_release_wrapper_forwards_targeted_termination_to_active_gate(
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "release-output"
+    environment = fake_release_environment(
+        tmp_path,
+        gate_status=0,
+        gate_sleep=3,
+    )
+    process = subprocess.Popen(
+        [
+            str(RELEASE_WRAPPER),
+            "--seed=20260718",
+            "--output=" + str(output_path),
+        ],
+        cwd=tmp_path,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=environment,
+    )
+
+    wait_for_path(output_path / "logs" / "chromium-full.log")
+    termination_started = time.monotonic()
+    process.send_signal(signal.SIGTERM)
+    stdout, stderr = process.communicate(timeout=5)
+
+    assert process.returncode == 143
+    assert time.monotonic() - termination_started < 2
+    assert "Release test run interrupted by SIGTERM" in stderr
+    assert stdout.count("==>") == 1
+    summary = (output_path / "summary.txt").read_text(encoding="utf-8")
+    assert "RESULT\tINTERRUPTED\t" in summary
+    assert "signal=SIGTERM gate=chromium-full" in summary
 
 
 def test_teardown_browser_error_forces_trace_retention(tmp_path: Path) -> None:

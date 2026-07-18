@@ -31,6 +31,10 @@ npm install --global wrangler@4.28.0
 ## Common commands
 
 ```bash
+./run_release_tests.sh
+./run_release_tests.sh --seed 20260718
+./run_release_tests.sh --output /tmp/clocksimulator-release
+./run_release_tests.sh --dry-run
 conda run -n clocksimulator python -m pytest
 conda run -n clocksimulator python -m pytest -p no:randomly
 conda run -n clocksimulator python -m pytest --randomly-seed=20260718
@@ -41,7 +45,7 @@ conda run -n clocksimulator python -m pytest -m "cross_browser and not chromium_
 conda run -n clocksimulator python -m pytest -m "cross_browser and not chromium_only" --browser-engine=webkit
 ```
 
-`./run_tests.sh` is a small wrapper around the first command and forwards all arguments.
+`./run_tests.sh` is a small live-streaming wrapper around one pytest invocation and forwards all arguments. `./run_release_tests.sh` is the canonical one-command local release gate. It runs the complete Chromium suite, the isolated visual, service-worker and deployment gates, the Firefox and WebKit core matrices, and Chromium JavaScript coverage sequentially with one recorded random seed. It stops at the first failure and prints the exact failed-gate command for reproduction.
 
 ## Markers
 
@@ -151,7 +155,15 @@ The regression gate does not require the execution totals to match the observati
 
 The repository does not use GitHub Actions or another automated CI service. Tests are run manually in the local `clocksimulator` Conda environment.
 
-Before a release, run the complete Chromium suite, one recorded random seed, the visual, service-worker and deployment marker suites, both cross-browser core matrices, and the JavaScript coverage command documented above. Do not use retries to turn a failing release check green.
+Before a release, run the complete local matrix with:
+
+```bash
+./run_release_tests.sh
+```
+
+The wrapper verifies the pinned Conda dependencies, all three Playwright browsers, Wrangler 4.28.0, and the canonical macOS 26 arm64 visual environment before starting. It then runs the complete Chromium suite, the visual, service-worker and deployment marker suites, both cross-browser core matrices, and the JavaScript coverage command documented above. The gates run sequentially and fail fast. Do not use retries to turn a failing release check green.
+
+The default seed is generated once, printed, and reused for every gate. Reproduce a run with `--seed VALUE`. Release gates ignore ambient pytest, Python-path, and user-site overrides so shell or Conda settings cannot narrow the matrix, inject plugins, or update snapshots. By default the summary, gate logs and statuses, Playwright failure traces, and coverage reports are written to a new directory under `${TMPDIR:-/tmp}` so the repository remains clean. Use `--output PATH` to select a new artifact directory; an existing path is never overwritten. `--dry-run` prints the seven shell-escaped commands without running preflight checks, creating artifacts, or executing tests.
 
 ## Consolidation record
 

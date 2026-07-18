@@ -155,6 +155,9 @@ npm install --global wrangler@4.28.0
 # Run all tests
 conda run -n clocksimulator python -m pytest
 
+# Run the complete local release matrix
+./run_release_tests.sh
+
 # Run only visual snapshot tests
 conda run -n clocksimulator python -m pytest -m visual
 
