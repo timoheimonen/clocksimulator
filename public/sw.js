@@ -51,14 +51,16 @@ self.addEventListener('fetch', function (event) {
       fetch(event.request).catch(function () {
         const url = new URL(event.request.url);
         const cacheKey = LEGACY_PAGE_ALIASES[url.pathname] || event.request;
-        return caches.match(cacheKey, { ignoreSearch: true }).then(function (cached) {
-          if (cached) {
-            return cached;
-          }
-          if (url.pathname === '/digital' || url.pathname.indexOf('/digital/') === 0) {
-            return caches.match('/digital/');
-          }
-          return caches.match('/');
+        return caches.open(CACHE_NAME).then(function (cache) {
+          return cache.match(cacheKey, { ignoreSearch: true }).then(function (cached) {
+            if (cached) {
+              return cached;
+            }
+            if (url.pathname === '/digital' || url.pathname.indexOf('/digital/') === 0) {
+              return cache.match('/digital/');
+            }
+            return cache.match('/');
+          });
         });
       })
     );
@@ -66,17 +68,21 @@ self.addEventListener('fetch', function (event) {
   }
 
   event.respondWith(
-    caches.match(event.request).then(function (cached) {
-      return cached || fetch(event.request).then(function (response) {
-        if (!response.ok) {
-          return response;
-        }
-        return caches.open(CACHE_NAME).then(function (cache) {
-          return cache.put(event.request, response.clone());
-        }).catch(function () { }).then(function () {
-          return response;
+    caches.open(CACHE_NAME).then(function (cache) {
+      return cache.match(event.request).then(function (cached) {
+        return cached || fetch(event.request).then(function (response) {
+          if (!response.ok) {
+            return response;
+          }
+          return Promise.resolve().then(function () {
+            return cache.put(event.request, response.clone());
+          }).catch(function () { }).then(function () {
+            return response;
+          });
         });
       });
+    }, function () {
+      return fetch(event.request);
     })
   );
 });

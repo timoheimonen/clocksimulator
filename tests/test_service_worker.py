@@ -20,6 +20,8 @@ EXPECTED_PRECACHE_PATHS = {
     "/android-chrome-512x512.png",
     "/og-image.png",
 }
+FOREIGN_CACHE_NAME = "unrelated-app-shadow-test"
+FOREIGN_CACHE_SENTINEL = "Foreign cache sentinel"
 
 
 def prepare_controlled_page(page: Page, app_url: str) -> None:
@@ -60,6 +62,32 @@ def current_cache_name(page: Page) -> str:
     )
     assert len(names) == 1
     return names[0]
+
+
+def seed_foreign_cache(page: Page, app_url: str, paths: list[str]) -> None:
+    response = page.goto(
+        app_url.rstrip("/") + "/robots.txt",
+        wait_until="domcontentloaded",
+    )
+    assert response is not None
+    assert response.ok
+    seeded = page.evaluate(
+        """async ([name, sentinel, paths]) => {
+            const cache = await caches.open(name);
+            await Promise.all(paths.map(function (path) {
+                return cache.put(path, new Response(
+                    '<!doctype html><title>' + sentinel + '</title>' +
+                    '<main><h1>' + sentinel + '</h1></main>',
+                    { headers: { 'Content-Type': 'text/html' } }
+                ));
+            }));
+            return Promise.all(paths.map(async function (path) {
+                return Boolean(await cache.match(path));
+            }));
+        }""",
+        [FOREIGN_CACHE_NAME, FOREIGN_CACHE_SENTINEL, paths],
+    )
+    assert seeded == [True] * len(paths)
 
 
 @pytest.mark.parametrize("method", ["GET", "HEAD"])
@@ -253,6 +281,108 @@ def test_activate_deletes_old_owned_cache_and_preserves_current_and_foreign_cach
     assert seeded["oldName"] not in cache_names
     assert seeded["currentName"] in cache_names
     assert seeded["foreignName"] in cache_names
+
+
+def test_runtime_cache_ignores_earlier_foreign_cache_collision(
+    service_worker_page: Page,
+    app_url: str,
+) -> None:
+    cache_key = "/sitemap.xml"
+    seed_foreign_cache(service_worker_page, app_url, [cache_key])
+    prepare_controlled_page(service_worker_page, app_url)
+    cache_name = current_cache_name(service_worker_page)
+
+    service_worker_page.context.set_offline(True)
+    try:
+        service_worker_page.wait_for_function("() => navigator.onLine === false")
+        result = service_worker_page.evaluate(
+            """async ([currentName, foreignName, key]) => {
+                const currentResponse = await (await caches.open(currentName)).match(key);
+                const foreignResponse = await (await caches.open(foreignName)).match(key);
+                const fetchedResponse = await fetch(key);
+                return {
+                    cacheNames: await caches.keys(),
+                    currentBody: await currentResponse.text(),
+                    foreignBody: await foreignResponse.text(),
+                    fetchedBody: await fetchedResponse.text()
+                };
+            }""",
+            [cache_name, FOREIGN_CACHE_NAME, cache_key],
+        )
+    finally:
+        service_worker_page.context.set_offline(False)
+
+    assert FOREIGN_CACHE_NAME in result["cacheNames"]
+    assert result["foreignBody"] != result["currentBody"]
+    assert result["fetchedBody"] == result["currentBody"]
+
+
+def test_non_navigation_cache_miss_ignores_foreign_cache_and_uses_network(
+    service_worker_page: Page,
+    app_url: str,
+) -> None:
+    cache_key = "/robots.txt?foreign-cache-only"
+    seed_foreign_cache(service_worker_page, app_url, [cache_key])
+    prepare_controlled_page(service_worker_page, app_url)
+    cache_name = current_cache_name(service_worker_page)
+
+    result = service_worker_page.evaluate(
+        """async ([currentName, foreignName, key]) => {
+            const currentCache = await caches.open(currentName);
+            const foreignResponse = await (await caches.open(foreignName)).match(key);
+            const currentBefore = await currentCache.match(key);
+            const fetchedResponse = await fetch(key);
+            const fetchedBody = await fetchedResponse.text();
+            const currentAfter = await currentCache.match(key);
+            return {
+                currentBefore: Boolean(currentBefore),
+                currentAfterBody: currentAfter ? await currentAfter.text() : null,
+                foreignBody: await foreignResponse.text(),
+                fetchedBody: fetchedBody
+            };
+        }""",
+        [cache_name, FOREIGN_CACHE_NAME, cache_key],
+    )
+
+    assert result["currentBefore"] is False
+    assert result["fetchedBody"] != result["foreignBody"]
+    assert result["currentAfterBody"] == result["fetchedBody"]
+    assert "User-agent: *" in result["fetchedBody"]
+
+
+def test_current_cache_open_failure_falls_back_to_network_response(
+    service_worker_page: Page,
+    app_url: str,
+) -> None:
+    prepare_controlled_page(service_worker_page, app_url)
+    workers = service_worker_page.context.service_workers
+    assert len(workers) == 1
+    workers[0].evaluate(
+        """() => {
+            const originalOpen = CacheStorage.prototype.open;
+            CacheStorage.prototype.open = function (name) {
+                if (name.indexOf('clocksimulator-v') === 0) {
+                    return Promise.reject(new Error('cache open test failure'));
+                }
+                return originalOpen.call(this, name);
+            };
+        }"""
+    )
+
+    result = service_worker_page.evaluate(
+        """async () => {
+            const response = await fetch('/robots.txt?cache-open=failure');
+            return {
+                ok: response.ok,
+                status: response.status,
+                body: await response.text()
+            };
+        }"""
+    )
+
+    assert result["ok"] is True
+    assert result["status"] == 200
+    assert "User-agent: *" in result["body"]
 
 
 def test_precache_hit_returns_cached_asset_while_offline(
@@ -710,6 +840,64 @@ def test_online_redirect_then_offline_reload_returns_legal_document(
             "() => location.pathname + location.search"
         ) == public_path
         assert_document(service_worker_page, title, "main h1", heading)
+    finally:
+        service_worker_page.context.set_offline(False)
+
+
+@pytest.mark.parametrize(
+    ("foreign_key", "path", "title", "selector", "expected_text"),
+    [
+        pytest.param(
+            "/privacy",
+            "/privacy?source=foreign-cache-test",
+            "Privacy Policy - clocksimulator.com",
+            "main h1",
+            "Privacy Policy",
+            id="direct-navigation-cache-hit",
+        ),
+        pytest.param(
+            "/digital/",
+            "/digital/unknown",
+            "Fullscreen Online Digital Clock | Clocksimulator",
+            "#digitalTime",
+            None,
+            id="digital-navigation-fallback",
+        ),
+        pytest.param(
+            "/",
+            "/unknown-offline-route",
+            "Fullscreen Online Analog Clock | Clocksimulator",
+            "#clock",
+            None,
+            id="root-navigation-fallback",
+        ),
+    ],
+)
+def test_offline_navigation_ignores_earlier_foreign_cache_collision(
+    service_worker_page: Page,
+    app_url: str,
+    foreign_key: str,
+    path: str,
+    title: str,
+    selector: str,
+    expected_text: str | None,
+) -> None:
+    seed_foreign_cache(service_worker_page, app_url, [foreign_key])
+    prepare_controlled_page(service_worker_page, app_url)
+    assert FOREIGN_CACHE_NAME in service_worker_page.evaluate("async () => caches.keys()")
+
+    service_worker_page.context.set_offline(True)
+    try:
+        service_worker_page.wait_for_function("() => navigator.onLine === false")
+        response = service_worker_page.goto(
+            app_url.rstrip("/") + path,
+            wait_until="domcontentloaded",
+        )
+
+        assert response is not None
+        assert response.ok
+        assert service_worker_page.title() == title
+        assert_document(service_worker_page, title, selector, expected_text)
     finally:
         service_worker_page.context.set_offline(False)
 

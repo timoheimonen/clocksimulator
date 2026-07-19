@@ -127,7 +127,7 @@ Update only reviewed, intentional baselines. A failed comparison writes `*_diff.
 
 ## Service worker and deployment
 
-Service-worker tests use a controlled document and browser-side `fetch()` because `page.request` bypasses the service worker. The cache contract keeps the current cache, deletes only older `clocksimulator-v*` caches, preserves unrelated origin caches, and stores only successful runtime responses.
+Service-worker tests use a controlled document and browser-side `fetch()` because `page.request` bypasses the service worker. The cache contract keeps the current cache, deletes only older `clocksimulator-v*` caches, preserves unrelated origin caches without using them to satisfy app requests, and stores only successful runtime responses.
 
 Deployment tests copy the real `public/` directory and `wrangler.jsonc` into a temporary runtime directory, start exactly Wrangler 4.28.0 on a free port, and verify Cloudflare's actual HTML handling, redirects, headers, MIME types, and cross-origin iframe behavior. The ordinary SimpleHTTP fixture remains the fast DOM-test server and does not substitute for this suite.
 
