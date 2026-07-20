@@ -885,7 +885,7 @@ def test_every_dashboard_builder_control_reaches_url_and_preview_dom(
     add_dashboard_timezone(page, "Asia/Kathmandu", "enter")
     initial_url = page.locator("#dashboardUrl").input_value()
     if path == "/":
-        assert page.locator("#dashboardShadows").input_value() == "true"
+        assert page.locator("#dashboardShadows").input_value() == "false"
         assert "shadows=" not in initial_url
     select_and_dispatch(page, "#dashboardRows", "2")
     select_and_dispatch(page, "#dashboardTheme", "light")
@@ -893,11 +893,11 @@ def test_every_dashboard_builder_control_reaches_url_and_preview_dom(
     select_and_dispatch(page, "#dashboardDayNight", "show")
     if path == "/":
         select_and_dispatch(page, "#dashboardNumbers", "hide")
-        select_and_dispatch(page, "#dashboardShadows", "false")
+        select_and_dispatch(page, "#dashboardShadows", "true")
         select_and_dispatch(page, "#dashboardBorder", "hide")
         expected_query = (
             "?tz=" + encoded_timezones + "&rows=2&theme=light&seconds=hide"
-            "&border=hide&daynight=show&numbers=hide&shadows=false"
+            "&border=hide&daynight=show&numbers=hide&shadows=true"
         )
         production_base = "https://clocksimulator.com/"
     else:
@@ -938,7 +938,7 @@ def test_every_dashboard_builder_control_reaches_url_and_preview_dom(
         assert numbers.evaluate_all(
             "elements => elements.every(element => getComputedStyle(element).display === 'none')"
         ) is True
-        assert frame.locator(".clock-grid [filter]").count() == 0
+        assert frame.locator(".clock-grid [filter]").count() == 8
         sun_icons = frame.locator(".clock-grid .sun-icon")
         assert sun_icons.count() == 2
         assert sun_icons.evaluate_all(
@@ -1035,6 +1035,7 @@ def test_real_cross_origin_iframe_contract_across_renderers_themes_and_sizes(
     elif render_case == "analog-dashboard":
         frame.locator(".clock-grid .clock-cell").first.wait_for()
         assert frame.locator(".clock-grid .clock-cell").count() == 2
+        assert frame.locator(".clock-grid [filter]").count() == 0
         assert frame.locator(".clock-label").all_text_contents() == ["UTC", "Kathmandu"]
         assert frame.locator(".clock-grid .clock-cell svg").evaluate_all(
             "elements => elements.map(element => element.getAttribute('aria-label'))"

@@ -216,11 +216,21 @@ def test_dashboard_numbers_hide_and_default_visible(page: Page, app_url: str) ->
     ) is True
 
 
-def test_dashboard_shadows_false_and_default_enabled(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"tz": TIMEZONES, "shadows": "false"})
+@pytest.mark.parametrize("shadows", [None, "false"])
+def test_dashboard_shadows_disabled_unless_enabled(
+    page: Page,
+    app_url: str,
+    shadows: str | None,
+) -> None:
+    params = {"tz": TIMEZONES}
+    if shadows is not None:
+        params["shadows"] = shadows
+    open_page(page, app_url, params)
     assert page.locator(".clock-grid [filter]").count() == 0
 
-    open_page(page, app_url, {"tz": TIMEZONES})
+
+def test_dashboard_shadows_true_enables_filters(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"tz": TIMEZONES, "shadows": "true"})
     filtered = page.locator(".clock-grid [filter]")
     assert filtered.count() == 8
     assert filtered.evaluate_all(

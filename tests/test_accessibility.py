@@ -1281,7 +1281,7 @@ def test_dashboard_timezone_native_error_is_tied_to_visibly_labelled_input(
     [
         pytest.param({}, ".clock-container", 1, id="single"),
         pytest.param(
-            {"tz": "UTC,Asia/Kathmandu"},
+            {"tz": "UTC,Asia/Kathmandu", "shadows": "true"},
             ".clock-grid .clock-cell",
             2,
             id="dashboard",

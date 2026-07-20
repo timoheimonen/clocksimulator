@@ -1301,8 +1301,8 @@ SOFTWARE.
         <div class="embed-field">
           <label for="dashboardShadows">Shadows</label>
           <select id="dashboardShadows">
-            <option value="true">Show</option>
             <option value="false">Hide</option>
+            <option value="true">Show</option>
           </select>
         </div>
         <div class="embed-field">
@@ -1463,7 +1463,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           <tr>
             <td><code>shadows</code></td>
             <td><code>true</code>, <code>false</code></td>
-            <td><code>true</code></td>
+            <td><code>true</code> (single), <code>false</code> (dashboard)</td>
           </tr>
           <tr>
             <td><code>burnin</code></td>
@@ -1534,7 +1534,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       const numbersParam = params.get('numbers');
       const shadowsParam = params.get('shadows');
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const shadowsEnabled = shadowsParam !== 'false' && !reducedMotion;
+      const shadowsEnabled =
+        (dashboardMode ? shadowsParam === 'true' : shadowsParam !== 'false') && !reducedMotion;
       const burninParam = params.get('burnin');
       const showDayNight = daynightParam === 'show';
 
@@ -2567,7 +2568,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           if (rows !== '0') p.push('rows=' + rows);
           appendCommonParams(p, dashboardThemeSelect.value, dashboardSecondsSelect.value,
             dashboardBorderSelect.value, dashboardDayNightSelect.value, dashboardNumbersSelect.value);
-          if (dashboardShadowsSelect.value === 'false') p.push('shadows=false');
+          if (dashboardShadowsSelect.value === 'true') p.push('shadows=true');
           return '?' + p.join('&');
         }
 

@@ -129,7 +129,7 @@ All parameters are optional and can be combined:
 | `border`   | `show`, `hide` | `show` | Clock border visibility |
 | `daynight` | `show`, `hide` | `hide` | Sun/moon indicator for day/night |
 | `numbers`  | `show`, `hide` | `show` | Clock numbers visibility |
-| `shadows`  | `true`, `false` | `true` | Hand and center dot shadows |
+| `shadows`  | `true`, `false` | `true` (single), `false` (dashboard) | Hand and center dot shadows |
 | `burnin`   | `true`, `false` | `true` | Screen burn-in protection (pixel shift) |
 
 ## Accessibility
