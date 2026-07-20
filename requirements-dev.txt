@@ -1,4 +1,5 @@
-pytest
-pytest-playwright
-playwright
-Pillow>=11,<14
+pytest==9.0.2
+pytest-randomly==4.1.0
+pytest-playwright==0.7.2
+playwright==1.58.0
+Pillow>=12,<13

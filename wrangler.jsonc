@@ -2,6 +2,7 @@
     "name": "clocksimu",
     "compatibility_date": "2026-02-26",
     "assets": {
-        "directory": "./public"
+        "directory": "./public",
+        "html_handling": "auto-trailing-slash"
     }
 }
