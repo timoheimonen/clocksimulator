@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-echo "=== Running clocksimulator tests ==="
-echo ""
+repository_root="$(CDPATH= cd "$(dirname "$0")" && pwd -P)"
+cd "$repository_root"
 
-python -m pytest tests/ -v --tb=short
-
-echo ""
-echo "=== Tests complete ==="
+exec conda run --no-capture-output -n clocksimulator \
+  env \
+  -u PYTEST_ADDOPTS \
+  -u PYTEST_PLUGINS \
+  -u PYTEST_DISABLE_PLUGIN_AUTOLOAD \
+  -u PYTHONOPTIMIZE \
+  -u PYTHONPATH \
+  -u PYTHONUSERBASE \
+  PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
+  PYTHONNOUSERSITE=1 \
+  python -m pytest \
+  -p pytest_playwright.pytest_playwright \
+  -p pytest_randomly \
+  "$@"

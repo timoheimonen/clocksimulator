@@ -27,9 +27,9 @@ This is a minimalist, old-school web page with no trackers, no cookies, and no e
 
 ## Architecture & Performance
 
-clocksimulator is intentionally built as a **single-file, Edge-Native application** (`public/index.html`). This architecture ensures infinite scalability, maximum reliability, and lightning-fast performance.
+clocksimulator is intentionally built as two **self-contained, Edge-Native pages** (`public/index.html` and `public/digital/index.html`). This architecture ensures infinite scalability, maximum reliability, and lightning-fast performance.
 
-* **Single-File Simplicity:** Keeping everything in one file minimizes HTTP requests and simplifies deployment. While a single long file is a maintenance tradeoff, the project stays focused to avoid unnecessary complexity.
+* **Self-Contained Simplicity:** Keeping each application in one file minimizes HTTP requests and simplifies deployment. While long files are a maintenance tradeoff, the project stays focused to avoid unnecessary complexity.
 * **Originless Edge Distribution:** Hosted on **Cloudflare Pages**, the site has no single origin server that can be overwhelmed. Assets are served directly from the global edge network, ensuring good cache hit rate and minimal latency worldwide.
 * **Client-Side Execution:** 100% of the logic and rendering happen in the user's browser. There is no backend to crash; the performance is limited only by the client's device.
 
@@ -129,7 +129,7 @@ All parameters are optional and can be combined:
 | `border`   | `show`, `hide` | `show` | Clock border visibility |
 | `daynight` | `show`, `hide` | `hide` | Sun/moon indicator for day/night |
 | `numbers`  | `show`, `hide` | `show` | Clock numbers visibility |
-| `shadows`  | `true`, `false` | `true` | Hand and center dot shadows |
+| `shadows`  | `true`, `false` | `true` (single), `false` (dashboard) | Hand and center dot shadows |
 | `burnin`   | `true`, `false` | `true` | Screen burn-in protection (pixel shift) |
 
 ## Accessibility
@@ -144,27 +144,31 @@ Extension follows main clocksimulator.com version, but not always updated 1:1 an
 
 ## Testing
 
-126 automated tests using pytest and Playwright. No build step required. See [`TESTING.md`](TESTING.md) for the full test list.
+The release suite uses pytest and Playwright to cover both clocks, browser lifecycles, offline behavior, Cloudflare routing, accessibility, and visual regressions. No build step is required. See [`TESTING.md`](TESTING.md) for the test strategy and behavior matrix.
 
 ```bash
-# Install test dependencies
-pip install -r requirements-dev.txt
-python -m playwright install chromium
+# Create the project test environment and install browsers
+conda env create --file environment.yml
+conda run -n clocksimulator python -m playwright install chromium firefox webkit
+npm install --global wrangler@4.28.0
 
 # Run all tests
-python -m pytest
+conda run -n clocksimulator python -m pytest
+
+# Run the complete local release matrix
+./run_release_tests.sh
 
 # Run only visual snapshot tests
-python -m pytest -k "visual_snapshot"
+conda run -n clocksimulator python -m pytest -m visual
 
-# Regenerate screenshot baselines
-python -m pytest --update-snapshots
+# Explicitly regenerate reviewed screenshot baselines
+conda run -n clocksimulator python -m pytest -m visual --update-snapshots
 ```
 
 ## Privacy & Terms of service
 
-- [`clocksimulator.com/privacy.html`](https://clocksimulator.com/privacy.html)
-- [`clocksimulator.com/TOS.html`](https://clocksimulator.com/TOS.html)
+- [`clocksimulator.com/privacy`](https://clocksimulator.com/privacy)
+- [`clocksimulator.com/TOS`](https://clocksimulator.com/TOS)
 
 ## License
 

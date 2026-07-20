@@ -1,229 +1,146 @@
-# Testing
+# Testing clocksimulator
 
-123 tests across 4 test files. Run with `python -m pytest`.
+The test suite is a release gate for the analog and digital applications, not a source-code string checker. It verifies rendered time, URL contracts, browser API lifecycles, accessibility, offline behavior, Cloudflare routing, and visual output.
 
-## Embed mode (`test_embed_mode.py` — 29 tests)
+Do not maintain a hand-written test count here. Use collection when a count is needed:
 
-### Parameter handling
+```bash
+conda run -n clocksimulator python -m pytest --collect-only
+```
 
-| Test | Verifies |
+## Environment
+
+All tests run in the project-specific Conda environment:
+
+```bash
+conda env create --file environment.yml
+conda run -n clocksimulator python -m playwright install chromium firefox webkit
+npm install --global wrangler@4.28.0
+```
+
+Update an existing environment with:
+
+```bash
+conda env update --name clocksimulator --file environment.yml --prune
+conda run -n clocksimulator python -m playwright install chromium firefox webkit
+npm install --global wrangler@4.28.0
+```
+
+`requirements-dev.txt` is the single pip dependency list consumed by `environment.yml`. Browser versions come from the pinned Playwright package. The full suite also requires Node.js and the explicitly pinned Wrangler 4.28.0 command above.
+
+## Common commands
+
+```bash
+./run_release_tests.sh
+./run_release_tests.sh --seed 20260718
+./run_release_tests.sh --dry-run
+conda run -n clocksimulator python -m pytest
+conda run -n clocksimulator python -m pytest -p no:randomly
+conda run -n clocksimulator python -m pytest --randomly-seed=20260718
+conda run -n clocksimulator python -m pytest -m visual
+conda run -n clocksimulator python -m pytest -m service_worker
+conda run -n clocksimulator python -m pytest -m deployment
+conda run -n clocksimulator python -m pytest -m cross_browser --browser-engine=firefox
+conda run -n clocksimulator python -m pytest -m cross_browser --browser-engine=webkit
+```
+
+`./run_tests.sh` is a small live-streaming wrapper around one pytest invocation and forwards all arguments. `./run_release_tests.sh` is the canonical one-command local release gate. It runs the complete Chromium suite and the Firefox and WebKit cross-browser matrices sequentially with one recorded random seed. It stops at the first failure and prints the failed command and retained trace location.
+
+## Markers
+
+| Marker | Purpose |
 |---|---|
-| `test_embed_mode_adds_embed_mode_class` | `body.embed-mode` class applied |
-| `test_embed_mode_defaults_to_dark_theme` | Dark theme when no `theme` param |
-| `test_embed_mode_theme_light_override` | `theme=light` overrides embed default |
-| `test_embed_mode_theme_transparent` | `theme=transparent` applies transparent mode |
-| `test_embed_mode_with_single_timezone` | Single `tz` value works in embed |
-| `test_embed_mode_seconds_hide` | `seconds=hide` hides second hand |
-| `test_embed_mode_seconds_smooth` | `seconds=smooth` sets smooth mode |
-| `test_embed_mode_border_hide` | `border=hide` removes clock border |
-| `test_embed_mode_numbers_hide` | `numbers=hide` hides hour numbers |
-| `test_embed_mode_shadows_disabled` | `shadows=false` removes SVG filters |
-| `test_embed_mode_daynight_show` | `daynight=show` displays sun/moon icon |
-| `test_embed_mode_all_params_combined` | All params work together |
+| `visual` | Compares rendered output with committed baselines |
+| `service_worker` | Runs with service workers enabled in an isolated context |
+| `deployment` | Runs against pinned Wrangler 4.28.0 rather than the fast test server |
+| `cross_browser` | Critical behavior required in Chromium, Firefox, and WebKit |
+| `chromium_only` | Depends on Chromium-specific APIs such as CDP or service workers in this harness |
+| `accessibility` | Semantics, focus, reflow, contrast, and user preferences |
 
-### UI isolation
+Markers are registered under `--strict-markers`. Release checks are run manually. When changing marker assignments or commands, use `--collect-only` with the same marker expression first so an empty selection cannot pass unnoticed.
 
-| Test | Verifies |
-|---|---|
-| `test_embed_mode_hides_toggle_wrapper` | Controls hidden (zero width) |
-| `test_embed_mode_clock_container_full_size` | Clock fills container |
-| `test_embed_mode_removes_favicon` | Dynamic favicon removed |
-| `test_embed_mode_disables_save_settings` | Save settings toggle disabled |
-| `test_embed_mode_no_time_announcements` | Aria-live announcements suppressed |
-| `test_embed_mode_wakelock_hidden` | Wake lock label hidden |
-| `test_embed_mode_overlays_not_visible` | Embed/dashboard/help overlays not visible |
-| `test_embed_mode_about_bubble_hidden` | About button and bubble hidden |
-| `test_embed_mode_burnin_disabled` | No burn-in position shifting |
-| `test_embed_mode_clock_container_no_transition` | CSS transition is `none` |
-| `test_embed_mode_escape_key_no_effect` | Escape key triggers nothing |
+## Behavior responsibility matrix
 
-### Visual snapshots
+| Contract | A single top | A dash top | D single top | D dash top | A single iframe | A dash iframe | D single iframe | D dash iframe | Browsers | Primary tests |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| Time, target timezone, offsets, DST | Yes | Yes | Yes | Yes | Exact time | Exact time | Exact time | Exact time | Cross-browser | `test_timezone_dst.py`, `test_builders.py` |
+| Feature parameters and defaults | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Core subset | `test_embed_mode.py`, `test_dashboard_mode.py`, `test_digital_clock.py`, `test_builders.py` |
+| Theme priority and pre-render FOUC | Yes | Shared root | Yes | Shared root | Yes | Yes | Yes | Yes | Cross-browser | `test_theme_handling.py`, `test_builders.py` |
+| Embed and dashboard builders | Output | Output | Output | Output | Yes | Yes | Yes | Yes | Cross-browser | `test_builders.py` |
+| Saved settings and cross-page fields | Yes | Same app | Yes | Same app | URL-only | URL-only | URL-only | URL-only | Cross-browser | `test_saved_settings.py` |
+| Wake Lock intent and races | Yes | Same app | Yes | Same app | Disabled | Disabled | Disabled | Disabled | Cross-browser | `test_wake_lock.py` |
+| Keyboard, dialogs, semantics, reflow | Yes | Yes | Yes | Yes | Embed semantics | Embed semantics | Embed semantics | Embed semantics | Cross-browser | `test_accessibility.py`, `test_builders.py` |
+| Offline install/activate/fetch | Yes | Fallback | Yes | Fallback | — | — | — | — | Chromium | `test_service_worker.py` |
+| Cloudflare routes, headers, MIME | Yes | Shared page | Yes | Shared page | Cross-origin | Cross-origin | Cross-origin | Cross-origin | Chromium | `test_deployment_contract.py` |
+| Versions, manifest, icons, canonicals | Yes | Shared app | Yes | Shared app | — | — | — | — | Static | `test_static_contracts.py` |
+| Snapshot oracle itself | Yes | Yes | Yes | Yes | Transparent | Embed view | Transparent | Dashboard view | Chromium | `test_test_infrastructure.py`, visual-marked tests |
 
-| Test | Snapshot |
-|---|---|
-| `test_embed_mode_visual_snapshot_dark` | `embed-dark.png` |
-| `test_embed_mode_visual_snapshot_light` | `embed-light.png` |
-| `test_embed_mode_visual_snapshot_transparent` | `embed-transparent.png` |
-| `test_embed_mode_visual_snapshot_daynight` | `embed-daynight.png` |
-| `test_embed_mode_visual_snapshot_seconds_hide` | `embed-seconds-hide.png` |
-| `test_embed_mode_visual_snapshot_all_params` | `embed-all-params.png` |
+The matrix names the primary owner. Tests may deliberately overlap when they exercise a distinct implementation path or integration boundary.
 
-## Dashboard mode (`test_dashboard_mode.py` — 37 tests)
+## Fixture isolation
 
-### Grid activation and layout
+Every test receives a fresh `BrowserContext` and page. The normal context blocks service workers; the service-worker context allows them and is discarded after one test. Locale, viewport, device scale factor, color scheme, reduced-motion preference, and timezone are explicit.
 
-| Test | Verifies |
-|---|---|
-| `test_dashboard_mode_activates_with_multiple_tz` | Grid created with 2+ timezones |
-| `test_dashboard_mode_clock_grid_created` | `.clock-grid` element exists |
-| `test_dashboard_mode_grid_columns_correct` | 2 TZs = 2 columns |
-| `test_dashboard_auto_grid_4tz` | 4 TZs = 2 cols x 2 rows |
-| `test_dashboard_auto_grid_5tz` | 5 TZs = 3 cols x 2 rows |
-| `test_dashboard_auto_grid_6tz` | 6 TZs = 3 cols x 2 rows |
-| `test_dashboard_auto_grid_9tz` | 9 TZs = 3 cols x 3 rows |
-| `test_dashboard_mode_rows_parameter` | `rows` param overrides auto layout |
-| `test_dashboard_mode_four_tz_with_rows` | 4 TZs with `rows=2` |
-| `test_dashboard_mode_three_timezones` | 3 TZs renders 3 clocks |
+Chromium and Firefox share one browser process per session. WebKit restarts the browser process for each test module because its macOS network process stops accepting navigations after a large number of short-lived contexts; the contexts and pages remain function-scoped and isolated. Keyboard traversal uses Option+Tab in macOS WebKit, matching the platform setting that includes form controls, and ordinary Tab in Chromium and Firefox.
 
-### DOM structure and rendering
+`open_page()` installs Playwright's controlled clock, initializes the test origin with empty or explicitly seeded storage, navigates, and waits for exact render readiness. Separate helpers support navigation and reload without clearing storage. Tests that need another timezone use a separate Helsinki context rather than mutating a shared session.
 
-| Test | Verifies |
-|---|---|
-| `test_dashboard_mode_title_changes` | Page title includes "Dashboard" |
-| `test_dashboard_mode_clock_labels_show` | Labels rendered for each clock |
-| `test_dashboard_label_text_matches_tz` | Labels show display names (Helsinki, not Europe/Helsinki) |
-| `test_dashboard_clocks_different_hand_angles` | Different TZs show different hand positions |
-| `test_dashboard_no_duplicate_svg_ids` | Cloned SVGs have internal IDs stripped |
-| `test_dashboard_original_container_hidden` | Single-clock container hidden when grid active |
-| `test_dashboard_mode_filters_removed` | SVG filters removed from grid clones |
+The timer probe records timeout and interval identity, delay, calls, and cancellation. Manual mode invokes callbacks without real waiting. Production and test code must not use sleep-based synchronization.
 
-### Parameter handling
+Builder and Wake Lock behavior tests inject test-only CSS that removes transition and animation durations. This does not change `prefers-reduced-motion`, so application JavaScript follows the ordinary-motion path while Playwright avoids waiting for purely decorative transitions. Dedicated normal-motion, reduced-motion, and visual tests run without that suppression.
 
-| Test | Verifies |
-|---|---|
-| `test_dashboard_mode_theme_dark` | `theme=dark` in dashboard |
-| `test_dashboard_mode_theme_light` | `theme=light` in dashboard |
-| `test_dashboard_mode_seconds_hide` | `seconds=hide` hides all second hands |
-| `test_dashboard_mode_border_hide` | `border=hide` removes all borders |
-| `test_dashboard_mode_numbers_hide` | `numbers=hide` hides all numbers |
-| `test_dashboard_mode_daynight_show` | `daynight=show` shows icons on all clocks |
-| `test_dashboard_mode_all_params_combined` | All params work together |
+The ordinary asset server is threaded so intercepted document requests can fetch the original response without deadlocking the server. Shutdown closes the socket and joins the serving thread; daemon request threads cannot hold the test process open.
 
-### Edge cases
+Unexpected `pageerror` and `console.error` events fail teardown. A test that intentionally causes an error must declare the exact expected kind, message, URL, and multiplicity. `--tracing=retain-on-failure` records a trace from these custom contexts under `--output`.
 
-| Test | Verifies |
-|---|---|
-| `test_dashboard_mode_invalid_timezone_ignored` | Invalid TZ filtered, falls back to single clock |
-| `test_dashboard_mode_mixed_valid_invalid_tz` | Valid TZs kept, invalid ones dropped |
-| `test_dashboard_single_tz_no_grid` | Single `tz` value does not create a grid |
-| `test_dashboard_all_invalid_tz_fallback` | All-invalid TZs fall back to local clock |
-| `test_dashboard_empty_tz_param` | Empty `tz=` does not crash |
+## Time contracts
 
-### Embed + dashboard combined
+The browser's default timezone is UTC. Clock screenshots use `2026-01-01T12:00:00Z`. DST tests cross the exact 2026 New York spring and fall transitions within one page session. The target-timezone offset must be recalculated on the first update at or after 60,000 ms. Day is `[06:00, 18:00)` in the target timezone.
 
-| Test | Verifies |
-|---|---|
-| `test_dashboard_mode_embed_combined` | Embed class + grid + controls hidden |
-| `test_dashboard_mode_embed_grid_no_transition` | Grid transition is `none` in embed |
-| `test_dashboard_embed_labels_visible` | Labels remain visible in embed mode |
-| `test_dashboard_embed_burnin_disabled` | No burn-in shifting in embed dashboard |
+The offset matrix includes `America/St_Johns`, `Pacific/Kiritimati`, `Pacific/Pago_Pago`, `Asia/Kathmandu`, and the 30-minute `Australia/Lord_Howe` DST transition.
 
-### Visual snapshots
+## Persisted-state contracts
 
-| Test | Snapshot |
-|---|---|
-| `test_dashboard_mode_visual_snapshot_dark_2tz` | `dashboard-dark-2tz.png` |
-| `test_dashboard_mode_visual_snapshot_light_3tz` | `dashboard-light-3tz.png` |
-| `test_dashboard_mode_visual_snapshot_dark_4tz` | `dashboard-dark-4tz.png` |
-| `test_dashboard_mode_visual_snapshot_embed_2tz` | `dashboard-embed-2tz.png` |
+- Unknown fields in the shared settings object are preserved on every write.
+- Analog and digital page-specific fields do not overwrite one another.
+- `theme=transparent` is a URL/embed mode and is not restored as a top-level persistent theme.
+- Any URL query is a temporary override and must leave existing storage byte-for-byte unchanged.
+- Wake Lock desired intent is distinct from an active or pending sentinel. System release, a missing API, or a rejected request does not erase user intent.
+- At most one Wake Lock request may be active or pending.
 
-## Digital clock (`test_digital_clock.py` — 33 tests)
+## Builder contracts
 
-### Single clock rendering
+Generated HTML contains exactly one parseable iframe. Every visible control must affect both the canonical URL and the live preview. Clipboard and open actions receive the exact generated value. Invalid dimensions are rejected; valid inclusive boundaries are accepted. Preview dimensions may be capped for the dialog but generated dimensions are not silently changed.
 
-| Test | Verifies |
-|---|---|
-| `test_digital_page_renders_local_time` | `/digital/` renders local digital time |
-| `test_digital_seconds_hide` | `seconds=hide` hides seconds and the seconds toggle |
-| `test_digital_seconds_toggle_hides_seconds` | Seconds toggle updates the display |
-| `test_digital_format_12_hour` | `format=12` renders 12-hour time |
-| `test_digital_timezone` | Single IANA timezone adjusts the displayed time |
-| `test_digital_title_changes_for_timezone` | Page title includes the digital timezone |
-| `test_digital_daynight_show` | `daynight=show` renders the day/night marker |
-| `test_digital_border_show` | `border=show` adds the digital border |
-| `test_digital_saved_settings_seconds_hidden` | Saved digital seconds preference is restored |
+## Visual regression policy
 
-### Theme and embed behavior
+The canonical environment is Chromium from Playwright 1.58.0 on macOS 26 arm64, matching the committed baselines. Ordinary local runs never update baselines.
 
-| Test | Verifies |
-|---|---|
-| `test_digital_theme_dark` | `theme=dark` applies dark mode |
-| `test_digital_theme_light` | `theme=light` removes dark/transparent modes |
-| `test_digital_theme_transparent` | `theme=transparent` applies transparent mode |
-| `test_digital_theme_toggle_changes_class` | Theme toggle changes the class |
-| `test_digital_embed_mode_defaults_dark_and_hides_controls` | Embed mode defaults dark and hides controls |
-| `test_digital_embed_theme_transparent` | Transparent theme works in digital embed |
-| `test_digital_embed_removes_favicon` | Embed mode removes the dynamic favicon |
-| `test_digital_embed_burnin_disabled` | Embed mode disables burn-in shifting |
+Before capture, the helper waits for exact clock readiness and `document.fonts.ready`, disables animations, hides the caret, and uses the fixed context settings. Comparisons are exact. A missing baseline is a failure. Only `--update-snapshots` may create or replace one.
 
-### Digital dashboard
+```bash
+conda run -n clocksimulator python -m pytest -m visual
+conda run -n clocksimulator python -m pytest -m visual --update-snapshots
+```
 
-| Test | Verifies |
-|---|---|
-| `test_digital_dashboard_activates_with_multiple_timezones` | 2+ timezones create `.digital-grid` |
-| `test_digital_dashboard_labels_and_times` | Dashboard labels and timezone-adjusted times render |
-| `test_digital_dashboard_rows_parameter` | `rows` controls digital dashboard layout |
-| `test_digital_dashboard_seconds_hide` | `seconds=hide` applies to all digital clocks |
-| `test_digital_dashboard_format_12_hour` | `format=12` applies to dashboard clocks |
-| `test_digital_dashboard_daynight_show` | Day/night markers render in dashboard mode |
-| `test_digital_dashboard_invalid_timezone_ignored` | Invalid timezone is filtered |
-| `test_digital_dashboard_all_invalid_timezone_falls_back` | All-invalid `tz` falls back to local time |
+Update only reviewed, intentional baselines. A failed comparison writes `*_diff.png`; a passing comparison removes its stale diff. Transparent baselines use RGBA with `omit_background=True`, require zero alpha in known corner background pixels, require non-empty visible content, and compare alpha like every other channel. Small day/night and second-hand details have focused baselines alongside DOM assertions.
 
-### Builders and integration
+## Service worker and deployment
 
-| Test | Verifies |
-|---|---|
-| `test_digital_embed_panel_generates_digital_iframe` | Embed panel generates `/digital/` iframe code |
-| `test_digital_dashboard_builder_generates_digital_url` | Dashboard builder generates `/digital/` URLs |
-| `test_digital_service_worker_caches_digital_page` | Service worker caches `/digital/` and offline fallback |
-| `test_analog_index_has_no_digital_link` | Analog `public/index.html` has no `/digital` link |
+Service-worker tests use a controlled document and browser-side `fetch()` because `page.request` bypasses the service worker. The cache contract keeps the current cache, deletes only older `clocksimulator-v*` caches, preserves unrelated origin caches without using them to satisfy app requests, and stores only successful runtime responses.
 
-### Visual snapshots
+Deployment tests copy the real `public/` directory and `wrangler.jsonc` into a temporary runtime directory, start exactly Wrangler 4.28.0 on a free port, and verify Cloudflare's actual HTML handling, redirects, headers, MIME types, and cross-origin iframe behavior. The ordinary SimpleHTTP fixture remains the fast DOM-test server and does not substitute for this suite.
 
-| Test | Snapshot |
-|---|---|
-| `test_digital_visual_snapshot_dark` | `digital-dark.png` |
-| `test_digital_visual_snapshot_light` | `digital-light.png` |
-| `test_digital_visual_snapshot_embed_transparent` | `digital-embed-transparent.png` |
-| `test_digital_visual_snapshot_dashboard_dark` | `digital-dashboard-dark-3tz.png` |
+## Manual release checks
 
-## Theme handling (`test_theme_handling.py` — 24 tests)
+The repository does not use GitHub Actions or another automated CI service. Tests are run manually in the local `clocksimulator` Conda environment.
 
-### URL parameter themes
+Before a release, run the complete local matrix with:
 
-| Test | Verifies |
-|---|---|
-| `test_theme_dark_param` | `theme=dark` adds `dark-mode` class |
-| `test_theme_light_param` | `theme=light` removes dark/transparent |
-| `test_theme_transparent_param` | `theme=transparent` adds `transparent-mode` class |
-| `test_theme_dark_css_variables` | Dark `--bg` is `#000000` |
-| `test_theme_light_css_variables` | Light `--bg` is `#f0f0f0` |
-| `test_theme_transparent_css_variables` | Transparent `--bg` is `transparent` |
+```bash
+./run_release_tests.sh
+```
 
-### Theme priority chain
+The wrapper intentionally has no separate dependency preflight: the real test processes validate the environment they use. It runs the complete Chromium suite first, followed by the Firefox and WebKit `cross_browser` selections. The gates run sequentially and fail fast. Do not use retries to turn a failing release check green.
 
-| Test | Verifies |
-|---|---|
-| `test_embed_mode_default_dark` | Embed defaults to dark |
-| `test_embed_mode_theme_light_override` | URL param overrides embed default |
-| `test_embed_mode_theme_transparent_override` | Transparent overrides embed default |
-| `test_saved_settings_theme_dark` | Saved dark theme restored |
-| `test_saved_settings_theme_light` | Saved light theme restored |
-| `test_os_dark_preference_applied` | OS dark preference applied |
-| `test_os_light_preference_applied` | OS light preference applied |
-| `test_theme_param_overrides_saved_settings` | URL param beats saved settings |
-| `test_theme_param_overrides_os_preference` | URL param beats OS preference |
-
-### Theme interactions
-
-| Test | Verifies |
-|---|---|
-| `test_theme_toggle_changes_class` | Toggle switches light to dark |
-| `test_theme_toggle_removes_transparent_mode` | Toggle from transparent goes to dark |
-| `test_theme_transparent_in_embed_mode` | Transparent works in embed |
-| `test_theme_dashboard_dark` | Dark theme works in dashboard |
-
-### FOUC prevention
-
-| Test | Verifies |
-|---|---|
-| `test_theme_no_fouc_dark_mode` | Dark class exists at DOMContentLoaded |
-| `test_theme_no_fouc_embed_mode` | Embed dark class exists at DOMContentLoaded |
-
-### Visual snapshots
-
-| Test | Snapshot |
-|---|---|
-| `test_theme_visual_snapshot_dark` | `theme-dark.png` |
-| `test_theme_visual_snapshot_light` | `theme-light.png` |
-| `test_theme_visual_snapshot_transparent` | `theme-transparent.png` |
+The default seed is generated once, printed, and reused for every gate. Reproduce a run with `--seed VALUE`. `run_tests.sh` removes ambient pytest, Python-path, and user-site overrides so shell or Conda settings cannot narrow the matrix, inject plugins, or update snapshots. Playwright traces are written to a temporary release directory and retained for diagnosis. `--dry-run` prints the three shell-escaped commands without creating artifacts or executing tests.

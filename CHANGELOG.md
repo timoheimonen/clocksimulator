@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.3.5 - 2026-07-20
+
+### Changed
+- Analog and digital timezone clocks, including dashboards, now stay accurate across the viewer's daylight-saving time changes.
+- Saved settings now preserve each clock's seconds preference when switching between the analog and digital pages.
+- Digital clocks now announce the time to screen readers no more than once per minute; dashboard announcements remain accessible, while embedded clocks stay silent.
+- Shared analog and digital clock links now choose their theme predictably from the link, the embed default, or the viewer's device color preference, without saved settings overriding URL options.
+- Keyboard focus, dashboard timezone fields, generated embeds, and reduced-motion behavior are now more accessible across both clock pages.
+- Help dialog URL examples can now be reached and scrolled with a keyboard and are clearly identified for screen readers on both clock pages.
+- Offline reloads now keep the Privacy Policy and Terms of Service pages open instead of showing the analog clock.
+- Clock controls, dialogs, status messages, and time displays now work more reliably with keyboards and screen readers across browsers.
+- Saved settings, screen-on mode, burn-in protection, and timezone updates now handle interruptions and repeated actions more reliably.
+- Embedded clocks, dashboard layouts, and previews now fit small displays better while preserving their intended contrast and appearance.
+- The analog dashboard builder now lets you show or hide clock-hand shadows.
+- Offline updates now retain only successful site files, and legal-page links use their clean public addresses consistently.
+
 ## 1.3.4 - 2026-05-18
 
 ### Added
