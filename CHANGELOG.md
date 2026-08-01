@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.6 - 2026-08-01
+
+### Changed
+- Replaced the question-mark About control with a clearly labeled, outlined MENU button on both analog and digital clock pages.
+
 ## 1.3.5 - 2026-07-20
 
 ### Changed

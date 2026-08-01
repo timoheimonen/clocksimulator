@@ -22,7 +22,7 @@
   <meta name="twitter:description"
     content="Free online digital clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png">
-  <meta name="version" content="1.3.5">
+  <meta name="version" content="1.3.6">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -299,8 +299,7 @@
       transform: none;
     }
 
-    .toggle-label[data-tooltip]::after,
-    .about-btn[data-tooltip]::after {
+    .toggle-label[data-tooltip]::after {
       content: attr(data-tooltip);
       position: absolute;
       left: 50%;
@@ -322,26 +321,34 @@
       transition: opacity 0.2s ease 0.15s;
     }
 
-    .dark-mode .toggle-label[data-tooltip]::after,
-    .dark-mode .about-btn[data-tooltip]::after {
+    .dark-mode .toggle-label[data-tooltip]::after {
       background: #222;
       color: #eee;
       border-color: rgba(255, 255, 255, 0.15);
     }
 
-    .toggle-label[data-tooltip]:hover::after,
-    .about-btn[data-tooltip]:hover::after {
+    .toggle-label[data-tooltip]:hover::after {
       opacity: 1;
     }
 
     .about-btn {
       position: relative;
-      width: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: auto;
       height: 22px;
-      padding: 0;
-      border: none;
+      padding: 0 5px;
+      border: 1.5px solid currentColor;
+      border-radius: 3px;
       background: transparent;
       color: var(--tick);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
       cursor: pointer;
       flex-shrink: 0;
       opacity: 0.5;
@@ -352,14 +359,7 @@
       opacity: 1;
     }
 
-    .about-btn svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    body.about-bubble-open .toggle-label[data-tooltip]:hover::after,
-    body.about-bubble-open .about-btn[data-tooltip]:hover::after {
+    body.about-bubble-open .toggle-label[data-tooltip]:hover::after {
       opacity: 0;
       pointer-events: none;
     }
@@ -990,7 +990,6 @@
       .wake-lock-icon,
       .second-mode-icon,
       .toggle-label[data-tooltip]::after,
-      .about-btn[data-tooltip]::after,
       .about-btn,
       .about-bubble,
       .digital-container,
@@ -1097,16 +1096,10 @@
       </svg>
     </label>
     <div class="about-wrapper">
-      <button class="about-btn" id="aboutBtn" aria-label="About" aria-haspopup="dialog" aria-expanded="false"
-        aria-controls="aboutBubble" data-tooltip="About">
-        <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.5" />
-          <path d="M7.6 7.4a2.5 2.5 0 0 1 4.8.9c0 1.55-1.1 2.2-2 2.8-.5.35-.8.75-.8 1.4"
-            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-          <circle cx="9.6" cy="15.2" r="0.85" fill="currentColor" />
-        </svg>
+      <button class="about-btn" id="aboutBtn" aria-label="Menu" aria-haspopup="dialog" aria-expanded="false"
+        aria-controls="aboutBubble">MENU
       </button>
-      <div class="about-bubble" id="aboutBubble" role="dialog" aria-modal="false" aria-label="About"
+      <div class="about-bubble" id="aboutBubble" role="dialog" aria-modal="false" aria-label="Menu"
         aria-hidden="true" inert>
         <a href="#" id="embedLink">Embed this digital clock &rarr;</a><br>
         <a href="https://chromewebstore.google.com/detail/clocksimulatorcom/ljbpiigocbebamekohcpemgepjickldb"
@@ -1341,8 +1334,8 @@
             <td>Show or hide seconds in the digital time</td>
           </tr>
           <tr>
-            <td><strong>Info</strong> (&#9432; button)</td>
-            <td>Show embed link, dashboard builder, this help, and contact info</td>
+            <td><strong>Menu</strong> (MENU button)</td>
+            <td>Open clock tools, settings, help, and site links</td>
           </tr>
         </tbody>
       </table>
