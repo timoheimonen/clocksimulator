@@ -76,13 +76,13 @@ https://clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia
 ```
 
 The grid layout is calculated automatically. Use the optional `rows` parameter to control the number of rows.
-You can also build it visually: click the **info button** on [clocksimulator.com](https://clocksimulator.com) and select **Build dashboard** to open the dashboard builder with live preview and a copy-ready link.
+You can also build it visually: click the **MENU button** on [clocksimulator.com](https://clocksimulator.com) and select **Build dashboard** to open the dashboard builder with live preview and a copy-ready link.
 
 Feature of easy url with multiple timezones requested by "Hacker News" user "elteto".
 
 ## Embed
 
-You can embed either clock on any website using an iframe. Click the **info button** on [clocksimulator.com](https://clocksimulator.com) and select **Embed this analog clock** or open [`/digital/`](https://clocksimulator.com/digital/) and select **Embed this digital clock** to use the generator with a live preview and copy-ready code.
+You can embed either clock on any website using an iframe. Click the **MENU button** on [clocksimulator.com](https://clocksimulator.com) and select **Embed this analog clock** or open [`/digital/`](https://clocksimulator.com/digital/) and select **Embed this digital clock** to use the generator with a live preview and copy-ready code.
 
 ### Quick start
 
