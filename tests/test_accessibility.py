@@ -318,11 +318,15 @@ def keyboard_open_about(page: Page) -> None:
     for expected_id in ["themeToggle", "wakeLockToggle", "secondModeToggle", "aboutBtn"]:
         press_tab(page)
         assert page.evaluate("() => document.activeElement.id") == expected_id
+    menu_button = page.locator("#aboutBtn")
+    assert menu_button.get_attribute("aria-label") == "Menu"
+    assert menu_button.get_attribute("aria-haspopup") == "dialog"
+    assert menu_button.inner_text().strip() == "MENU"
     page.keyboard.press("Enter")
     about = page.locator("#aboutBubble")
     assert about.get_attribute("role") == "dialog"
     assert about.get_attribute("aria-modal") == "false"
-    assert about.get_attribute("aria-label") == "About"
+    assert about.get_attribute("aria-label") == "Menu"
     assert about.get_attribute("aria-hidden") == "false"
     assert about.evaluate("element => element.hasAttribute('inert')") is False
 
