@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.7 - 2026-08-02
+
+### Fixed
+- Updated the How to use instructions to reference the MENU button instead of the outdated information icon.
+
 ## 1.3.6 - 2026-08-01
 
 ### Changed
