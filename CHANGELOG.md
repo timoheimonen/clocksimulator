@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.8 - 2026-08-04
+
+### Changed
+- Simplified the carbon rating wording across the analog and digital clock pages and project documentation.
+
 ## 1.3.7 - 2026-08-02
 
 ### Fixed
