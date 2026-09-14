@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.9 - 2026-09-14
+
+### Fixed
+- Transparent embed previews now show a neutral checkerboard background on both analog and digital clock pages, with readable clock contrast in light and dark themes.
+
 ## 1.3.8 - 2026-08-04
 
 ### Changed

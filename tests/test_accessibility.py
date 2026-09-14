@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import io
 import re
 
 import pytest
+from PIL import Image
 from playwright.sync_api import Page
 
 from tests.helpers import (
@@ -1573,13 +1575,15 @@ def test_light_and_dark_text_border_and_focus_colors_meet_contrast_contract(
     pytest.param("", "--number", id="analog"),
     pytest.param("/digital/", "--digit", id="digital"),
 ])
+@pytest.mark.parametrize("parent_theme", ["light", "dark"])
 def test_transparent_theme_contrast_against_builder_preview_background(
     page: Page,
     app_url: str,
     path: str,
     foreground_variable: str,
+    parent_theme: str,
 ) -> None:
-    open_clock(page, app_url, path, {"theme": "light"})
+    open_clock(page, app_url, path, {"theme": parent_theme})
     page.evaluate("() => document.getElementById('embedLink').click()")
     page.locator("#embedTheme").select_option("transparent")
     page.wait_for_function("""() => {
@@ -1587,20 +1591,18 @@ def test_transparent_theme_contrast_against_builder_preview_background(
       return frame.contentDocument && frame.contentDocument.documentElement &&
         frame.contentDocument.documentElement.classList.contains('transparent-mode');
     }""")
-    colors = page.evaluate("""foregroundVariable => {
+    foreground = page.evaluate("""foregroundVariable => {
       var frame = document.getElementById('embedPreview');
       var frameStyle = getComputedStyle(frame.contentDocument.documentElement);
-      return {
-        foreground: frameStyle.getPropertyValue(foregroundVariable).trim(),
-        wrapper: getComputedStyle(frame.parentElement).backgroundColor,
-        panel: getComputedStyle(frame.closest('.modal-panel')).backgroundColor
-      };
+      return frameStyle.getPropertyValue(foregroundVariable).trim();
     }""", foreground_variable)
-    preview_background = composite_color(
-        parse_css_color(colors["wrapper"]),
-        parse_css_color(colors["panel"]),
-    )
-    preview_rgb = "rgb(%s, %s, %s)" % tuple(
-        round(component) for component in preview_background[:3]
-    )
-    assert contrast_ratio(colors["foreground"], preview_rgb) >= 4.5
+    wrapper = page.locator("#embedOverlay .embed-preview-wrap")
+    with Image.open(io.BytesIO(wrapper.screenshot(animations="disabled"))) as screenshot:
+        pixels = screenshot.convert("RGB")
+        # Sample the centers of adjacent checker squares in the top padding,
+        # away from the iframe and the wrapper's rounded corners.
+        backgrounds = [pixels.getpixel(point) for point in [(36, 4), (44, 4)]]
+    assert backgrounds[0] != backgrounds[1]
+    for background in backgrounds:
+        preview_rgb = "rgb(%s, %s, %s)" % background
+        assert contrast_ratio(foreground, preview_rgb) >= 4.5

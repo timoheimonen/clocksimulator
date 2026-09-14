@@ -4,6 +4,7 @@ from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import io
 import json
+import math
 from pathlib import Path
 import threading
 from typing import Iterator
@@ -361,6 +362,77 @@ def test_embed_builder_default_is_one_exact_parseable_iframe_and_loaded_preview(
     assert frame.locator("body").evaluate(
         "element => element.classList.contains('embed-mode')"
     ) is True
+
+
+@pytest.mark.parametrize("path", ["/", "/digital/"])
+@pytest.mark.parametrize("parent_theme", ["light", "dark"])
+def test_embed_builder_transparent_preview_shows_checkerboard_through_iframe(
+    page: Page,
+    app_url: str,
+    path: str,
+    parent_theme: str,
+) -> None:
+    open_page(page, app_url, {"theme": parent_theme}, path=path)
+    page.evaluate("() => document.getElementById('embedLink').click()")
+    page.locator("#embedOverlay.visible").wait_for()
+    select_and_dispatch(page, "#embedTheme", "transparent")
+    page.clock.run_for(400)
+    frame = wait_for_preview(
+        page, "#embedPreview", "#clock" if path == "/" else "#digitalTime"
+    )
+    frame.locator("html.transparent-mode").wait_for(state="attached")
+    assert frame.locator("html, body").evaluate_all(
+        "elements => elements.map(element => getComputedStyle(element).backgroundColor)"
+    ) == ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"]
+
+    preview = page.locator("#embedPreview")
+    wrapper = page.locator("#embedOverlay .embed-preview-wrap")
+    wrapper_box = wrapper.bounding_box()
+    iframe_box = preview.bounding_box()
+    assert wrapper_box is not None and iframe_box is not None
+    background_size = wrapper.evaluate(
+        "element => getComputedStyle(element).backgroundSize"
+    )
+    assert background_size != "auto"
+    tile = int(float(background_size.split()[0].removesuffix("px")))
+    origin_x, origin_y = int(wrapper_box["x"]), int(wrapper_box["y"])
+    padding_points = [
+        (origin_x + 2 * tile + tile // 4 + offset, origin_y + tile // 4)
+        for offset in (0, tile // 2)
+    ]
+    # Keep analog samples inside its round iframe mask and clear of the clock
+    # hands/numerals; digital samples sit above the digits. Align both with
+    # the same checkerboard phases sampled in the wrapper's top padding.
+    sample_x = origin_x + math.ceil(
+        (iframe_box["x"] + 24 - origin_x) / tile
+    ) * tile + tile // 4
+    target_y = iframe_box["y"] + (78 if path == "/" else 16)
+    sample_y = origin_y + math.floor((target_y - origin_y) / tile) * tile + tile // 4
+    iframe_points = [(sample_x + offset, sample_y) for offset in (0, tile // 2)]
+    with Image.open(io.BytesIO(page.screenshot())) as screenshot:
+        pixels = screenshot.convert("RGB")
+        checker_colors = [pixels.getpixel(point) for point in padding_points]
+        assert checker_colors[0] != checker_colors[1]
+        assert [pixels.getpixel(point) for point in iframe_points] == checker_colors
+
+    select_and_dispatch(page, "#embedTheme", parent_theme)
+    page.clock.run_for(400)
+    frame.locator("html:not(.transparent-mode) body.embed-mode").wait_for()
+    expected_body = "rgb(240, 240, 240)" if parent_theme == "light" else "rgb(0, 0, 0)"
+    assert frame.locator("body").evaluate(
+        "element => getComputedStyle(element).backgroundColor"
+    ) == expected_body
+    background_selector = "#clockBorder" if path == "/" else "body"
+    background_property = "fill" if path == "/" else "backgroundColor"
+    rendered_background = frame.locator(background_selector).evaluate(
+        "(element, property) => getComputedStyle(element)[property]",
+        background_property,
+    )
+    expected_pixel = tuple(int(value) for value in rendered_background[4:-1].split(","))
+    with Image.open(io.BytesIO(page.screenshot())) as screenshot:
+        pixels = screenshot.convert("RGB")
+        assert pixels.getpixel(padding_points[0]) == pixels.getpixel(padding_points[1])
+        assert [pixels.getpixel(point) for point in iframe_points] == [expected_pixel] * 2
 
 
 @pytest.mark.parametrize("path", ["/", "/digital/"])
