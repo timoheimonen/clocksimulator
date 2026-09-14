@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Free online analog clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.3.7">
+  <meta name="version" content="1.3.8">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -66,6 +66,8 @@ SOFTWARE.
       --toggle-knob: #fff;
       --focus-ring: #005fcc;
       --focus-ring-contrast: #ffffff;
+      --preview-checker-light: #b0b0b0;
+      --preview-checker-dark: #909090;
       --second-angle: 0deg;
     }
 
@@ -685,6 +687,12 @@ SOFTWARE.
       padding: 16px;
       background: rgba(128, 128, 128, 0.08);
       border-radius: 8px;
+    }
+
+    .embed-preview-wrap.transparent-preview {
+      background-color: var(--preview-checker-light);
+      background-image: conic-gradient(var(--preview-checker-dark) 25%, transparent 0 50%, var(--preview-checker-dark) 0 75%, transparent 0);
+      background-size: 16px 16px;
     }
 
     .embed-preview-wrap iframe {
@@ -2416,6 +2424,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           embedPreview.height = Math.min(h, 120);
           embedPreview.style.borderRadius = isRound ? '50%' : '0';
           embedPreview.style.overflow = 'hidden';
+          embedPreview.parentElement.classList.toggle(
+            'transparent-preview', embedThemeSelect.value === 'transparent');
           const transparent = embedThemeSelect.value === 'transparent' ? ' allowtransparency="true"' : '';
           const code = '<iframe src="' + prodBase + qs + '" title="Analog clock"\n' +
             '  width="' + w + '" height="' + h + '"' + transparent + '\n' +

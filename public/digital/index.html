@@ -22,7 +22,7 @@
   <meta name="twitter:description"
     content="Free online digital clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png">
-  <meta name="version" content="1.3.7">
+  <meta name="version" content="1.3.8">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -40,6 +40,8 @@
       --toggle-knob: #fff;
       --focus-ring: #005fcc;
       --focus-ring-contrast: #ffffff;
+      --preview-checker-light: #565656;
+      --preview-checker-dark: #424242;
       --digital-font-size: 18dvh;
       --digital-meta-offset: 0px;
     }
@@ -739,7 +741,9 @@
     }
 
     .embed-preview-wrap.transparent-preview {
-      background: #1f2937;
+      background-color: var(--preview-checker-light);
+      background-image: conic-gradient(var(--preview-checker-dark) 25%, transparent 0 50%, var(--preview-checker-dark) 0 75%, transparent 0);
+      background-size: 16px 16px;
     }
 
     .embed-preview-wrap iframe {
