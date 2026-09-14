@@ -1,7 +1,7 @@
 # clocksimulator
 
 [![GitHub stars](https://img.shields.io/github/stars/timoheimonen/clocksimulator?style=for-the-badge)](https://github.com/timoheimonen/clocksimulator/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/timoheimonen/clocksimulator?style=for-the-badge)](https://github.com/timoheimonen/clocksimulator/network/members) [![Website Carbon](https://img.shields.io/badge/Website_Carbon-0.01g_CO2-brightgreen?style=flat-square)](https://www.websitecarbon.com/website/clocksimulator-com/)
+[![GitHub forks](https://img.shields.io/github/forks/timoheimonen/clocksimulator?style=for-the-badge)](https://github.com/timoheimonen/clocksimulator/network/members) [![Website Carbon](https://img.shields.io/badge/Website_Carbon-A%2B-brightgreen?style=flat-square)](https://www.websitecarbon.com/website/clocksimulator-com/)
 
 A clean, fullscreen clock simulator built with plain HTML, CSS, and JavaScript.
 The site is available as both an analog clock at [`clocksimulator.com`](https://clocksimulator.com) and a digital clock at [`clocksimulator.com/digital/`](https://clocksimulator.com/digital/).
