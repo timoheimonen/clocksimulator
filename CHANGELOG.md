@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 - 2026-09-22
+
+### Added
+- Added a Dark / Light clock color selector for transparent embeds on both analog and digital clock pages.
+- Added the `color=dark|light` URL parameter for transparent clock colors. Existing embeds without a valid color retain their original appearance: dark analog clocks and light digital clocks.
+
 ## 1.3.9 - 2026-09-14
 
 ### Fixed

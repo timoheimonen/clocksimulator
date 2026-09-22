@@ -22,7 +22,7 @@
   <meta name="twitter:description"
     content="Free online digital clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png">
-  <meta name="version" content="1.3.9">
+  <meta name="version" content="1.4.0">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -40,8 +40,8 @@
       --toggle-knob: #fff;
       --focus-ring: #005fcc;
       --focus-ring-contrast: #ffffff;
-      --preview-checker-light: #565656;
-      --preview-checker-dark: #424242;
+      --preview-checker-light: #b0b0b0;
+      --preview-checker-dark: #909090;
       --digital-font-size: 18dvh;
       --digital-meta-offset: 0px;
     }
@@ -68,6 +68,12 @@
       --panel-text: #222222;
       --focus-ring: #ffffff;
       --focus-ring-contrast: #000000;
+    }
+
+    html.transparent-mode[data-clock-color="dark"] {
+      --digit: #222222;
+      --muted: #555555;
+      --tick: #333333;
     }
 
     * {
@@ -493,6 +499,15 @@
       filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
     }
 
+    html.transparent-mode[data-clock-color="dark"] .digital-time,
+    html.transparent-mode[data-clock-color="dark"] .digital-meta {
+      text-shadow: none;
+    }
+
+    html.transparent-mode[data-clock-color="dark"] .daynight-mark {
+      filter: none;
+    }
+
     .daynight-mark {
       position: relative;
       display: none;
@@ -675,6 +690,10 @@
       margin-bottom: 16px;
     }
 
+    #embedClockColorField {
+      margin-top: 10px;
+    }
+
     .embed-field label {
       display: block;
       font-size: 11px;
@@ -744,6 +763,11 @@
       background-color: var(--preview-checker-light);
       background-image: conic-gradient(var(--preview-checker-dark) 25%, transparent 0 50%, var(--preview-checker-dark) 0 75%, transparent 0);
       background-size: 16px 16px;
+    }
+
+    .embed-preview-wrap.light-clock-preview {
+      --preview-checker-light: #565656;
+      --preview-checker-dark: #424242;
     }
 
     .embed-preview-wrap iframe {
@@ -1048,6 +1072,11 @@
         document.documentElement.classList.add('dark-mode');
       } else if (activeTheme === 'transparent') {
         document.documentElement.classList.add('transparent-mode');
+        const colorParam = params.get('color');
+        // Keep existing transparent embeds unchanged when no valid color is supplied.
+        document.documentElement.dataset.clockColor = colorParam === 'dark' || colorParam === 'light'
+          ? colorParam
+          : 'light';
       }
     })();
   </script>
@@ -1166,6 +1195,13 @@
             <option value="dark" selected>Dark</option>
             <option value="transparent">Transparent</option>
           </select>
+          <div class="embed-field" id="embedClockColorField" hidden>
+            <label for="embedClockColor">Clock color</label>
+            <select id="embedClockColor">
+              <option value="dark">Dark</option>
+              <option value="light" selected>Light</option>
+            </select>
+          </div>
         </div>
         <div class="embed-field">
           <label for="embedSeconds">Seconds</label>
@@ -1404,6 +1440,11 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
             <td>System preference</td>
           </tr>
           <tr>
+            <td><code>color</code></td>
+            <td><code>dark</code>, <code>light</code> (clock color with <code>theme=transparent</code>)</td>
+            <td><code>light</code></td>
+          </tr>
+          <tr>
             <td><code>seconds</code></td>
             <td><code>show</code>, <code>hide</code></td>
             <td><code>show</code></td>
@@ -1537,6 +1578,15 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       }
       document.documentElement.classList.toggle('dark-mode', activeTheme === 'dark');
       document.documentElement.classList.toggle('transparent-mode', activeTheme === 'transparent');
+      if (activeTheme === 'transparent') {
+        const colorParam = params.get('color');
+        // Keep existing transparent embeds unchanged when no valid color is supplied.
+        document.documentElement.dataset.clockColor = colorParam === 'dark' || colorParam === 'light'
+          ? colorParam
+          : 'light';
+      } else {
+        delete document.documentElement.dataset.clockColor;
+      }
       themeToggle.checked = activeTheme === 'dark';
 
       let showSeconds = secondsParam !== 'hide';
@@ -1848,6 +1898,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
 
       themeToggle.addEventListener('change', function () {
         document.documentElement.classList.remove('transparent-mode');
+        delete document.documentElement.dataset.clockColor;
         document.documentElement.classList.toggle('dark-mode', this.checked);
         saveSettings();
       });
@@ -2209,6 +2260,8 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
         const embedCloseBtn = document.getElementById('embedCloseBtn');
         const embedTzInput = document.getElementById('embedTz');
         const embedThemeSelect = document.getElementById('embedTheme');
+        const embedClockColorField = document.getElementById('embedClockColorField');
+        const embedClockColorSelect = document.getElementById('embedClockColor');
         const embedSecondsSelect = document.getElementById('embedSeconds');
         const embedFormatSelect = document.getElementById('embedFormat');
         const embedBorderSelect = document.getElementById('embedBorder');
@@ -2248,10 +2301,14 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
           }
           appendCommonParams(p, embedThemeSelect.value, embedSecondsSelect.value,
             embedFormatSelect.value, embedBorderSelect.value, embedDayNightSelect.value);
+          if (embedThemeSelect.value === 'transparent') {
+            p.push('color=' + embedClockColorSelect.value);
+          }
           return '?' + p.join('&');
         }
 
         function updateEmbed() {
+          embedClockColorField.hidden = embedThemeSelect.value !== 'transparent';
           if (!embedWidthInput.checkValidity() || !embedHeightInput.checkValidity()) {
             const invalidInput = !embedWidthInput.checkValidity() ? embedWidthInput : embedHeightInput;
             invalidInput.reportValidity();
@@ -2265,6 +2322,8 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
           embedPreview.height = Math.min(h, 110);
           embedPreview.parentElement.classList.toggle(
             'transparent-preview', embedThemeSelect.value === 'transparent');
+          embedPreview.parentElement.classList.toggle(
+            'light-clock-preview', embedThemeSelect.value === 'transparent' && embedClockColorSelect.value === 'light');
           const transparent = embedThemeSelect.value === 'transparent' ? ' allowtransparency="true"' : '';
           const code = '<iframe src="' + prodBase + qs + '" title="Digital clock"\n' +
             '  width="' + w + '" height="' + h + '"' + transparent + '\n' +
@@ -2314,6 +2373,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
 
         embedTzInput.addEventListener('input', updateEmbedDebounced);
         embedThemeSelect.addEventListener('change', updateEmbed);
+        embedClockColorSelect.addEventListener('change', updateEmbed);
         embedSecondsSelect.addEventListener('change', updateEmbed);
         embedFormatSelect.addEventListener('change', updateEmbed);
         embedBorderSelect.addEventListener('change', updateEmbed);

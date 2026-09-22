@@ -308,6 +308,15 @@ def open_with_theme_probe(
           if (!values.length || values[values.length - 1] !== value) values.push(value);
           return value;
         };
+        window.__recordClockColor = function () {
+          var root = document.documentElement;
+          var style = getComputedStyle(root);
+          return {
+            color: root.getAttribute('data-clock-color'),
+            foreground: (style.getPropertyValue('--number') || style.getPropertyValue('--digit')).trim(),
+            background: style.getPropertyValue('--bg').trim()
+          };
+        };
         new MutationObserver(window.__recordTheme).observe(document.documentElement, {
           attributes: true,
           attributeFilter: ['class']
@@ -365,6 +374,7 @@ def open_with_theme_probe(
         json.dumps(os_dark_after_head),
     )
     head_probe = """<script>
+      window.__clockColorAfterHead = window.__recordClockColor();
       window.__themeAfterHead = {
         theme: window.__recordTheme(),
         reads: window.__themeProbe.reads,
@@ -405,8 +415,10 @@ def open_with_theme_probe(
         navigate_clock_page(page, target, expected_clock_count(params))
         return page.evaluate("""() => ({
           head: window.__themeAfterHead,
+          headClockColor: window.__clockColorAfterHead,
           domcontentloaded: window.__themeAtDOMContentLoaded,
           finalTheme: window.__recordTheme(),
+          finalClockColor: window.__recordClockColor(),
           finalWrites: window.__themeProbe.writes
         })""")
     finally:
@@ -469,6 +481,130 @@ def test_os_theme_resynchronizes_only_without_stronger_source(
 @pytest.mark.cross_browser
 @pytest.mark.parametrize("path", PAGE_PATHS)
 @pytest.mark.parametrize(
+    ("color", "dashboard"),
+    [
+        pytest.param(None, False, id="legacy-default"),
+        pytest.param("invalid", False, id="invalid-default"),
+        pytest.param("dark", False, id="dark-single"),
+        pytest.param("light", False, id="light-single"),
+        pytest.param("dark", True, id="dark-dashboard"),
+        pytest.param("light", True, id="light-dashboard"),
+    ],
+)
+def test_transparent_clock_color_before_first_paint_and_rendered_without_storage_changes(
+    page: Page,
+    app_url: str,
+    path: str,
+    color: str | None,
+    dashboard: bool,
+) -> None:
+    params = {"embed": "true", "theme": "transparent", "daynight": "show"}
+    if color is not None:
+        params["color"] = color
+    if dashboard:
+        params["tz"] = "UTC,Asia/Kathmandu"
+    raw_settings = '{"theme":"dark","unrelated":"preserved","digitalShowSeconds":false}'
+    case = {
+        "params": params,
+        "storage_value": raw_settings,
+        "os_dark": True,
+        "head_reads": 0,
+        "final_reads": 0,
+        "head_media": 0,
+        "final_media": 0,
+    }
+    result = open_with_theme_probe(page, app_url, path, case)
+    assert_theme_probe(result, case, "transparent", "transparent")
+    expected_color = color if color in ("dark", "light") else ("dark" if path == "" else "light")
+    foreground = "#222222" if expected_color == "dark" else "#fafafa"
+    expected_state = {
+        "color": expected_color,
+        "foreground": foreground,
+        "background": "transparent",
+    }
+    assert result["headClockColor"] == expected_state
+    assert result["finalClockColor"] == expected_state
+    assert page.evaluate(
+        "() => localStorage.getItem('clocksimulator-user-settings')"
+    ) == raw_settings
+    assert page.locator("#saveSettingsToggle").is_disabled() is True
+    assert page.locator("html, body").evaluate_all(
+        "elements => elements.map(element => getComputedStyle(element).backgroundColor)"
+    ) == ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"]
+    expected_rgb = "rgb(34, 34, 34)" if expected_color == "dark" else "rgb(250, 250, 250)"
+    expected_count = 2 if dashboard else 1
+    if path == "":
+        scope = ".clock-grid" if dashboard else ".clock-container"
+        assert page.locator(scope + " .hour-hand").evaluate_all(
+            "elements => elements.map(element => getComputedStyle(element).fill)"
+        ) == [expected_rgb] * expected_count
+        assert page.locator(scope + " .sun-icon circle").evaluate_all(
+            "elements => elements.map(element => getComputedStyle(element).stroke)"
+        ) == [expected_rgb] * expected_count
+        assert page.locator(scope + " .clock-border").evaluate_all(
+            "elements => elements.map(element => getComputedStyle(element).fill)"
+        ) == ["rgba(0, 0, 0, 0)"] * expected_count
+        if dashboard:
+            assert page.locator(".clock-grid .clock-label").evaluate_all(
+                "elements => elements.map(element => getComputedStyle(element).color)"
+            ) == [expected_rgb] * expected_count
+    else:
+        scope = ".digital-grid" if dashboard else ".digital-container"
+        assert page.locator(scope + " .digital-time").evaluate_all(
+            "elements => elements.map(element => getComputedStyle(element).color)"
+        ) == [expected_rgb] * expected_count
+        assert page.locator(scope + " .daynight-mark").evaluate_all(
+            "elements => elements.map(element => getComputedStyle(element).color)"
+        ) == [expected_rgb] * expected_count
+        expected_muted = "rgb(85, 85, 85)" if expected_color == "dark" else "rgb(212, 212, 212)"
+        assert page.locator(scope + " .digital-meta").evaluate_all(
+            "elements => elements.map(element => getComputedStyle(element).color)"
+        ) == [expected_muted] * expected_count
+        shadows = page.locator(scope + " .digital-time").evaluate_all(
+            "elements => elements.map(element => getComputedStyle(element).textShadow)"
+        )
+        assert all((shadow == "none") is (expected_color == "dark") for shadow in shadows)
+
+
+@pytest.mark.cross_browser
+@pytest.mark.parametrize("path", PAGE_PATHS)
+@pytest.mark.parametrize(
+    ("theme", "color", "expected_theme"),
+    [("dark", "dark", "dark"), ("light", "light", "light"), (None, "dark", "dark")],
+)
+def test_clock_color_is_ignored_without_transparent_theme(
+    page: Page,
+    app_url: str,
+    path: str,
+    theme: str | None,
+    color: str,
+    expected_theme: str,
+) -> None:
+    params = {"embed": "true", "color": color}
+    if theme is not None:
+        params["theme"] = theme
+    case = {
+        "params": params,
+        "stored": "light",
+        "head_reads": 0,
+        "final_reads": 0,
+        "head_media": 0,
+        "final_media": 0,
+    }
+    result = open_with_theme_probe(page, app_url, path, case)
+    assert_theme_probe(result, case, expected_theme, expected_theme)
+    expected_state = {
+        "color": None,
+        "foreground": "#fafafa" if expected_theme == "dark" else "#222222",
+        "background": "#000000" if expected_theme == "dark" else "#f0f0f0",
+    }
+    assert result["headClockColor"] == expected_state
+    assert result["finalClockColor"] == expected_state
+
+
+@pytest.mark.cross_browser
+@pytest.mark.parametrize("path", PAGE_PATHS)
+@pytest.mark.parametrize(
     ("theme", "expected_bg"),
     [
         pytest.param("light", "#f0f0f0", id="light"),
@@ -496,10 +632,12 @@ def test_theme_classes_and_base_rendering(
 @pytest.mark.cross_browser
 @pytest.mark.parametrize("path", PAGE_PATHS)
 @pytest.mark.parametrize(
-    ("initial_theme", "expected_theme"),
+    ("initial_theme", "initial_color", "expected_theme"),
     [
-        pytest.param("light", "dark", id="light-to-dark"),
-        pytest.param("transparent", "dark", id="transparent-to-dark"),
+        pytest.param("light", None, "dark", id="light-to-dark"),
+        pytest.param("transparent", None, "dark", id="transparent-to-dark"),
+        pytest.param("transparent", "dark", "dark", id="transparent-dark-color-to-dark"),
+        pytest.param("transparent", "light", "dark", id="transparent-light-color-to-dark"),
     ],
 )
 def test_theme_switch_updates_class_and_checked_state(
@@ -507,15 +645,20 @@ def test_theme_switch_updates_class_and_checked_state(
     app_url: str,
     path: str,
     initial_theme: str,
+    initial_color: str | None,
     expected_theme: str,
 ) -> None:
     install_test_clock(page)
     seed_local_storage(page, app_url)
-    navigate_clock_page(page, build_clock_url(app_url, path, {"theme": initial_theme}))
+    params = {"theme": initial_theme}
+    if initial_color is not None:
+        params["color"] = initial_color
+    navigate_clock_page(page, build_clock_url(app_url, path, params))
     switch = page.locator("#themeToggle")
     page.evaluate("() => document.getElementById('themeToggle').click()")
     assert theme_name(page) == expected_theme
     assert switch.is_checked() is True
+    assert page.locator("html").get_attribute("data-clock-color") is None
 
 
 @pytest.mark.visual

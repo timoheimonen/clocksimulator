@@ -387,28 +387,33 @@ def test_embed_builder_transparent_preview_shows_checkerboard_through_iframe(
 
     preview = page.locator("#embedPreview")
     wrapper = page.locator("#embedOverlay .embed-preview-wrap")
-    wrapper_box = wrapper.bounding_box()
-    iframe_box = preview.bounding_box()
-    assert wrapper_box is not None and iframe_box is not None
     background_size = wrapper.evaluate(
         "element => getComputedStyle(element).backgroundSize"
     )
     assert background_size != "auto"
     tile = int(float(background_size.split()[0].removesuffix("px")))
-    origin_x, origin_y = int(wrapper_box["x"]), int(wrapper_box["y"])
-    padding_points = [
-        (origin_x + 2 * tile + tile // 4 + offset, origin_y + tile // 4)
-        for offset in (0, tile // 2)
-    ]
-    # Keep analog samples inside its round iframe mask and clear of the clock
-    # hands/numerals; digital samples sit above the digits. Align both with
-    # the same checkerboard phases sampled in the wrapper's top padding.
-    sample_x = origin_x + math.ceil(
-        (iframe_box["x"] + 24 - origin_x) / tile
-    ) * tile + tile // 4
-    target_y = iframe_box["y"] + (78 if path == "/" else 16)
-    sample_y = origin_y + math.floor((target_y - origin_y) / tile) * tile + tile // 4
-    iframe_points = [(sample_x + offset, sample_y) for offset in (0, tile // 2)]
+
+    def sample_points() -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
+        wrapper_box = wrapper.bounding_box()
+        iframe_box = preview.bounding_box()
+        assert wrapper_box is not None and iframe_box is not None
+        origin_x, origin_y = int(wrapper_box["x"]), int(wrapper_box["y"])
+        padding_points = [
+            (origin_x + 2 * tile + tile // 4 + offset, origin_y + tile // 4)
+            for offset in (0, tile // 2)
+        ]
+        # Keep analog samples inside its round iframe mask and clear of the clock
+        # hands/numerals; digital samples sit above the digits. Align both with
+        # the same checkerboard phases sampled in the wrapper's top padding.
+        sample_x = origin_x + math.ceil(
+            (iframe_box["x"] + 24 - origin_x) / tile
+        ) * tile + tile // 4
+        target_y = iframe_box["y"] + (78 if path == "/" else 16)
+        sample_y = origin_y + math.floor((target_y - origin_y) / tile) * tile + tile // 4
+        iframe_points = [(sample_x + offset, sample_y) for offset in (0, tile // 2)]
+        return padding_points, iframe_points
+
+    padding_points, iframe_points = sample_points()
     with Image.open(io.BytesIO(page.screenshot())) as screenshot:
         pixels = screenshot.convert("RGB")
         checker_colors = [pixels.getpixel(point) for point in padding_points]
@@ -429,10 +434,71 @@ def test_embed_builder_transparent_preview_shows_checkerboard_through_iframe(
         background_property,
     )
     expected_pixel = tuple(int(value) for value in rendered_background[4:-1].split(","))
+    # Hiding the transparent-only color field can move the preview in the dialog.
+    padding_points, iframe_points = sample_points()
     with Image.open(io.BytesIO(page.screenshot())) as screenshot:
         pixels = screenshot.convert("RGB")
         assert pixels.getpixel(padding_points[0]) == pixels.getpixel(padding_points[1])
         assert [pixels.getpixel(point) for point in iframe_points] == [expected_pixel] * 2
+
+
+@pytest.mark.parametrize("path", ["/", "/digital/"])
+def test_embed_clock_color_updates_preview_and_code_and_survives_theme_switches(
+    page: Page,
+    app_url: str,
+    path: str,
+) -> None:
+    open_builder(page, app_url, path, "embed")
+    color_field = page.locator("#embedClockColorField")
+    color_select = page.get_by_label("Clock color", exact=True)
+    default_color = "dark" if path == "/" else "light"
+    other_color = "light" if default_color == "dark" else "dark"
+    production_base = "https://clocksimulator.com" + path
+    assert color_field.is_visible() is False
+    assert color_select.input_value() == default_color
+    assert "color" not in query_values(str(parsed_generated_iframe(page)["src"]))
+
+    def assert_transparent_preview(color: str) -> None:
+        expected_query = "?embed=true&theme=transparent&color=" + color
+        generated = parsed_generated_iframe(page)
+        assert generated["src"] == production_base + expected_query
+        assert generated["allowtransparency"] == "true"
+        assert page.locator("#embedPreview").get_attribute("src").endswith(expected_query)
+        frame = wait_for_preview(
+            page, "#embedPreview", "#clock" if path == "/" else "#digitalTime"
+        )
+        frame.locator('html.transparent-mode[data-clock-color="' + color + '"]').wait_for()
+        foreground = frame.locator("#hourHand" if path == "/" else "#digitalTime")
+        assert foreground.evaluate(
+            "(element, property) => getComputedStyle(element)[property]",
+            "fill" if path == "/" else "color",
+        ) == ("rgb(34, 34, 34)" if color == "dark" else "rgb(250, 250, 250)")
+        assert frame.locator("body").evaluate(
+            "element => getComputedStyle(element).backgroundColor"
+        ) == "rgba(0, 0, 0, 0)"
+
+    select_and_dispatch(page, "#embedTheme", "transparent")
+    assert color_field.is_visible() is True
+    assert_transparent_preview(default_color)
+    select_and_dispatch(page, "#embedClockColor", other_color)
+    assert_transparent_preview(other_color)
+
+    for theme in ("light", "dark"):
+        select_and_dispatch(page, "#embedTheme", theme)
+        assert color_field.is_visible() is False
+        assert color_select.input_value() == other_color
+        generated = parsed_generated_iframe(page)
+        assert generated["src"] == production_base + "?embed=true&theme=" + theme
+        assert generated["allowtransparency"] is None
+        frame = wait_for_preview(
+            page, "#embedPreview", "#clock" if path == "/" else "#digitalTime"
+        )
+        frame.locator("html:not(.transparent-mode):not([data-clock-color])").wait_for()
+
+    select_and_dispatch(page, "#embedTheme", "transparent")
+    assert color_field.is_visible() is True
+    assert color_select.input_value() == other_color
+    assert_transparent_preview(other_color)
 
 
 @pytest.mark.parametrize("path", ["/", "/digital/"])
@@ -444,6 +510,7 @@ def test_every_embed_builder_control_reaches_code_and_preview_dom(
     open_builder(page, app_url, path, "embed")
     page.locator("#embedTz").fill("  Asia/Kathmandu  ")
     select_and_dispatch(page, "#embedTheme", "transparent")
+    select_and_dispatch(page, "#embedClockColor", "light" if path == "/" else "dark")
     select_and_dispatch(page, "#embedSeconds", "smooth" if path == "/" else "hide")
     select_and_dispatch(page, "#embedBorder", "hide" if path == "/" else "show")
     select_and_dispatch(page, "#embedDayNight", "show")
@@ -456,7 +523,7 @@ def test_every_embed_builder_control_reaches_code_and_preview_dom(
         production_base = "https://clocksimulator.com/"
         expected_query = (
             "?embed=true&tz=Asia%2FKathmandu&theme=transparent&seconds=smooth"
-            "&border=hide&daynight=show&numbers=hide&shadows=false"
+            "&border=hide&daynight=show&numbers=hide&shadows=false&color=light"
         )
         expected_width = "321"
         expected_height = "234"
@@ -468,7 +535,7 @@ def test_every_embed_builder_control_reaches_code_and_preview_dom(
         production_base = "https://clocksimulator.com/digital/"
         expected_query = (
             "?embed=true&tz=Asia%2FKathmandu&theme=transparent&seconds=hide"
-            "&format=12&border=show&daynight=show"
+            "&format=12&border=show&daynight=show&color=dark"
         )
         expected_width = "421"
         expected_height = "187"
