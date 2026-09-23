@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Free online analog clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.4.0">
+  <meta name="version" content="1.4.1">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -122,6 +122,16 @@ SOFTWARE.
       --minute-hand: #d4d4d4;
       --second-hand: #ef4444;
       --center-dot: #ef4444;
+    }
+
+    html.transparent-mode[data-clock-color="custom"] {
+      --clock-border: var(--custom-clock-color);
+      --tick: var(--custom-clock-color);
+      --number: var(--custom-clock-color);
+      --hour-hand: var(--custom-clock-color);
+      --minute-hand: var(--custom-clock-color);
+      --second-hand: var(--custom-clock-color);
+      --center-dot: var(--custom-clock-color);
     }
 
     * {
@@ -999,10 +1009,13 @@ SOFTWARE.
       if (theme === 'transparent') {
         document.documentElement.classList.add('transparent-mode');
         const colorParam = params.get('color');
+        const isHexColor = /^(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(colorParam || '');
         // Keep existing transparent embeds unchanged when no valid color is supplied.
-        document.documentElement.dataset.clockColor = colorParam === 'dark' || colorParam === 'light'
-          ? colorParam
-          : 'dark';
+        document.documentElement.dataset.clockColor = isHexColor ? 'custom'
+          : colorParam === 'dark' || colorParam === 'light' ? colorParam : 'dark';
+        if (isHexColor) {
+          document.documentElement.style.setProperty('--custom-clock-color', '#' + colorParam);
+        }
         return;
       }
       if (theme === 'light') {
@@ -1473,7 +1486,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           </tr>
           <tr>
             <td><code>color</code></td>
-            <td><code>dark</code>, <code>light</code> (clock color with <code>theme=transparent</code>)</td>
+            <td><code>dark</code>, <code>light</code>, or 3/6-digit hex without <code>#</code> (e.g. <code>0af</code>, <code>FF8800</code>; clock color with <code>theme=transparent</code>). Invalid or missing values use the default.</td>
             <td><code>dark</code></td>
           </tr>
           <tr>
@@ -1613,12 +1626,16 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       document.documentElement.classList.toggle('transparent-mode', activeTheme === 'transparent');
       if (activeTheme === 'transparent') {
         const colorParam = params.get('color');
+        const isHexColor = /^(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(colorParam || '');
         // Keep existing transparent embeds unchanged when no valid color is supplied.
-        document.documentElement.dataset.clockColor = colorParam === 'dark' || colorParam === 'light'
-          ? colorParam
-          : 'dark';
+        document.documentElement.dataset.clockColor = isHexColor ? 'custom'
+          : colorParam === 'dark' || colorParam === 'light' ? colorParam : 'dark';
+        if (isHexColor) {
+          document.documentElement.style.setProperty('--custom-clock-color', '#' + colorParam);
+        }
       } else {
         delete document.documentElement.dataset.clockColor;
+        document.documentElement.style.removeProperty('--custom-clock-color');
       }
       themeToggle.checked = activeTheme === 'dark';
 
@@ -2005,6 +2022,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       themeToggle.addEventListener('change', function () {
         document.documentElement.classList.remove('transparent-mode');
         delete document.documentElement.dataset.clockColor;
+        document.documentElement.style.removeProperty('--custom-clock-color');
         document.documentElement.classList.toggle('dark-mode', this.checked);
         saveSettings();
       });

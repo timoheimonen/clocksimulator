@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.1 - 2026-09-23
+
+### Added
+- Added custom 3- and 6-digit hex colors without `#` to the `color` URL parameter for transparent analog and digital clocks, including dashboards (for example, `color=0066FF`).
+
 ## 1.4.0 - 2026-09-22
 
 ### Added
