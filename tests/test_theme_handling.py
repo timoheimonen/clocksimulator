@@ -485,6 +485,12 @@ def test_os_theme_resynchronizes_only_without_stronger_source(
     [
         pytest.param(None, False, id="legacy-default"),
         pytest.param("invalid", False, id="invalid-default"),
+        *[pytest.param(value, False, id=f"invalid-hex-{index}") for index, value in
+          enumerate(("", "ab", "abcd", "abcde", "abcdef0", "abcdef12", "ggg", "#abc", " abc", "abc;"))],
+        pytest.param("0aF", False, id="hex-short-single"),
+        pytest.param("FF8800", False, id="hex-long-single"),
+        pytest.param("0aF", True, id="hex-short-dashboard"),
+        pytest.param("FF8800", True, id="hex-long-dashboard"),
         pytest.param("dark", False, id="dark-single"),
         pytest.param("light", False, id="light-single"),
         pytest.param("dark", True, id="dark-dashboard"),
@@ -517,6 +523,10 @@ def test_transparent_clock_color_before_first_paint_and_rendered_without_storage
     assert_theme_probe(result, case, "transparent", "transparent")
     expected_color = color if color in ("dark", "light") else ("dark" if path == "" else "light")
     foreground = "#222222" if expected_color == "dark" else "#fafafa"
+    custom_hex = color if color in ("0aF", "FF8800") else None
+    if custom_hex:
+        expected_color = "custom"
+        foreground = "#" + custom_hex
     expected_state = {
         "color": expected_color,
         "foreground": foreground,
@@ -532,6 +542,8 @@ def test_transparent_clock_color_before_first_paint_and_rendered_without_storage
         "elements => elements.map(element => getComputedStyle(element).backgroundColor)"
     ) == ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"]
     expected_rgb = "rgb(34, 34, 34)" if expected_color == "dark" else "rgb(250, 250, 250)"
+    if custom_hex:
+        expected_rgb = "rgb(0, 170, 255)" if custom_hex == "0aF" else "rgb(255, 136, 0)"
     expected_count = 2 if dashboard else 1
     if path == "":
         scope = ".clock-grid" if dashboard else ".clock-container"
@@ -557,6 +569,8 @@ def test_transparent_clock_color_before_first_paint_and_rendered_without_storage
             "elements => elements.map(element => getComputedStyle(element).color)"
         ) == [expected_rgb] * expected_count
         expected_muted = "rgb(85, 85, 85)" if expected_color == "dark" else "rgb(212, 212, 212)"
+        if custom_hex:
+            expected_muted = expected_rgb
         assert page.locator(scope + " .digital-meta").evaluate_all(
             "elements => elements.map(element => getComputedStyle(element).color)"
         ) == [expected_muted] * expected_count
@@ -570,7 +584,8 @@ def test_transparent_clock_color_before_first_paint_and_rendered_without_storage
 @pytest.mark.parametrize("path", PAGE_PATHS)
 @pytest.mark.parametrize(
     ("theme", "color", "expected_theme"),
-    [("dark", "dark", "dark"), ("light", "light", "light"), (None, "dark", "dark")],
+    [("dark", "dark", "dark"), ("light", "light", "light"), (None, "dark", "dark"),
+     ("dark", "0af", "dark"), ("light", "FF8800", "light"), (None, "0af", "dark")],
 )
 def test_clock_color_is_ignored_without_transparent_theme(
     page: Page,
@@ -638,6 +653,7 @@ def test_theme_classes_and_base_rendering(
         pytest.param("transparent", None, "dark", id="transparent-to-dark"),
         pytest.param("transparent", "dark", "dark", id="transparent-dark-color-to-dark"),
         pytest.param("transparent", "light", "dark", id="transparent-light-color-to-dark"),
+        pytest.param("transparent", "0af", "dark", id="transparent-hex-color-to-dark"),
     ],
 )
 def test_theme_switch_updates_class_and_checked_state(

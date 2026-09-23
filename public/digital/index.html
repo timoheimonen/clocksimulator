@@ -22,7 +22,7 @@
   <meta name="twitter:description"
     content="Free online digital clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png">
-  <meta name="version" content="1.4.0">
+  <meta name="version" content="1.4.1">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -74,6 +74,12 @@
       --digit: #222222;
       --muted: #555555;
       --tick: #333333;
+    }
+
+    html.transparent-mode[data-clock-color="custom"] {
+      --digit: var(--custom-clock-color);
+      --muted: var(--custom-clock-color);
+      --tick: var(--custom-clock-color);
     }
 
     * {
@@ -1073,10 +1079,13 @@
       } else if (activeTheme === 'transparent') {
         document.documentElement.classList.add('transparent-mode');
         const colorParam = params.get('color');
+        const isHexColor = /^(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(colorParam || '');
         // Keep existing transparent embeds unchanged when no valid color is supplied.
-        document.documentElement.dataset.clockColor = colorParam === 'dark' || colorParam === 'light'
-          ? colorParam
-          : 'light';
+        document.documentElement.dataset.clockColor = isHexColor ? 'custom'
+          : colorParam === 'dark' || colorParam === 'light' ? colorParam : 'light';
+        if (isHexColor) {
+          document.documentElement.style.setProperty('--custom-clock-color', '#' + colorParam);
+        }
       }
     })();
   </script>
@@ -1441,7 +1450,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
           </tr>
           <tr>
             <td><code>color</code></td>
-            <td><code>dark</code>, <code>light</code> (clock color with <code>theme=transparent</code>)</td>
+            <td><code>dark</code>, <code>light</code>, or 3/6-digit hex without <code>#</code> (e.g. <code>0af</code>, <code>FF8800</code>; clock color with <code>theme=transparent</code>). Invalid or missing values use the default.</td>
             <td><code>light</code></td>
           </tr>
           <tr>
@@ -1580,12 +1589,16 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       document.documentElement.classList.toggle('transparent-mode', activeTheme === 'transparent');
       if (activeTheme === 'transparent') {
         const colorParam = params.get('color');
+        const isHexColor = /^(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(colorParam || '');
         // Keep existing transparent embeds unchanged when no valid color is supplied.
-        document.documentElement.dataset.clockColor = colorParam === 'dark' || colorParam === 'light'
-          ? colorParam
-          : 'light';
+        document.documentElement.dataset.clockColor = isHexColor ? 'custom'
+          : colorParam === 'dark' || colorParam === 'light' ? colorParam : 'light';
+        if (isHexColor) {
+          document.documentElement.style.setProperty('--custom-clock-color', '#' + colorParam);
+        }
       } else {
         delete document.documentElement.dataset.clockColor;
+        document.documentElement.style.removeProperty('--custom-clock-color');
       }
       themeToggle.checked = activeTheme === 'dark';
 
@@ -1899,6 +1912,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       themeToggle.addEventListener('change', function () {
         document.documentElement.classList.remove('transparent-mode');
         delete document.documentElement.dataset.clockColor;
+        document.documentElement.style.removeProperty('--custom-clock-color');
         document.documentElement.classList.toggle('dark-mode', this.checked);
         saveSettings();
       });
