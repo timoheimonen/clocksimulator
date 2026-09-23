@@ -115,6 +115,28 @@ Custom border radius:
 
 The shape is controlled via the iframe's CSS `border-radius` — use `50%` for round, `0` for square, or any value like `8px`, `16px` for rounded corners.
 
+### Custom color on a transparent background
+
+In this example `theme=transparent&color=0066FF` for a blue clock. Hex colors are supplied without `#` in the URL.
+
+Analog:
+
+```html
+<iframe src="https://clocksimulator.com/?embed=true&amp;theme=transparent&amp;color=0066FF"
+  title="Blue analog clock" width="300" height="300"
+  style="border:none; overflow:hidden;">
+</iframe>
+```
+
+Digital:
+
+```html
+<iframe src="https://clocksimulator.com/digital/?embed=true&amp;theme=transparent&amp;color=0066FF"
+  title="Blue digital clock" width="600" height="200"
+  style="border:none; overflow:hidden;">
+</iframe>
+```
+
 ### Parameters
 
 All parameters are optional and can be combined:
@@ -125,7 +147,7 @@ All parameters are optional and can be combined:
 | `tz`       | IANA timezone(s), comma-separated | Local time | Timezone(s), e.g. `Europe/Helsinki` or `UTC,Europe/Helsinki,America/New_York` |
 | `rows`     | Number | Auto | Number of grid rows for multi-clock dashboard |
 | `theme`    | `dark`, `light`, `transparent` | OS preference (light fallback) | Color theme |
-| `color`    | `dark`, `light` | `dark` (analog), `light` (digital) | Clock foreground color when `theme=transparent`; ignored in other themes |
+| `color`    | `dark`, `light`, 3/6-digit hex without `#` (e.g. `0af`, `FF8800`) | `dark` (analog), `light` (digital) | Clock foreground color when `theme=transparent`; ignored in other themes. Invalid or missing values use the default |
 | `seconds`  | `tick`, `smooth`, `hide` | `tick` | Second hand mode |
 | `border`   | `show`, `hide` | `show` | Clock border visibility |
 | `daynight` | `show`, `hide` | `hide` | Sun/moon indicator for day/night |
