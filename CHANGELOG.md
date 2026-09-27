@@ -1,18 +1,22 @@
 # Changelog
 
-## 1.4.2 - 2026-09-27
+## 1.5.0 - 2026-09-27
 
 ### Added
 - Added a custom color picker to the embed builder for transparent clocks; it generates the hex `color` URL parameter.
+- Added the `secondcolor` URL parameter and a second hand color picker for transparent analog clocks. Existing embeds without it are unchanged.
 - Added one-click quick-add timezone suggestions, including the viewer's own timezone, and UTC offsets on selected timezone chips in the dashboard builder.
 - Added arrow-key, Home and End navigation inside the menu; Escape now returns focus to the MENU button.
 
 ### Changed
-- Redesigned the MENU panel and the Embed, Build dashboard and How to use dialogs on both analog and digital clock pages. The menu shows the active timezone, the app version and a live preview of the other clock view. The builders have side-by-side controls and live previews, and the dialogs open as bottom sheets on small screens.
-- Reorganized the How to use dialog with section shortcuts and tip cards.
+- Redesigned the MENU panel and the Embed, Build dashboard and How to use dialogs on both analog and digital clock pages.
+- The Embed and Build dashboard builders now default to the page's light or dark theme.
+
+### Fixed
+- The controls no longer flash briefly on page load in Firefox.
 
 ### Removed
-- Removed the Chrome extension link from the menu, the Chrome extension section from the README, and the extension privacy policy and terms pages (`/extension/privacy`, `/extension/TOS`).
+- Removed the Chrome extension overall.
 
 ## 1.4.1 - 2026-09-23
 

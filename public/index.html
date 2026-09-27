@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Free online analog clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.4.2">
+  <meta name="version" content="1.5.0">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -1108,7 +1108,7 @@ SOFTWARE.
     }
 
     @supports (animation-timeline: scroll()) {
-      .modal-panel-header {
+      .overlay.visible .modal-panel-header {
         animation: modal-header-divider linear both;
         animation-timeline: scroll(nearest block);
         animation-range: 0 24px;
