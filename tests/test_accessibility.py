@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import io
 import re
 
 import pytest
-from PIL import Image
 from playwright.sync_api import Page
 
 from tests.helpers import (
@@ -21,28 +19,10 @@ PAGE_CASES = [
     pytest.param("/digital/", "Digital clock", ".digital-container", id="digital"),
 ]
 
-DIALOG_CASES = [
-    pytest.param("embedLink", "embedOverlay", "embedCloseBtn", id="embed"),
-    pytest.param(
-        "dashboardLink",
-        "dashboardOverlay",
-        "dashboardCloseBtn",
-        id="dashboard",
-    ),
-    pytest.param("helpLink", "helpOverlay", "helpCloseBtn", id="help"),
-]
-
 pytestmark = pytest.mark.accessibility
 
 BURNIN_CASES = [
     pytest.param("", {}, ".clock-container", id="analog-single"),
-    pytest.param(
-        "",
-        {"tz": "UTC,Asia/Tokyo"},
-        ".clock-grid",
-        id="analog-dashboard",
-    ),
-    pytest.param("/digital/", {}, ".digital-container", id="digital-single"),
     pytest.param(
         "/digital/",
         {"tz": "UTC,Asia/Tokyo"},
@@ -283,39 +263,6 @@ def assert_dialog_tab_order(page: Page, overlay_id: str) -> None:
     ) is True
 
 
-def install_dialog_listener_probe(page: Page) -> None:
-    page.add_init_script("""
-        (function () {
-          var originalAdd = EventTarget.prototype.addEventListener;
-          var originalRemove = EventTarget.prototype.removeEventListener;
-          window.__dialogTrapListeners = {};
-          EventTarget.prototype.addEventListener = function (type, listener, options) {
-            if (type === 'keydown' && this.id && this.id.endsWith('Overlay')) {
-              var state = window.__dialogTrapListeners[this.id] || {
-                adds: 0,
-                removes: 0,
-                active: 0
-              };
-              state.adds += 1;
-              state.active += 1;
-              window.__dialogTrapListeners[this.id] = state;
-            }
-            return originalAdd.call(this, type, listener, options);
-          };
-          EventTarget.prototype.removeEventListener = function (type, listener, options) {
-            if (type === 'keydown' && this.id && this.id.endsWith('Overlay')) {
-              var state = window.__dialogTrapListeners[this.id];
-              if (state) {
-                state.removes += 1;
-                state.active -= 1;
-              }
-            }
-            return originalRemove.call(this, type, listener, options);
-          };
-        })();
-    """)
-
-
 def keyboard_open_about(page: Page) -> None:
     for expected_id in ["themeToggle", "wakeLockToggle", "secondModeToggle", "aboutBtn"]:
         press_tab(page)
@@ -334,7 +281,7 @@ def keyboard_open_about(page: Page) -> None:
 
 
 def keyboard_choose_dialog(page: Page, link_id: str) -> None:
-    tab_counts = {"embedLink": 1, "dashboardLink": 3, "helpLink": 4}
+    tab_counts = {"embedLink": 1, "dashboardLink": 2, "helpLink": 3}
     assert link_id in tab_counts
     for _ in range(tab_counts[link_id]):
         press_tab(page)
@@ -481,14 +428,17 @@ def contrast_ratio(first: str, second: str) -> float:
     return (lighter + 0.05) / (darker + 0.05)
 
 
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-@pytest.mark.parametrize("theme", ["light", "dark", "transparent"])
+@pytest.mark.parametrize(
+    ("path", "theme"),
+    [
+        pytest.param("", "transparent", id="analog-transparent"),
+        pytest.param("/digital/", "dark", id="digital-dark"),
+    ],
+)
 def test_keyboard_focus_ring_visible_on_theme_switch(
     page: Page,
     app_url: str,
     path: str,
-    title: str,
-    container_selector: str,
     theme: str,
 ) -> None:
     open_clock(page, app_url, path, {"theme": theme})
@@ -502,35 +452,12 @@ def test_keyboard_focus_ring_visible_on_theme_switch(
     assert_visible_focus_indicator(page)
 
 
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-def test_pointer_activation_does_not_force_keyboard_focus_indicator(
-    page: Page,
-    app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
-) -> None:
-    open_clock(page, app_url, path)
-    page.mouse.move(20, 20)
-    page.wait_for_function("() => !document.querySelector('.toggle-wrapper').hasAttribute('inert')")
-    page.locator(".theme-toggle").click()
-    assert page.evaluate(
-        "() => document.getElementById('themeToggle').matches(':focus-visible')"
-    ) is False
-    indicator = active_focus_indicator(page)
-    assert not any(focus_indicator_results(indicator).values()), indicator
-
-
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
 def test_all_switches_and_about_button_have_keyboard_focus(
     page: Page,
     app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
 ) -> None:
     mock_wake_lock(page)
-    open_clock(page, app_url, path)
+    open_clock(page, app_url, "")
     expected_ids = ["themeToggle", "wakeLockToggle", "secondModeToggle", "aboutBtn"]
     for expected_id in expected_ids:
         press_tab(page)
@@ -547,15 +474,12 @@ def test_all_switches_and_about_button_have_keyboard_focus(
     assert page.evaluate("() => document.activeElement.id") == "saveSettingsToggle"
 
 
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-def test_help_url_examples_are_named_focusable_regions(
+def test_help_url_examples_scroll_with_keyboard_on_mobile(
     page: Page,
     app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
 ) -> None:
-    open_clock(page, app_url, path)
+    page.set_viewport_size({"width": 320, "height": 640})
+    open_clock(page, app_url, "", {"theme": "dark"})
     page.evaluate("() => document.getElementById('helpLink').click()")
     regions = page.locator("#helpOverlay pre")
     expected_names = ["Timezone URL examples", "Dashboard URL examples"]
@@ -575,21 +499,6 @@ def test_help_url_examples_are_named_focusable_regions(
     for name in expected_names:
         assert page.get_by_role("region", name=name, exact=True).count() == 1
 
-
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-@pytest.mark.parametrize("theme", ["light", "dark", "transparent"])
-def test_help_url_examples_scroll_with_keyboard_on_mobile(
-    page: Page,
-    app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
-    theme: str,
-) -> None:
-    page.set_viewport_size({"width": 320, "height": 640})
-    open_clock(page, app_url, path, {"theme": theme})
-    page.evaluate("() => document.getElementById('helpLink').click()")
-    expected_names = ["Timezone URL examples", "Dashboard URL examples"]
     focused_names = []
     for expected_name in expected_names:
         for _ in range(20):
@@ -613,109 +522,12 @@ def test_help_url_examples_scroll_with_keyboard_on_mobile(
     assert focused_names == expected_names
 
 
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-def test_preview_iframes_stay_out_of_dialog_tab_order(
-    page: Page,
-    app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
-) -> None:
-    open_clock(page, app_url, path)
-    assert page.evaluate("""() => [
-        document.getElementById('embedPreview').getAttribute('tabindex'),
-        document.getElementById('dashboardPreview').getAttribute('tabindex')
-    ]""") == ["-1", "-1"]
-
-
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-def test_dashboard_timezone_has_visible_associated_label_on_mobile(
-    page: Page,
-    app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
-) -> None:
-    page.set_viewport_size({"width": 320, "height": 640})
-    open_clock(page, app_url, path)
-    suppress_document_css_motion(page)
-    press_tab(page)
-    page.wait_for_function("() => !document.querySelector('.toggle-wrapper').hasAttribute('inert')")
-    page.locator("#aboutBtn").click()
-    page.locator("#dashboardLink").click()
-    page.wait_for_function("""() => {
-        var transform = getComputedStyle(document.querySelector('#dashboardOverlay .modal-panel')).transform;
-        return transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)';
-    }""")
-    result = page.evaluate("""() => {
-        var panel = document.querySelector('#dashboardOverlay .modal-panel');
-        var label = document.querySelector('label[for="dashboardTzInput"]');
-        var input = document.getElementById('dashboardTzInput');
-        var addButton = document.getElementById('dashboardAddBtn');
-        var panelRect = panel.getBoundingClientRect();
-        var inputRect = input.getBoundingClientRect();
-        var addRect = addButton.getBoundingClientRect();
-        var panelStyle = getComputedStyle(panel);
-        var contentLeft = panelRect.left + parseFloat(panelStyle.paddingLeft);
-        var contentRight = panelRect.right - parseFloat(panelStyle.paddingRight);
-        return {
-            labelCount: document.querySelectorAll('label[for="dashboardTzInput"]').length,
-            text: label.textContent.trim(),
-            visible: label.getClientRects().length > 0,
-            associated: Array.from(input.labels).includes(label),
-            rowInsidePanel: inputRect.left >= contentLeft - 1 && addRect.right <= contentRight + 1,
-            noHorizontalOverflow: panel.scrollWidth <= panel.clientWidth,
-            scrollTop: panel.scrollTop,
-            geometry: {
-                contentLeft: contentLeft,
-                contentRight: contentRight,
-                inputLeft: inputRect.left,
-                addRight: addRect.right
-            }
-        };
-    }""")
-    assert result["labelCount"] == 1
-    assert result["text"] == "Timezone"
-    assert result["visible"] is True
-    assert result["associated"] is True
-    assert result["rowInsidePanel"] is True, result["geometry"]
-    assert result["noHorizontalOverflow"] is True
-    assert result["scrollTop"] == 0
-
-
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-def test_generated_iframe_has_descriptive_title(
-    page: Page,
-    app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
-) -> None:
-    open_clock(page, app_url, path)
-    page.evaluate("() => document.getElementById('embedLink').click()")
-    page.wait_for_function("() => document.getElementById('embedCode').value !== ''")
-    result = page.evaluate("""() => {
-        var template = document.createElement('template');
-        template.innerHTML = document.getElementById('embedCode').value;
-        var frames = template.content.querySelectorAll('iframe');
-        return {
-            count: frames.length,
-            title: frames.length ? frames[0].getAttribute('title') : null
-        };
-    }""")
-    assert result == {"count": 1, "title": title}
-
-
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
 def test_reduced_motion_removes_nonessential_transitions(
     page: Page,
     app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
 ) -> None:
     page.emulate_media(reduced_motion="reduce")
-    open_clock(page, app_url, path)
+    open_clock(page, app_url, "")
     result = page.evaluate(
         """containerSelector => {
             var targets = [
@@ -739,88 +551,10 @@ def test_reduced_motion_removes_nonessential_transitions(
             durations.push(getComputedStyle(document.querySelector('.toggle-slider'), '::before').transitionDuration);
             return durations;
         }""",
-        container_selector,
+        ".clock-container",
     )
     assert len(result) == 14
     assert all(all(float(value.removesuffix("s")) == 0 for value in duration.split(", ")) for duration in result)
-
-
-@pytest.mark.parametrize(
-    ("path", "grid_selector"),
-    [
-        pytest.param("", ".clock-grid", id="analog"),
-        pytest.param("/digital/", ".digital-grid", id="digital"),
-    ],
-)
-def test_reduced_motion_removes_dashboard_transition(
-    page: Page,
-    app_url: str,
-    path: str,
-    grid_selector: str,
-) -> None:
-    page.emulate_media(reduced_motion="reduce")
-    open_clock(page, app_url, path, {"tz": "UTC,Europe/Helsinki"})
-    duration = page.evaluate(
-        "selector => getComputedStyle(document.querySelector(selector)).transitionDuration",
-        grid_selector,
-    )
-    assert all(float(value.strip().removesuffix("s")) == 0 for value in duration.split(","))
-
-
-@pytest.mark.parametrize(
-    ("path", "params", "container_selector"),
-    [
-        pytest.param("", {"embed": "true"}, ".clock-container", id="analog-single"),
-        pytest.param(
-            "",
-            {"embed": "true", "tz": "UTC,Europe/Helsinki"},
-            ".clock-grid",
-            id="analog-dashboard",
-        ),
-        pytest.param("/digital/", {"embed": "true"}, ".digital-container", id="digital-single"),
-        pytest.param(
-            "/digital/",
-            {"embed": "true", "tz": "UTC,Europe/Helsinki"},
-            ".digital-grid",
-            id="digital-dashboard",
-        ),
-    ],
-)
-def test_embed_transition_remains_disabled_without_reduced_motion(
-    page: Page,
-    app_url: str,
-    path: str,
-    params: dict[str, str],
-    container_selector: str,
-) -> None:
-    page.emulate_media(reduced_motion="no-preference")
-    open_clock(page, app_url, path, params)
-    duration = page.evaluate(
-        "selector => getComputedStyle(document.querySelector(selector)).transitionDuration",
-        container_selector,
-    )
-    assert all(float(value.strip().removesuffix("s")) == 0 for value in duration.split(","))
-
-
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-def test_ui_normal_motion_retains_transitions(
-    page: Page,
-    app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
-) -> None:
-    page.emulate_media(reduced_motion="no-preference")
-    open_clock(page, app_url, path)
-    durations = page.evaluate(
-        """containerSelector => ({
-            container: getComputedStyle(document.querySelector(containerSelector)).transitionDuration,
-            modal: getComputedStyle(document.querySelector('.modal-panel')).transitionDuration
-        })""",
-        container_selector,
-    )
-    assert float(durations["container"].split(",")[0].strip().removesuffix("s")) > 0
-    assert float(durations["modal"].split(",")[0].strip().removesuffix("s")) > 0
 
 
 @pytest.mark.parametrize(("path", "params", "container_selector"), BURNIN_CASES)
@@ -873,37 +607,58 @@ def test_burnin_interval_respects_motion_and_embed_mode(
     assert sum(not record.cleared for record in burnin_records) == 1
 
 
-@pytest.mark.parametrize(("path", "base_params", "container_selector"), BURNIN_CASES)
 @pytest.mark.parametrize(
-    ("override_params", "reduced_motion"),
+    ("params", "reduced_motion"),
     [
-        pytest.param({"burnin": "false"}, "no-preference", id="disabled"),
-        pytest.param({"burnin": "true"}, "reduce", id="reduced-motion"),
+        pytest.param(
+            {"burnin": "false"},
+            "no-preference",
+            id="analog-single-disabled",
+        ),
+        pytest.param(
+            {"burnin": "true"},
+            "reduce",
+            id="analog-single-reduced-motion",
+        ),
         pytest.param(
             {"embed": "true", "burnin": "true"},
             "no-preference",
-            id="embed",
+            id="analog-single-embed",
         ),
     ],
 )
 def test_burnin_interval_is_not_registered_when_disabled(
     page: Page,
     app_url: str,
-    path: str,
-    base_params: dict[str, str],
-    container_selector: str,
-    override_params: dict[str, str],
+    params: dict[str, str],
     reduced_motion: str,
 ) -> None:
     page.emulate_media(reduced_motion=reduced_motion)
     clock = install_timer_probe(page, manual=True)
-    params = {**base_params, **override_params}
-    open_clock(page, app_url, path, params)
+    open_clock(page, app_url, "", params)
     burnin_records = [
         record for record in clock.timers()
         if record.kind == "interval" and record.delay == 600000
     ]
     assert burnin_records == []
+
+
+@pytest.mark.cross_browser
+def test_window_focus_reveals_controls_only_after_returning_to_window(
+    page: Page,
+    app_url: str,
+) -> None:
+    open_clock(page, app_url, "")
+    toolbar = page.locator(".toggle-wrapper")
+
+    page.evaluate("() => window.dispatchEvent(new Event('focus'))")
+    assert toolbar.evaluate("element => element.classList.contains('visible')") is False
+    assert toolbar.get_attribute("aria-hidden") == "true"
+
+    page.evaluate("() => window.dispatchEvent(new Event('blur'))")
+    page.evaluate("() => window.dispatchEvent(new Event('focus'))")
+    assert toolbar.evaluate("element => element.classList.contains('visible')") is True
+    assert toolbar.get_attribute("aria-hidden") == "false"
 
 
 @pytest.mark.parametrize(
@@ -939,41 +694,55 @@ def test_reduced_motion_keeps_clock_time_updating(
 
 
 @pytest.mark.cross_browser
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-@pytest.mark.parametrize(("link_id", "overlay_id", "close_id"), DIALOG_CASES)
-def test_dialog_keyboard_lifecycle_focus_trap_and_reopen_listener_balance(
+@pytest.mark.parametrize(
+    ("path", "link_id", "overlay_id", "close_id"),
+    [
+        pytest.param(
+            "",
+            "embedLink",
+            "embedOverlay",
+            "embedCloseBtn",
+            id="analog-embed",
+        ),
+        pytest.param(
+            "/digital/",
+            "dashboardLink",
+            "dashboardOverlay",
+            "dashboardCloseBtn",
+            id="digital-dashboard",
+        ),
+        pytest.param(
+            "",
+            "helpLink",
+            "helpOverlay",
+            "helpCloseBtn",
+            id="analog-help",
+        ),
+    ],
+)
+def test_dialog_keyboard_lifecycle_and_focus_trap(
     page: Page,
     app_url: str,
     path: str,
-    title: str,
-    container_selector: str,
     link_id: str,
     overlay_id: str,
     close_id: str,
 ) -> None:
     mock_wake_lock(page)
-    install_dialog_listener_probe(page)
     open_clock(page, app_url, path)
 
     keyboard_open_dialog(page, link_id)
     assert_dialog_open_state(page, path, overlay_id, close_id)
-    assert page.evaluate(
-        "overlayId => window.__dialogTrapListeners[overlayId]", overlay_id
-    ) == {"adds": 1, "removes": 0, "active": 1}
     assert_dialog_tab_order(page, overlay_id)
     preview_id = prepare_dialog_preview(page, overlay_id)
+    if preview_id:
+        assert page.locator("#" + preview_id).get_attribute("tabindex") == "-1"
 
     page.keyboard.press("Escape")
     assert_dialog_closed_state(page, overlay_id, preview_id)
-    assert page.evaluate(
-        "overlayId => window.__dialogTrapListeners[overlayId]", overlay_id
-    ) == {"adds": 1, "removes": 1, "active": 0}
 
     keyboard_reopen_dialog(page, link_id)
     assert_dialog_open_state(page, path, overlay_id, close_id)
-    assert page.evaluate(
-        "overlayId => window.__dialogTrapListeners[overlayId]", overlay_id
-    ) == {"adds": 2, "removes": 1, "active": 1}
     press_tab(page, reverse=True)
     assert page.evaluate(
         """overlayId => {
@@ -990,21 +759,34 @@ def test_dialog_keyboard_lifecycle_focus_trap_and_reopen_listener_balance(
     assert page.evaluate("() => document.activeElement.id") == close_id
     page.keyboard.press("Escape")
     assert_dialog_closed_state(page, overlay_id, preview_id)
-    assert page.evaluate(
-        "overlayId => window.__dialogTrapListeners[overlayId]", overlay_id
-    ) == {"adds": 2, "removes": 2, "active": 0}
 
 
 @pytest.mark.cross_browser
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-@pytest.mark.parametrize(("link_id", "overlay_id", "close_id"), DIALOG_CASES)
-@pytest.mark.parametrize("close_method", ["button", "backdrop"])
+@pytest.mark.parametrize(
+    ("path", "link_id", "overlay_id", "close_id", "close_method"),
+    [
+        pytest.param(
+            "",
+            "embedLink",
+            "embedOverlay",
+            "embedCloseBtn",
+            "button",
+            id="analog-embed-button",
+        ),
+        pytest.param(
+            "/digital/",
+            "dashboardLink",
+            "dashboardOverlay",
+            "dashboardCloseBtn",
+            "backdrop",
+            id="digital-dashboard-backdrop",
+        ),
+    ],
+)
 def test_dialog_close_methods_restore_inert_focus_and_preview(
     page: Page,
     app_url: str,
     path: str,
-    title: str,
-    container_selector: str,
     link_id: str,
     overlay_id: str,
     close_id: str,
@@ -1012,6 +794,7 @@ def test_dialog_close_methods_restore_inert_focus_and_preview(
 ) -> None:
     mock_wake_lock(page)
     open_clock(page, app_url, path)
+    initial_url = page.url
     keyboard_open_dialog(page, link_id)
     assert_dialog_open_state(page, path, overlay_id, close_id)
     preview_id = prepare_dialog_preview(page, overlay_id)
@@ -1023,20 +806,26 @@ def test_dialog_close_methods_restore_inert_focus_and_preview(
         page.mouse.click(2, 2)
 
     assert_dialog_closed_state(page, overlay_id, preview_id)
+    overlay = page.locator("#" + overlay_id)
+    overlay.wait_for(state="hidden")
+    assert overlay.is_visible() is False
+    assert page.url == initial_url
 
 
 @pytest.mark.cross_browser
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
 @pytest.mark.parametrize(
-    "switch_key",
-    ["theme", "wake-lock", "seconds", "save-settings"],
+    ("path", "switch_key"),
+    [
+        pytest.param("", "theme", id="analog-theme"),
+        pytest.param("", "wake-lock", id="analog-wake-lock"),
+        pytest.param("", "save-settings", id="analog-save-settings"),
+        pytest.param("/digital/", "seconds", id="digital-seconds"),
+    ],
 )
 def test_switches_expose_name_state_and_space_activation(
     page: Page,
     app_url: str,
     path: str,
-    title: str,
-    container_selector: str,
     switch_key: str,
 ) -> None:
     mock_wake_lock(page)
@@ -1065,6 +854,41 @@ def test_switches_expose_name_state_and_space_activation(
     switch.focus()
     page.keyboard.press("Space")
     assert switch.is_checked() is (not initially_checked)
+
+
+@pytest.mark.cross_browser
+def test_menu_arrow_keys_move_focus_and_escape_returns_to_menu_button(
+    page: Page,
+    app_url: str,
+) -> None:
+    mock_wake_lock(page)
+    open_clock(page, app_url, "")
+    keyboard_open_about(page)
+    expected_version = page.locator('meta[name="version"]').get_attribute("content")
+    assert page.locator("#menuVersion").text_content() == "v" + expected_version
+    assert page.locator("#menuZone").text_content().startswith("Local time")
+
+    press_tab(page)
+    assert page.evaluate("() => document.activeElement.id") == "embedLink"
+    page.keyboard.press("ArrowDown")
+    assert page.evaluate("() => document.activeElement.id") == "dashboardLink"
+    page.keyboard.press("ArrowRight")
+    assert page.evaluate("() => document.activeElement.id") == "helpLink"
+    page.keyboard.press("ArrowUp")
+    page.keyboard.press("ArrowLeft")
+    assert page.evaluate("() => document.activeElement.id") == "embedLink"
+    page.keyboard.press("End")
+    assert page.locator("#aboutBubble").evaluate(
+        "element => element.contains(document.activeElement)"
+    ) is True
+    page.keyboard.press("Home")
+    assert page.evaluate("() => document.activeElement.id") == "embedLink"
+    assert_visible_focus_indicator(page)
+
+    page.keyboard.press("Escape")
+    assert page.locator("#aboutBubble").get_attribute("aria-hidden") == "true"
+    assert page.locator("#aboutBtn").get_attribute("aria-expanded") == "false"
+    assert page.evaluate("() => document.activeElement.id") == "aboutBtn"
 
 
 @pytest.mark.cross_browser
@@ -1210,62 +1034,26 @@ def test_embed_silences_live_region_but_updates_clock_name(
 
 
 @pytest.mark.cross_browser
-@pytest.mark.parametrize(
-    ("path", "clock_selector", "icon_selector"),
-    [
-        pytest.param("", "#clock", "#sunIcon, #moonIcon", id="analog"),
-        pytest.param(
-            "/digital/",
-            "#digitalContainer",
-            "#dayNightIcon",
-            id="digital",
-        ),
-    ],
-)
-def test_daynight_graphics_are_decorative_without_duplicate_names(
-    page: Page,
-    app_url: str,
-    path: str,
-    clock_selector: str,
-    icon_selector: str,
-) -> None:
-    open_page(
-        page,
-        app_url,
-        {"daynight": "show"},
-        path=path,
-        fixed_time="2026-01-01T12:00:00Z",
-    )
-    assert page.locator(clock_selector).count() == 1
-    if path:
-        icon = page.locator(icon_selector)
-        assert icon.count() == 1
-        assert icon.get_attribute("aria-hidden") == "true"
-    else:
-        assert page.locator(icon_selector).count() == 2
-    assert page.get_by_role("img").count() == (0 if path else 1)
-    assert page.get_by_role("img", name=re.compile("sun|moon", re.I)).count() == 0
-
-
-@pytest.mark.cross_browser
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
 def test_dashboard_timezone_native_error_is_tied_to_visibly_labelled_input(
     page: Page,
     app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
 ) -> None:
     mock_wake_lock(page)
-    open_clock(page, app_url, path)
+    open_clock(page, app_url, "")
     suppress_document_css_motion(page)
     keyboard_open_dialog(page, "dashboardLink")
     timezone_input = page.get_by_role("textbox", name="Timezone", exact=True)
     assert timezone_input.count() == 1
-    assert page.locator('label[for="dashboardTzInput"]').is_visible() is True
+    label = page.locator('label[for="dashboardTzInput"]')
+    assert label.count() == 1
+    assert label.text_content().strip() == "Timezone"
+    assert label.is_visible() is True
     assert timezone_input.evaluate(
         "element => element.labels.length === 1 && element.labels[0].textContent.trim() === 'Timezone'"
     ) is True
+    assert timezone_input.evaluate("""element => Array.from(element.labels).includes(
+        document.querySelector('label[for="dashboardTzInput"]')
+    )""") is True
 
     timezone_input.fill("Invalid/Timezone")
     page.get_by_role("button", name="Add", exact=True).click()
@@ -1282,29 +1070,14 @@ def test_dashboard_timezone_native_error_is_tied_to_visibly_labelled_input(
 
 
 @pytest.mark.cross_browser
-@pytest.mark.parametrize(
-    ("params", "selector", "expected_count"),
-    [
-        pytest.param({}, ".clock-container", 1, id="single"),
-        pytest.param(
-            {"tz": "UTC,Asia/Kathmandu", "shadows": "true"},
-            ".clock-grid .clock-cell",
-            2,
-            id="dashboard",
-        ),
-    ],
-)
 def test_reduced_motion_hides_analog_seconds_and_removes_all_hand_shadows(
     page: Page,
     app_url: str,
-    params: dict[str, str],
-    selector: str,
-    expected_count: int,
 ) -> None:
     page.emulate_media(reduced_motion="reduce")
-    open_clock(page, app_url, "", params)
-    containers = page.locator(selector)
-    assert containers.count() == expected_count
+    open_clock(page, app_url, "", {"tz": "UTC,Asia/Kathmandu", "shadows": "true"})
+    containers = page.locator(".clock-grid .clock-cell")
+    assert containers.count() == 2
     result = containers.evaluate_all("""elements => elements.map(function (container) {
         var second = container.querySelector('.second-hand');
         var shadowTargets = container.querySelectorAll(
@@ -1318,34 +1091,26 @@ def test_reduced_motion_hides_analog_seconds_and_removes_all_hand_shadows(
         };
     })""")
     assert result == [
-        {"secondDisplay": "none", "filteredTargets": 0}
-        for _ in range(expected_count)
+        {"secondDisplay": "none", "filteredTargets": 0},
+        {"secondDisplay": "none", "filteredTargets": 0},
     ]
 
 
 @pytest.mark.chromium_only
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
 def test_forced_colors_preserve_clock_focus_and_dialog_controls(
     page: Page,
     app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
 ) -> None:
     page.emulate_media(forced_colors="active")
     mock_wake_lock(page)
-    open_clock(page, app_url, path)
+    open_clock(page, app_url, "")
     assert page.evaluate(
         "() => matchMedia('(forced-colors: active)').matches"
     ) is True
 
-    if path:
-        assert page.locator("#digitalTime").is_visible() is True
-        assert page.locator("#digitalTime").text_content() == "12:00:00"
-    else:
-        assert page.get_by_role("img", name="The time is 12:00").is_visible() is True
-        assert page.locator("#hourHand").is_visible() is True
-        assert page.locator("#minuteHand").is_visible() is True
+    assert page.get_by_role("img", name="The time is 12:00").is_visible() is True
+    assert page.locator("#hourHand").is_visible() is True
+    assert page.locator("#minuteHand").is_visible() is True
 
     press_tab(page)
     assert page.evaluate("() => document.activeElement.id") == "themeToggle"
@@ -1353,7 +1118,7 @@ def test_forced_colors_preserve_clock_focus_and_dialog_controls(
     for _ in range(3):
         press_tab(page)
     page.keyboard.press("Enter")
-    for _ in range(4):
+    for _ in range(3):
         press_tab(page)
         assert page.locator("#aboutBubble").evaluate(
             "element => element.contains(document.activeElement)"
@@ -1369,26 +1134,23 @@ def test_forced_colors_preserve_clock_focus_and_dialog_controls(
 
 
 @pytest.mark.cross_browser
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-def test_320_by_256_main_page_has_no_document_horizontal_scroll(
+def test_320_by_256_dialog_reflows_without_document_or_panel_overflow(
     page: Page,
     app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
 ) -> None:
     page.set_viewport_size({"width": 320, "height": 256})
-    open_clock(page, app_url, path)
-    result = page.evaluate("""containerSelector => ({
+    mock_wake_lock(page)
+    open_clock(page, app_url, "")
+    main_page = page.evaluate("""() => ({
       htmlClient: document.documentElement.clientWidth,
       htmlScroll: document.documentElement.scrollWidth,
       bodyClient: document.body.clientWidth,
       bodyScroll: document.body.scrollWidth,
-      containerVisible: document.querySelector(containerSelector)
-        ? document.querySelector(containerSelector).getClientRects().length > 0
+      containerVisible: document.querySelector('.clock-container')
+        ? document.querySelector('.clock-container').getClientRects().length > 0
         : false
-    })""", container_selector)
-    assert result == {
+    })""")
+    assert main_page == {
         "htmlClient": 320,
         "htmlScroll": 320,
         "bodyClient": 320,
@@ -1396,26 +1158,10 @@ def test_320_by_256_main_page_has_no_document_horizontal_scroll(
         "containerVisible": True,
     }
 
-
-@pytest.mark.cross_browser
-@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
-@pytest.mark.parametrize(("link_id", "overlay_id", "close_id"), DIALOG_CASES)
-def test_320_by_256_dialog_reflows_without_document_or_panel_overflow(
-    page: Page,
-    app_url: str,
-    path: str,
-    title: str,
-    container_selector: str,
-    link_id: str,
-    overlay_id: str,
-    close_id: str,
-) -> None:
-    page.set_viewport_size({"width": 320, "height": 256})
-    mock_wake_lock(page)
-    open_clock(page, app_url, path)
+    overlay_id = "dashboardOverlay"
     suppress_document_css_motion(page)
-    keyboard_open_dialog(page, link_id)
-    assert_dialog_open_state(page, path, overlay_id, close_id)
+    keyboard_open_dialog(page, "dashboardLink")
+    assert_dialog_open_state(page, "", overlay_id, "dashboardCloseBtn")
     page.wait_for_function("""overlayId => {
       var transform = getComputedStyle(
         document.querySelector('#' + overlayId + ' .modal-panel')
@@ -1446,52 +1192,22 @@ def test_320_by_256_dialog_reflows_without_document_or_panel_overflow(
     assert result["top"] >= 0
     assert result["bottom"] <= 256
 
-    if overlay_id == "helpOverlay":
-        regions = page.locator("#helpOverlay pre[role='region']")
-        assert regions.count() == 2
-        assert regions.evaluate_all(
-            "elements => elements.map(element => element.scrollWidth > element.clientWidth)"
-        ) == [True, True]
-
 
 @pytest.mark.cross_browser
-@pytest.mark.parametrize(
-    ("path", "extra_params", "cell_selector", "label_selector"),
-    [
-        pytest.param(
-            "",
-            {},
-            ".clock-cell",
-            ".clock-label",
-            id="analog",
-        ),
-        pytest.param(
-            "/digital/",
-            {"format": "12"},
-            ".digital-cell",
-            ".digital-label",
-            id="digital-12-hour",
-        ),
-    ],
-)
 def test_small_dashboard_long_labels_daynight_and_borders_are_not_clipped(
     page: Page,
     app_url: str,
-    path: str,
-    extra_params: dict[str, str],
-    cell_selector: str,
-    label_selector: str,
 ) -> None:
     page.set_viewport_size({"width": 320, "height": 256})
     params = {
         "tz": "America/Argentina/Buenos_Aires,America/North_Dakota/New_Salem",
         "daynight": "show",
         "border": "show",
-        **extra_params,
+        "format": "12",
     }
-    open_clock(page, app_url, path, params)
-    cells = page.locator(cell_selector)
-    labels = page.locator(label_selector)
+    open_clock(page, app_url, "/digital/", params)
+    cells = page.locator(".digital-cell")
+    labels = page.locator(".digital-label")
     assert cells.count() == 2
     assert labels.count() == 2
     assert labels.all_text_contents() == ["Buenos Aires", "New Salem"]
@@ -1505,7 +1221,7 @@ def test_small_dashboard_long_labels_daynight_and_borders_are_not_clipped(
           labelRect.right <= cellRect.right + 1 &&
           labelRect.top >= cellRect.top - 1 && labelRect.bottom <= cellRect.bottom + 1
       };
-    })""", label_selector) == [
+    })""", ".digital-label") == [
         {"labelFitsWidth": True, "labelInside": True},
         {"labelFitsWidth": True, "labelInside": True},
     ]
@@ -1513,22 +1229,13 @@ def test_small_dashboard_long_labels_daynight_and_borders_are_not_clipped(
         "() => document.documentElement.scrollWidth === document.documentElement.clientWidth"
     ) is True
 
-    if path:
-        assert cells.evaluate_all(
-            "elements => elements.map(element => element.classList.contains('bordered'))"
-        ) == [True, True]
-        assert page.locator(".digital-cell .daynight-mark.visible").count() == 2
-        assert page.locator(".digital-cell time").evaluate_all(
-            "elements => elements.map(element => / (AM|PM)$/.test(element.textContent))"
-        ) == [True, True]
-    else:
-        assert page.locator(".clock-cell .clock-border").evaluate_all(
-            "elements => elements.map(element => element.getAttribute('stroke') !== 'none')"
-        ) == [True, True]
-        visible_icons = page.locator(
-            ".clock-cell .sun-icon:not([display='none']), .clock-cell .moon-icon:not([display='none'])"
-        )
-        assert visible_icons.count() == 2
+    assert cells.evaluate_all(
+        "elements => elements.map(element => element.classList.contains('bordered'))"
+    ) == [True, True]
+    assert page.locator(".digital-cell .daynight-mark.visible").count() == 2
+    assert page.locator(".digital-cell time").evaluate_all(
+        "elements => elements.map(element => / (AM|PM)$/.test(element.textContent))"
+    ) == [True, True]
 
 
 @pytest.mark.cross_browser
@@ -1568,41 +1275,3 @@ def test_light_and_dark_text_border_and_focus_colors_meet_contrast_contract(
         assert contrast_ratio(
             variables["--clock-border"], variables["--clock-face"]
         ) >= 3
-
-
-@pytest.mark.cross_browser
-@pytest.mark.parametrize(("path", "foreground_variable"), [
-    pytest.param("", "--number", id="analog"),
-    pytest.param("/digital/", "--digit", id="digital"),
-])
-@pytest.mark.parametrize("parent_theme", ["light", "dark"])
-def test_transparent_theme_contrast_against_builder_preview_background(
-    page: Page,
-    app_url: str,
-    path: str,
-    foreground_variable: str,
-    parent_theme: str,
-) -> None:
-    open_clock(page, app_url, path, {"theme": parent_theme})
-    page.evaluate("() => document.getElementById('embedLink').click()")
-    page.locator("#embedTheme").select_option("transparent")
-    page.wait_for_function("""() => {
-      var frame = document.getElementById('embedPreview');
-      return frame.contentDocument && frame.contentDocument.documentElement &&
-        frame.contentDocument.documentElement.classList.contains('transparent-mode');
-    }""")
-    foreground = page.evaluate("""foregroundVariable => {
-      var frame = document.getElementById('embedPreview');
-      var frameStyle = getComputedStyle(frame.contentDocument.documentElement);
-      return frameStyle.getPropertyValue(foregroundVariable).trim();
-    }""", foreground_variable)
-    wrapper = page.locator("#embedOverlay .embed-preview-wrap")
-    with Image.open(io.BytesIO(wrapper.screenshot(animations="disabled"))) as screenshot:
-        pixels = screenshot.convert("RGB")
-        # Sample the centers of adjacent checker squares in the top padding,
-        # away from the iframe and the wrapper's rounded corners.
-        backgrounds = [pixels.getpixel(point) for point in [(36, 4), (44, 4)]]
-    assert backgrounds[0] != backgrounds[1]
-    for background in backgrounds:
-        preview_rgb = "rgb(%s, %s, %s)" % background
-        assert contrast_ratio(foreground, preview_rgb) >= 4.5

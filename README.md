@@ -82,7 +82,7 @@ Feature of easy url with multiple timezones requested by "Hacker News" user "elt
 
 ## Embed
 
-You can embed either clock on any website using an iframe. Click the **MENU button** on [clocksimulator.com](https://clocksimulator.com) and select **Embed this analog clock** or open [`/digital/`](https://clocksimulator.com/digital/) and select **Embed this digital clock** to use the generator with a live preview and copy-ready code.
+You can embed either clock on any website using an iframe. Click the **MENU button** on [clocksimulator.com](https://clocksimulator.com) and select **Embed** (on the analog clock or on [`/digital/`](https://clocksimulator.com/digital/)) to use the generator with a live preview and copy-ready code.
 
 ### Quick start
 
@@ -117,7 +117,7 @@ The shape is controlled via the iframe's CSS `border-radius` — use `50%` for r
 
 ### Custom color on a transparent background
 
-In this example `theme=transparent&color=0066FF` for a blue clock. Hex colors are supplied without `#` in the URL.
+In this example `theme=transparent&color=0066FF` for a blue clock. Hex colors are supplied without `#` in the URL. On the analog clock, `secondcolor` sets a separate second hand color, e.g. `theme=transparent&color=0066FF&secondcolor=FF3B30`.
 
 Analog:
 
@@ -148,6 +148,7 @@ All parameters are optional and can be combined:
 | `rows`     | Number | Auto | Number of grid rows for multi-clock dashboard |
 | `theme`    | `dark`, `light`, `transparent` | OS preference (light fallback) | Color theme |
 | `color`    | `dark`, `light`, 3/6-digit hex without `#` (e.g. `0af`, `FF8800`) | `dark` (analog), `light` (digital) | Clock foreground color when `theme=transparent`; ignored in other themes. Invalid or missing values use the default |
+| `secondcolor` | 3/6-digit hex without `#` (e.g. `f00`, `FF3B30`) | Default second hand color | Analog second hand and center dot color when `theme=transparent`; ignored in other themes and on the digital clock. Invalid or missing values keep the default second hand color |
 | `seconds`  | `tick`, `smooth`, `hide` | `tick` | Second hand mode |
 | `border`   | `show`, `hide` | `show` | Clock border visibility |
 | `daynight` | `show`, `hide` | `hide` | Sun/moon indicator for day/night |
@@ -159,15 +160,9 @@ All parameters are optional and can be combined:
 
 When the operating system's **prefers-reduced-motion** setting is active, the second hand and clock hand shadows are automatically disabled to reduce on-screen animation.
 
-## Chrome extension
-Chrome extension is also available at [Google Chrome web store](https://chromewebstore.google.com/detail/clocksimulatorcom/ljbpiigocbebamekohcpemgepjickldb).
-Extension replaces new tab page with analog clock.
-[GitHub repo](https://github.com/timoheimonen/chrome-extension-clocksimulator) also available.
-Extension follows main clocksimulator.com version, but not always updated 1:1 and might vary in features.
-
 ## Testing
 
-The release suite uses pytest and Playwright to cover both clocks, browser lifecycles, offline behavior, Cloudflare routing, accessibility, and visual regressions. No build step is required. See [`TESTING.md`](TESTING.md) for the test strategy and behavior matrix.
+The release suite uses pytest and Playwright to cover both clocks, browser lifecycles, offline behavior, Cloudflare routing, and accessibility. No build step is required. See [`TESTING.md`](TESTING.md) for the test strategy and behavior matrix.
 
 ```bash
 # Create the project test environment and install browsers
@@ -180,12 +175,6 @@ conda run -n clocksimulator python -m pytest
 
 # Run the complete local release matrix
 ./run_release_tests.sh
-
-# Run only visual snapshot tests
-conda run -n clocksimulator python -m pytest -m visual
-
-# Explicitly regenerate reviewed screenshot baselines
-conda run -n clocksimulator python -m pytest -m visual --update-snapshots
 ```
 
 ## Privacy & Terms of service
