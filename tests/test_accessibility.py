@@ -643,6 +643,24 @@ def test_burnin_interval_is_not_registered_when_disabled(
     assert burnin_records == []
 
 
+@pytest.mark.cross_browser
+def test_window_focus_reveals_controls_only_after_returning_to_window(
+    page: Page,
+    app_url: str,
+) -> None:
+    open_clock(page, app_url, "")
+    toolbar = page.locator(".toggle-wrapper")
+
+    page.evaluate("() => window.dispatchEvent(new Event('focus'))")
+    assert toolbar.evaluate("element => element.classList.contains('visible')") is False
+    assert toolbar.get_attribute("aria-hidden") == "true"
+
+    page.evaluate("() => window.dispatchEvent(new Event('blur'))")
+    page.evaluate("() => window.dispatchEvent(new Event('focus'))")
+    assert toolbar.evaluate("element => element.classList.contains('visible')") is True
+    assert toolbar.get_attribute("aria-hidden") == "false"
+
+
 @pytest.mark.parametrize(
     ("path", "clock_kind"),
     [
