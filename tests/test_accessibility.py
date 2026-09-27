@@ -334,7 +334,7 @@ def keyboard_open_about(page: Page) -> None:
 
 
 def keyboard_choose_dialog(page: Page, link_id: str) -> None:
-    tab_counts = {"embedLink": 1, "dashboardLink": 3, "helpLink": 4}
+    tab_counts = {"embedLink": 1, "dashboardLink": 2, "helpLink": 3}
     assert link_id in tab_counts
     for _ in range(tab_counts[link_id]):
         press_tab(page)
@@ -1068,6 +1068,45 @@ def test_switches_expose_name_state_and_space_activation(
 
 
 @pytest.mark.cross_browser
+@pytest.mark.parametrize(("path", "title", "container_selector"), PAGE_CASES)
+def test_menu_arrow_keys_move_focus_and_escape_returns_to_menu_button(
+    page: Page,
+    app_url: str,
+    path: str,
+    title: str,
+    container_selector: str,
+) -> None:
+    mock_wake_lock(page)
+    open_clock(page, app_url, path)
+    keyboard_open_about(page)
+    expected_version = page.locator('meta[name="version"]').get_attribute("content")
+    assert page.locator("#menuVersion").text_content() == "v" + expected_version
+    assert page.locator("#menuZone").text_content().startswith("Local time")
+
+    press_tab(page)
+    assert page.evaluate("() => document.activeElement.id") == "embedLink"
+    page.keyboard.press("ArrowDown")
+    assert page.evaluate("() => document.activeElement.id") == "dashboardLink"
+    page.keyboard.press("ArrowRight")
+    assert page.evaluate("() => document.activeElement.id") == "helpLink"
+    page.keyboard.press("ArrowUp")
+    page.keyboard.press("ArrowLeft")
+    assert page.evaluate("() => document.activeElement.id") == "embedLink"
+    page.keyboard.press("End")
+    assert page.locator("#aboutBubble").evaluate(
+        "element => element.contains(document.activeElement)"
+    ) is True
+    page.keyboard.press("Home")
+    assert page.evaluate("() => document.activeElement.id") == "embedLink"
+    assert_visible_focus_indicator(page)
+
+    page.keyboard.press("Escape")
+    assert page.locator("#aboutBubble").get_attribute("aria-hidden") == "true"
+    assert page.locator("#aboutBtn").get_attribute("aria-expanded") == "false"
+    assert page.evaluate("() => document.activeElement.id") == "aboutBtn"
+
+
+@pytest.mark.cross_browser
 def test_analog_single_and_dashboard_have_named_image_semantics(
     page: Page,
     app_url: str,
@@ -1353,7 +1392,7 @@ def test_forced_colors_preserve_clock_focus_and_dialog_controls(
     for _ in range(3):
         press_tab(page)
     page.keyboard.press("Enter")
-    for _ in range(4):
+    for _ in range(3):
         press_tab(page)
         assert page.locator("#aboutBubble").evaluate(
             "element => element.contains(document.activeElement)"

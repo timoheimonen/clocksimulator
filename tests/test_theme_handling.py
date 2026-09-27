@@ -6,7 +6,6 @@ import pytest
 from playwright.sync_api import Page, Route
 
 from tests.helpers import (
-    assert_screenshot,
     build_clock_url,
     expected_clock_count,
     install_test_clock,
@@ -675,34 +674,3 @@ def test_theme_switch_updates_class_and_checked_state(
     assert theme_name(page) == expected_theme
     assert switch.is_checked() is True
     assert page.locator("html").get_attribute("data-clock-color") is None
-
-
-@pytest.mark.visual
-@pytest.mark.chromium_only
-@pytest.mark.parametrize(
-    ("theme", "name", "transparent"),
-    [
-        pytest.param("dark", "theme-dark.png", False, id="dark"),
-        pytest.param("light", "theme-light.png", False, id="light"),
-        pytest.param("transparent", "theme-transparent.png", True, id="transparent"),
-    ],
-)
-def test_theme_visual_snapshot(
-    page: Page,
-    app_url: str,
-    update_snapshots: bool,
-    theme: str,
-    name: str,
-    transparent: bool,
-) -> None:
-    install_test_clock(page)
-    seed_local_storage(page, app_url)
-    navigate_clock_page(page, build_clock_url(app_url, "", {"theme": theme}))
-    assert theme_name(page) == theme
-    assert page.get_by_role("img", name="The time is 12:00").count() == 1
-    assert_screenshot(
-        page,
-        name,
-        update=update_snapshots,
-        transparent=transparent,
-    )

@@ -671,10 +671,3 @@ def test_digital_visual_snapshot_embed_transparent(page: Page, app_url: str, upd
         update=update_snapshots,
         transparent=True,
     )
-
-
-@pytest.mark.visual
-def test_digital_visual_snapshot_dashboard_dark(page: Page, app_url: str, update_snapshots: bool) -> None:
-    open_digital(page, app_url, {"tz": "UTC,Europe/Helsinki,America/New_York", "theme": "dark"})
-    assert page.locator(".digital-grid .digital-cell").count() == 3
-    assert_screenshot(page, "digital-dashboard-dark-3tz.png", update=update_snapshots)

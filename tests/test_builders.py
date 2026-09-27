@@ -502,6 +502,55 @@ def test_embed_clock_color_updates_preview_and_code_and_survives_theme_switches(
 
 
 @pytest.mark.parametrize("path", ["/", "/digital/"])
+def test_embed_custom_clock_color_reaches_code_and_preview(
+    page: Page,
+    app_url: str,
+    path: str,
+) -> None:
+    open_builder(page, app_url, path, "embed")
+    custom_field = page.locator("#embedCustomColorField")
+    production_base = "https://clocksimulator.com" + path
+    assert custom_field.is_visible() is False
+
+    select_and_dispatch(page, "#embedTheme", "transparent")
+    assert custom_field.is_visible() is False
+    select_and_dispatch(page, "#embedClockColor", "custom")
+    assert custom_field.is_visible() is True
+    assert page.get_by_label("Custom color", exact=True).input_value() == "#ff8800"
+    assert parsed_generated_iframe(page)["src"] == (
+        production_base + "?embed=true&theme=transparent&color=ff8800"
+    )
+
+    page.get_by_label("Custom color", exact=True).fill("#1a2b8c")
+    page.clock.run_for(400)
+    expected_query = "?embed=true&theme=transparent&color=1a2b8c"
+    assert parsed_generated_iframe(page)["src"] == production_base + expected_query
+    assert page.locator("#embedPreview").get_attribute("src").endswith(expected_query)
+    frame = wait_for_preview(
+        page, "#embedPreview", "#clock" if path == "/" else "#digitalTime"
+    )
+    frame.locator('html.transparent-mode[data-clock-color="custom"]').wait_for()
+    foreground = frame.locator("#hourHand" if path == "/" else "#digitalTime")
+    assert foreground.evaluate(
+        "(element, property) => getComputedStyle(element)[property]",
+        "fill" if path == "/" else "color",
+    ) == "rgb(26, 43, 140)"
+    assert page.locator("#embedOverlay .embed-preview-wrap").evaluate(
+        "element => element.classList.contains('light-clock-preview')"
+    ) is False
+
+    page.get_by_label("Custom color", exact=True).fill("#f0f0f0")
+    page.clock.run_for(400)
+    assert page.locator("#embedOverlay .embed-preview-wrap").evaluate(
+        "element => element.classList.contains('light-clock-preview')"
+    ) is True
+
+    select_and_dispatch(page, "#embedTheme", "dark")
+    assert custom_field.is_visible() is False
+    assert parsed_generated_iframe(page)["src"] == production_base + "?embed=true&theme=dark"
+
+
+@pytest.mark.parametrize("path", ["/", "/digital/"])
 def test_every_embed_builder_control_reaches_code_and_preview_dom(
     page: Page,
     app_url: str,
@@ -976,6 +1025,45 @@ def test_dashboard_builder_empty_one_zone_canonicalization_duplicates_and_remova
     assert dashboard_chip_names(page) == [canonical_new_york]
     assert page.locator("#dashboardUrl").input_value() == ""
     assert page.locator("#dashboardPreview").get_attribute("src") == "about:blank"
+
+
+@pytest.mark.parametrize(("path", "production_base"), DASHBOARD_CASES)
+def test_dashboard_builder_quick_add_suggestions_add_canonical_timezones(
+    page: Page,
+    app_url: str,
+    path: str,
+    production_base: str,
+) -> None:
+    open_builder(page, app_url, path, "dashboard")
+    canonical_utc = resolved_timezone(page, "UTC")
+    canonical_tokyo = resolved_timezone(page, "Asia/Tokyo")
+    suggestions = page.locator("#tzSuggestions .tz-suggestion")
+    labels = suggestions.evaluate_all(
+        "elements => elements.map(element => element.getAttribute('aria-label'))"
+    )
+    assert labels[0] == "Add " + canonical_utc
+    assert "Add " + canonical_tokyo in labels
+    assert len(labels) == len(set(labels))
+
+    page.get_by_role("button", name="Add " + canonical_utc, exact=True).click()
+    assert dashboard_chip_names(page) == [canonical_utc]
+    assert page.get_by_role("button", name="Add " + canonical_utc, exact=True).count() == 0
+    assert page.locator("#dashboardUrl").input_value() == ""
+
+    page.get_by_role("button", name="Add " + canonical_tokyo, exact=True).click()
+    assert dashboard_chip_names(page) == [canonical_utc, canonical_tokyo]
+    assert page.evaluate("() => document.activeElement.classList.contains('tz-suggestion')") is True
+    url = page.locator("#dashboardUrl").input_value()
+    assert url.startswith(production_base + "?")
+    assert query_values(url)["tz"] == [canonical_utc + "," + canonical_tokyo]
+    assert page.locator("#tzChips .tz-chip-offset").all_text_contents()[1] == "GMT+9"
+
+    page.locator("#tzChips .tz-chip-remove").nth(0).click()
+    assert dashboard_chip_names(page) == [canonical_tokyo]
+    assert page.evaluate("() => document.activeElement.getAttribute('aria-label')") == (
+        "Remove " + canonical_tokyo
+    )
+    assert page.get_by_role("button", name="Add " + canonical_utc, exact=True).count() == 1
 
 
 @pytest.mark.parametrize(("path", "production_base"), DASHBOARD_CASES)

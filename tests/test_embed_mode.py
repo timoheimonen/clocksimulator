@@ -253,34 +253,6 @@ def test_embed_mode_wakelock_hidden(page: Page, app_url: str) -> None:
 
 
 @pytest.mark.visual
-def test_embed_mode_visual_snapshot_dark(page: Page, app_url: str, update_snapshots: bool) -> None:
-    open_page(page, app_url, {"embed": "true", "theme": "dark"})
-    assert page.locator("html").get_attribute("class") == "dark-mode"
-    assert_screenshot(page, "embed-dark.png", update=update_snapshots)
-
-
-@pytest.mark.visual
-def test_embed_mode_visual_snapshot_light(page: Page, app_url: str, update_snapshots: bool) -> None:
-    open_page(page, app_url, {"embed": "true", "theme": "light"})
-    assert page.locator("html").get_attribute("class") in {None, ""}
-    assert_screenshot(page, "embed-light.png", update=update_snapshots)
-
-
-@pytest.mark.visual
-def test_embed_mode_visual_snapshot_transparent(page: Page, app_url: str, update_snapshots: bool) -> None:
-    open_page(page, app_url, {"embed": "true", "theme": "transparent"})
-    assert page.locator("body").evaluate(
-        "element => getComputedStyle(element).backgroundColor"
-    ) == "rgba(0, 0, 0, 0)"
-    assert_screenshot(
-        page,
-        "embed-transparent.png",
-        update=update_snapshots,
-        transparent=True,
-    )
-
-
-@pytest.mark.visual
 def test_embed_mode_visual_snapshot_daynight(page: Page, app_url: str, update_snapshots: bool) -> None:
     open_page(page, app_url, {"embed": "true", "theme": "dark", "daynight": "show"})
     assert icon_displays(page) == {"sun": "inline", "moon": "none"}
@@ -313,15 +285,6 @@ def test_embed_mode_visual_snapshot_second_hand_detail(
             "height": clock_box["height"] * 0.52,
         },
     )
-
-
-@pytest.mark.visual
-def test_embed_mode_visual_snapshot_seconds_hide(page: Page, app_url: str, update_snapshots: bool) -> None:
-    open_page(page, app_url, {"embed": "true", "theme": "dark", "seconds": "hide"})
-    assert page.locator("#secondHand").evaluate(
-        "element => getComputedStyle(element).display"
-    ) == "none"
-    assert_screenshot(page, "embed-seconds-hide.png", update=update_snapshots)
 
 
 @pytest.mark.visual

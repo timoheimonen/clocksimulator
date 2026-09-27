@@ -24,17 +24,11 @@ SITEMAP_PAGE_CANONICALS = {
 }
 PAGE_CANONICALS = {
     **SITEMAP_PAGE_CANONICALS,
-    PUBLIC_ROOT / "extension" / "privacy.html": SITE_ORIGIN + "/extension/privacy",
-    PUBLIC_ROOT / "extension" / "TOS.html": SITE_ORIGIN + "/extension/TOS",
 }
 EXPECTED_LEGAL_LINKS = {
     PUBLIC_ROOT / "index.html": {"/privacy", "/TOS"},
     PUBLIC_ROOT / "digital" / "index.html": {"/privacy", "/TOS"},
     PUBLIC_ROOT / "TOS.html": {"/privacy"},
-    PUBLIC_ROOT / "extension" / "TOS.html": {
-        "/extension/privacy",
-        "/extension/TOS",
-    },
 }
 REQUIRED_MANIFEST_ICON_SIZES = {(192, 192), (512, 512)}
 
@@ -333,4 +327,4 @@ def test_internal_legal_links_use_canonical_public_routes(
         if parsed.scheme == "https" and parsed.netloc == "clocksimulator.com"
     }
     assert expected_paths <= observed_paths
-    assert not ({"/privacy.html", "/TOS.html", "/extension/tos"} & observed_paths)
+    assert not ({"/privacy.html", "/TOS.html"} & observed_paths)

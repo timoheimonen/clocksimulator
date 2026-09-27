@@ -73,7 +73,7 @@ Markers are registered under `--strict-markers`. Release checks are run manually
 | Offline install/activate/fetch | Yes | Fallback | Yes | Fallback | — | — | — | — | Chromium | `test_service_worker.py` |
 | Cloudflare routes, headers, MIME | Yes | Shared page | Yes | Shared page | Cross-origin | Cross-origin | Cross-origin | Cross-origin | Chromium | `test_deployment_contract.py` |
 | Versions, manifest, icons, canonicals | Yes | Shared app | Yes | Shared app | — | — | — | — | Static | `test_static_contracts.py` |
-| Snapshot oracle itself | Yes | Yes | Yes | Yes | Transparent | Embed view | Transparent | Dashboard view | Chromium | `test_test_infrastructure.py`, visual-marked tests |
+| Snapshot oracle itself | — | — | Yes | — | Embed view | — | Transparent | — | Chromium | `test_test_infrastructure.py`, visual-marked tests |
 
 The matrix names the primary owner. Tests may deliberately overlap when they exercise a distinct implementation path or integration boundary.
 

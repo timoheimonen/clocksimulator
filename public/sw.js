@@ -1,4 +1,4 @@
-const CACHE_NAME = 'clocksimulator-v1.4.1';
+const CACHE_NAME = 'clocksimulator-v1.4.2';
 const ASSETS = [
   '/',
   '/digital/',

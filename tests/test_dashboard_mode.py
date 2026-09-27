@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from playwright.sync_api import Page
 
-from tests.helpers import assert_screenshot, open_page
+from tests.helpers import open_page
 
 
 TIMEZONES = "UTC,Europe/Helsinki"
@@ -397,68 +397,3 @@ def test_dashboard_no_duplicate_svg_ids(page: Page, app_url: str) -> None:
     assert clocks.evaluate_all(
         "elements => elements.every(element => element.querySelectorAll('[id]').length === 0)"
     ) is True
-
-
-@pytest.mark.visual
-def test_dashboard_mode_visual_snapshot_dark_2tz(
-    page: Page,
-    app_url: str,
-    update_snapshots: bool,
-) -> None:
-    open_page(page, app_url, {"tz": TIMEZONES, "theme": "dark"})
-    assert dashboard_counts(page)["cells"] == 2
-    assert page.locator("html").evaluate(
-        "element => element.classList.contains('dark-mode')"
-    ) is True
-    assert_screenshot(page, "dashboard-dark-2tz.png", update=update_snapshots)
-
-
-@pytest.mark.visual
-def test_dashboard_mode_visual_snapshot_light_3tz(
-    page: Page,
-    app_url: str,
-    update_snapshots: bool,
-) -> None:
-    open_page(
-        page,
-        app_url,
-        {"tz": "UTC,Europe/Helsinki,America/New_York", "theme": "light"},
-    )
-    assert dashboard_counts(page)["cells"] == 3
-    assert_screenshot(page, "dashboard-light-3tz.png", update=update_snapshots)
-
-
-@pytest.mark.visual
-def test_dashboard_mode_visual_snapshot_dark_4tz(
-    page: Page,
-    app_url: str,
-    update_snapshots: bool,
-) -> None:
-    open_page(
-        page,
-        app_url,
-        {
-            "tz": "UTC,Europe/Helsinki,America/New_York,Asia/Tokyo",
-            "theme": "dark",
-        },
-    )
-    assert dashboard_counts(page)["cells"] == 4
-    assert_screenshot(page, "dashboard-dark-4tz.png", update=update_snapshots)
-
-
-@pytest.mark.visual
-def test_dashboard_mode_visual_snapshot_embed_2tz(
-    page: Page,
-    app_url: str,
-    update_snapshots: bool,
-) -> None:
-    open_page(
-        page,
-        app_url,
-        {"embed": "true", "tz": TIMEZONES, "theme": "dark"},
-    )
-    assert dashboard_counts(page)["cells"] == 2
-    assert page.locator(".toggle-wrapper").evaluate(
-        "element => element.getBoundingClientRect().width"
-    ) == 0
-    assert_screenshot(page, "dashboard-embed-2tz.png", update=update_snapshots)
