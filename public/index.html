@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Free online analog clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.4.1">
+  <meta name="version" content="1.5.0">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -132,6 +132,11 @@ SOFTWARE.
       --minute-hand: var(--custom-clock-color);
       --second-hand: var(--custom-clock-color);
       --center-dot: var(--custom-clock-color);
+    }
+
+    html.transparent-mode[data-second-color="custom"] {
+      --second-hand: var(--custom-second-color);
+      --center-dot: var(--custom-second-color);
     }
 
     * {
@@ -331,39 +336,6 @@ SOFTWARE.
       transform: rotate(360deg);
     }
 
-    .save-settings-toggle {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      width: auto;
-    }
-
-    .save-settings-toggle input:checked~.toggle-slider {
-      background: #3a7d55;
-    }
-
-    .dark-mode .save-settings-toggle input:checked~.toggle-slider {
-      background: #2f6a47;
-    }
-
-    .save-settings-toggle:has(input:disabled),
-    .save-settings-toggle.disabled {
-      cursor: not-allowed;
-    }
-
-    .save-settings-toggle:has(input:disabled) .toggle-slider,
-    .save-settings-toggle:has(input:disabled) span:not(.toggle-slider),
-    .save-settings-toggle.disabled .toggle-slider,
-    .save-settings-toggle.disabled span:not(.toggle-slider) {
-      opacity: 0.45;
-      pointer-events: none;
-    }
-
-    #saveSettingsLabel[data-tooltip]::after {
-      left: 0;
-      transform: none;
-    }
-
     .toggle-label[data-tooltip]::after {
       content: attr(data-tooltip);
       position: absolute;
@@ -394,103 +366,6 @@ SOFTWARE.
 
     .toggle-label[data-tooltip]:hover::after {
       opacity: 1;
-    }
-
-    .about-btn {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: auto;
-      height: 22px;
-      padding: 0 5px;
-      border: 1.5px solid currentColor;
-      border-radius: 3px;
-      background: transparent;
-      color: var(--tick);
-      font-family: inherit;
-      font-size: 10px;
-      font-weight: 600;
-      line-height: 1;
-      letter-spacing: 0.06em;
-      white-space: nowrap;
-      cursor: pointer;
-      flex-shrink: 0;
-      opacity: 0.5;
-      transition: opacity 0.2s ease;
-    }
-
-    .about-btn:hover {
-      opacity: 1;
-    }
-
-    body.about-bubble-open .toggle-label[data-tooltip]:hover::after {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    body.about-bubble-open .about-bubble .toggle-label[data-tooltip]:hover::after {
-      opacity: 1;
-    }
-
-    .about-wrapper {
-      display: flex;
-      align-items: center;
-    }
-
-    .about-bubble {
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      background: rgba(255, 255, 255, 0.95);
-      color: #222;
-      font-size: 12px;
-      line-height: 1.5;
-      padding: 8px 12px;
-      border-radius: 8px;
-      white-space: nowrap;
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-      transition: opacity 0.2s ease;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      -webkit-user-select: text;
-      user-select: text;
-    }
-
-    .about-bubble.visible {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-    }
-
-    .dark-mode .about-bubble {
-      background: rgba(30, 30, 30, 0.95);
-      color: #eee;
-    }
-
-    .about-bubble a,
-    .help-panel a {
-      color: inherit;
-      text-decoration: underline;
-      text-decoration-color: rgba(0, 0, 0, 0.3);
-      text-underline-offset: 2px;
-    }
-
-    .about-bubble a:hover,
-    .help-panel a:hover {
-      text-decoration-color: rgba(0, 0, 0, 0.6);
-    }
-
-    .dark-mode .about-bubble a,
-    .dark-mode .help-panel a {
-      text-decoration-color: rgba(255, 255, 255, 0.35);
-    }
-
-    .dark-mode .about-bubble a:hover,
-    .dark-mode .help-panel a:hover {
-      text-decoration-color: rgba(255, 255, 255, 0.7);
     }
 
     .clock-container {
@@ -554,163 +429,1083 @@ SOFTWARE.
       flex-shrink: 0;
     }
 
+    @media (prefers-reduced-motion: reduce) {
+
+      .clock-container,
+      .clock-grid {
+        transition: none;
+      }
+    }
+
+    :root {
+      --ui-bg: #ffffff;
+      --ui-bg-soft: #f4f4f7;
+      --ui-field: #ffffff;
+      --ui-stage: #ececf1;
+      --ui-line: #e3e3e9;
+      --ui-line-strong: #c8c8d1;
+      --ui-text: #1d1d22;
+      --ui-text-soft: #5a5a66;
+      --ui-link: #1d4ed8;
+      --ui-accent: #2563eb;
+      --ui-accent-hover: #1d4ed8;
+      --ui-accent-soft: #e7eefd;
+      --ui-accent-text: #1a44b8;
+      --ui-success: #15803d;
+      --ui-danger: #b91c1c;
+      --ui-focus: #005fcc;
+      --ui-code-bg: #f6f6f9;
+      --ui-code-text: #1d1d22;
+      --ui-code-soft: #5a5a66;
+      --ui-screen-bg: #15171c;
+      --ui-menu-bg: rgba(250, 250, 252, 0.86);
+      --ui-tile-bg: rgba(255, 255, 255, 0.78);
+      --ui-tile-glow: rgba(22, 163, 74, 0.14);
+      --ui-shadow: 0 1px 2px rgba(16, 16, 24, 0.06), 0 12px 32px -8px rgba(16, 16, 24, 0.22),
+        0 40px 80px -24px rgba(16, 16, 24, 0.30);
+      --ui-ease-out: cubic-bezier(0.2, 0.9, 0.25, 1);
+      --ui-ease-spring: cubic-bezier(0.2, 0.9, 0.3, 1.18);
+      --ui-mono: 'SF Mono', Menlo, Monaco, Consolas, monospace;
+      --tile-embed-bg: #e4edff;
+      --tile-embed-fg: #1f55d4;
+      --tile-dashboard-bg: #dcf4e6;
+      --tile-dashboard-fg: #13703f;
+      --tile-help-bg: #eee7ff;
+      --tile-help-fg: #6337cf;
+    }
+
+    html.dark-mode {
+      --ui-bg: #17171b;
+      --ui-bg-soft: #212126;
+      --ui-field: #1c1c21;
+      --ui-stage: #0f0f12;
+      --ui-line: #2c2c33;
+      --ui-line-strong: #43434d;
+      --ui-text: #f2f2f5;
+      --ui-text-soft: #a6a6b2;
+      --ui-link: #9dbcff;
+      --ui-accent: #2f66d8;
+      --ui-accent-hover: #3a73ea;
+      --ui-accent-soft: #1c2944;
+      --ui-accent-text: #bcd0ff;
+      --ui-success: #17804a;
+      --ui-danger: #c0392b;
+      --ui-focus: #8ec5ff;
+      --ui-code-bg: #0b0c0f;
+      --ui-code-text: #e7e9ef;
+      --ui-code-soft: #9ba1ae;
+      --ui-screen-bg: #0b0c0f;
+      --ui-menu-bg: rgba(26, 26, 31, 0.84);
+      --ui-tile-bg: rgba(255, 255, 255, 0.045);
+      --ui-tile-glow: rgba(74, 222, 128, 0.13);
+      --ui-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 40px -8px rgba(0, 0, 0, 0.6),
+        0 40px 90px -24px rgba(0, 0, 0, 0.7);
+      --tile-embed-bg: #1b2847;
+      --tile-embed-fg: #93b6ff;
+      --tile-dashboard-bg: #143327;
+      --tile-dashboard-fg: #6fe0a6;
+      --tile-help-bg: #2a2150;
+      --tile-help-fg: #c3afff;
+    }
+
+    .about-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      width: auto;
+      height: 22px;
+      padding: 0 7px 0 6px;
+      border: 1.5px solid currentColor;
+      border-radius: 11px;
+      background: transparent;
+      color: var(--tick);
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 650;
+      line-height: 1;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      opacity: 0.5;
+      transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .about-btn:hover,
+    .about-btn[aria-expanded="true"] {
+      opacity: 1;
+    }
+
+    .about-btn-icon {
+      position: relative;
+      width: 9px;
+      height: 7px;
+      flex-shrink: 0;
+    }
+
+    .about-btn-icon::before,
+    .about-btn-icon::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      width: 9px;
+      height: 1.5px;
+      border-radius: 1px;
+      background: currentColor;
+      transition: transform 0.3s var(--ui-ease-out), top 0.3s var(--ui-ease-out);
+    }
+
+    .about-btn-icon::before {
+      top: 0.5px;
+    }
+
+    .about-btn-icon::after {
+      top: 5px;
+    }
+
+    .about-btn[aria-expanded="true"] .about-btn-icon::before {
+      top: 2.75px;
+      transform: rotate(45deg);
+    }
+
+    .about-btn[aria-expanded="true"] .about-btn-icon::after {
+      top: 2.75px;
+      transform: rotate(-45deg);
+    }
+
+    button:focus-visible,
+    a:focus-visible {
+      outline: 2px solid var(--focus-ring);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px var(--focus-ring-contrast);
+    }
+
+    body.about-bubble-open .toggle-label[data-tooltip]:hover::after {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .about-wrapper {
+      display: flex;
+      align-items: center;
+    }
+
+    .about-bubble {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 0;
+      z-index: 30;
+      width: min(360px, calc(100vw - 32px));
+      max-height: calc(var(--app-height, 100dvh) - 64px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      padding: 10px;
+      border: 1px solid var(--ui-line);
+      border-radius: 20px;
+      background: var(--ui-menu-bg);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      backdrop-filter: blur(24px) saturate(180%);
+      box-shadow: var(--ui-shadow);
+      color: var(--ui-text);
+      font-size: 13px;
+      line-height: 1.4;
+      text-align: left;
+      cursor: auto;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(-8px) scale(0.96);
+      transform-origin: var(--menu-origin-x, 24px) -10px;
+      transition: opacity 0.18s ease, transform 0.3s var(--ui-ease-out), visibility 0s linear 0.3s;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    .about-bubble.visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: none;
+      transition-delay: 0s;
+      transition-timing-function: ease, var(--ui-ease-spring), linear;
+    }
+
+    @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+      .about-bubble {
+        background: var(--ui-bg);
+      }
+    }
+
+    .about-bubble>* {
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.3s ease, transform 0.45s var(--ui-ease-out);
+    }
+
+    .about-bubble.visible>* {
+      opacity: 1;
+      transform: none;
+    }
+
+    .about-bubble.visible>:nth-child(2) {
+      transition-delay: 30ms;
+    }
+
+    .about-bubble.visible>:nth-child(3) {
+      transition-delay: 60ms;
+    }
+
+    .about-bubble.visible>:nth-child(4) {
+      transition-delay: 90ms;
+    }
+
+    .about-bubble.visible>:nth-child(5) {
+      transition-delay: 120ms;
+    }
+
+    .menu-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 4px 12px;
+    }
+
+    .menu-logo {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      flex-shrink: 0;
+      border-radius: 11px;
+      background: var(--ui-text);
+      color: var(--ui-bg);
+    }
+
+    .menu-logo svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .menu-logo-hand {
+      transform-origin: 10px 10px;
+      animation: menu-logo-spin 12s linear infinite paused;
+    }
+
+    .about-bubble.visible .menu-logo-hand {
+      animation-play-state: running;
+    }
+
+    @keyframes menu-logo-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .menu-head-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .menu-brand {
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+    }
+
+    .menu-zone {
+      overflow: hidden;
+      color: var(--ui-text-soft);
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .menu-version {
+      margin-left: auto;
+      padding: 4px 8px;
+      border: 1px solid var(--ui-line);
+      border-radius: 999px;
+      background: var(--ui-bg-soft);
+      color: var(--ui-text-soft);
+      font-family: var(--ui-mono);
+      font-size: 10.5px;
+      font-weight: 600;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .menu-tile,
+    .menu-switch {
+      position: relative;
+      border: 1px solid var(--ui-line);
+      border-radius: 14px;
+      background: var(--ui-tile-bg);
+      box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.45);
+      color: inherit;
+      text-decoration: none;
+      transition: transform 0.25s var(--ui-ease-out), border-color 0.2s ease, box-shadow 0.25s ease;
+    }
+
+    .menu-tile {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      padding: 12px;
+    }
+
+    .menu-tile:hover,
+    .menu-switch:hover {
+      border-color: var(--ui-line-strong);
+    }
+
+    .menu-tile:active,
+    .menu-switch:active {
+      transform: scale(0.98);
+    }
+
+    @media (hover: hover) {
+
+      .menu-tile:hover,
+      .menu-switch:hover {
+        background:
+          radial-gradient(140px circle at var(--mx, 50%) var(--my, 50%), var(--ui-tile-glow), transparent 70%),
+          var(--ui-tile-bg);
+      }
+    }
+
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+
+      .menu-tile:hover,
+      .menu-switch:hover {
+        transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) scale(0.985);
+        transition: transform 0.15s ease-out, border-color 0.2s ease, box-shadow 0.25s ease;
+      }
+
+      .menu-tile:active,
+      .menu-switch:active {
+        transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) scale(0.965);
+      }
+    }
+
+    .menu-tile-icon {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      margin-bottom: 8px;
+      border-radius: 10px;
+      background: var(--tile-bg);
+      color: var(--tile-fg);
+      transition: transform 0.35s var(--ui-ease-spring);
+    }
+
+    .menu-tile:hover .menu-tile-icon {
+      transform: scale(1.08) rotate(-4deg);
+    }
+
+    .menu-tile-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .menu-tile-embed {
+      --tile-bg: var(--tile-embed-bg);
+      --tile-fg: var(--tile-embed-fg);
+    }
+
+    .menu-tile-dashboard {
+      --tile-bg: var(--tile-dashboard-bg);
+      --tile-fg: var(--tile-dashboard-fg);
+    }
+
+    .menu-tile-help {
+      --tile-bg: var(--tile-help-bg);
+      --tile-fg: var(--tile-help-fg);
+    }
+
+    .menu-tile-title {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .menu-tile-text {
+      color: var(--ui-text-soft);
+      font-size: 11.5px;
+      line-height: 1.35;
+    }
+
+    .menu-tile-wide {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+    }
+
+    .menu-tile-wide .menu-tile-icon {
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+
+    .menu-tile-body {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .menu-switch {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+      padding: 9px 14px 9px 9px;
+    }
+
+    .menu-switch-preview {
+      display: grid;
+      place-items: center;
+      width: 56px;
+      height: 38px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      background: var(--ui-screen-bg);
+      color: #f5f5f7;
+      font-size: 14px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+    }
+
+    .menu-switch-preview svg {
+      width: 30px;
+      height: 30px;
+    }
+
+    .menu-switch-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .menu-switch-arrow {
+      width: 16px;
+      height: 16px;
+      margin-left: auto;
+      flex-shrink: 0;
+      color: var(--ui-text-soft);
+      transition: transform 0.25s var(--ui-ease-out);
+    }
+
+    .menu-switch:hover .menu-switch-arrow {
+      transform: translateX(3px);
+    }
+
+    .menu-section {
+      margin-top: 10px;
+      padding: 4px 4px 2px;
+      border-top: 1px solid var(--ui-line);
+    }
+
+    .save-settings-toggle {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas: "title slider" "hint slider";
+      align-items: center;
+      column-gap: 12px;
+      width: 100%;
+      height: auto;
+      padding: 8px 2px 6px;
+      cursor: pointer;
+    }
+
+    .save-settings-toggle:hover,
+    .save-settings-toggle:active {
+      transform: none;
+    }
+
+    .save-settings-toggle .toggle-slider {
+      grid-area: slider;
+    }
+
+    .save-settings-title {
+      grid-area: title;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .about-bubble #saveSettingsLabel[data-tooltip]::after {
+      position: static;
+      grid-area: hint;
+      width: auto;
+      max-width: none;
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--ui-text-soft);
+      font-size: 11.5px;
+      line-height: 1.35;
+      text-align: left;
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+
+    .save-settings-toggle input:checked~.toggle-slider {
+      background: #2f8a57;
+      box-shadow: 0 0 12px rgba(47, 138, 87, 0.35);
+    }
+
+    .dark-mode .save-settings-toggle input:checked~.toggle-slider {
+      background: #2f7a50;
+    }
+
+    .about-bubble .toggle-label input:focus-visible~.toggle-slider {
+      outline-color: var(--ui-focus);
+    }
+
+    .save-settings-toggle:has(input:disabled),
+    .save-settings-toggle.disabled {
+      cursor: not-allowed;
+    }
+
+    .save-settings-toggle:has(input:disabled) .toggle-slider,
+    .save-settings-toggle:has(input:disabled) .save-settings-title,
+    .save-settings-toggle.disabled .toggle-slider,
+    .save-settings-toggle.disabled .save-settings-title {
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    .menu-foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px 12px;
+      margin-top: 8px;
+      padding: 10px 4px 2px;
+      border-top: 1px solid var(--ui-line);
+      color: var(--ui-text-soft);
+      font-size: 11.5px;
+    }
+
+    .menu-foot p {
+      margin: 0;
+    }
+
+    .menu-foot a {
+      color: inherit;
+      text-decoration: none;
+      border-radius: 3px;
+    }
+
+    .menu-foot a:hover {
+      color: var(--ui-text);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .menu-links {
+      display: flex;
+      gap: 10px;
+    }
+
+    .about-bubble a:focus-visible,
+    .about-bubble button:focus-visible {
+      outline: 2px solid var(--ui-focus);
+      outline-offset: 2px;
+      box-shadow: none;
+    }
+
     .overlay {
       position: fixed;
       inset: 0;
       z-index: 100;
-      background: rgba(0, 0, 0, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 24px;
+      background: rgba(8, 8, 12, 0.5);
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transition: opacity 0.3s ease, backdrop-filter 0.4s ease;
-      backdrop-filter: blur(0px);
+      transition: opacity 0.25s ease, visibility 0s linear 0.25s, backdrop-filter 0.4s ease;
       -webkit-backdrop-filter: blur(0px);
+      backdrop-filter: blur(0px);
     }
 
     .overlay.visible {
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      transition-delay: 0s;
+      -webkit-backdrop-filter: blur(8px) saturate(120%);
+      backdrop-filter: blur(8px) saturate(120%);
     }
 
     .modal-panel {
-      background: #ffffff;
-      color: #222;
-      border-radius: 12px;
-      padding: 20px 24px;
-      max-width: 520px;
-      width: 90vw;
-      max-height: 90vh;
+      position: relative;
+      width: min(100%, 560px);
+      max-height: calc(var(--app-height, 100dvh) - 48px);
+      overflow-x: hidden;
       overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      container-type: inline-size;
+      padding: 0 24px 24px;
+      border: 1px solid var(--ui-line);
+      border-radius: 22px;
+      background: var(--ui-bg);
+      box-shadow: var(--ui-shadow);
+      color: var(--ui-text);
       font-size: 13px;
       line-height: 1.5;
+      opacity: 0;
+      transform: translateY(16px) scale(0.97);
+      transition: transform 0.45s var(--ui-ease-out), opacity 0.25s ease;
       -webkit-user-select: text;
       user-select: text;
-      transform: scale(0.95) translateY(20px);
-      opacity: 0;
-      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
     }
 
-    .embed-overlay.visible .modal-panel,
-    .dashboard-overlay.visible .modal-panel,
-    .help-overlay.visible .modal-panel {
-      transform: scale(1) translateY(0);
+    .embed-panel,
+    .dashboard-panel {
+      width: min(100%, 900px);
+    }
+
+    .help-panel {
+      width: min(100%, 700px);
+    }
+
+    .overlay.visible .modal-panel {
       opacity: 1;
-    }
-
-    .dark-mode .modal-panel {
-      background: #1a1a1a;
-      color: #eee;
+      transform: translateY(0) scale(1);
     }
 
     .modal-panel-header {
+      position: sticky;
+      top: 0;
+      z-index: 3;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
+      gap: 12px;
+      margin: 0 -24px 20px;
+      padding: 18px 18px 16px 24px;
+      border-bottom: 1px solid transparent;
+      background: var(--ui-bg);
+    }
+
+    @supports (animation-timeline: scroll()) {
+      .overlay.visible .modal-panel-header {
+        animation: modal-header-divider linear both;
+        animation-timeline: scroll(nearest block);
+        animation-range: 0 24px;
+      }
+    }
+
+    @keyframes modal-header-divider {
+      to {
+        border-bottom-color: var(--ui-line);
+        box-shadow: 0 10px 20px -18px rgba(0, 0, 0, 0.6);
+      }
+    }
+
+    .modal-panel-icon {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: 12px;
+      background: var(--tile-bg);
+      color: var(--tile-fg);
+    }
+
+    .modal-panel-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .modal-panel-heading {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      min-width: 0;
     }
 
     .modal-panel-title {
-      font-size: 15px;
-      font-weight: 600;
+      font-size: 17px;
+      font-weight: 650;
+      letter-spacing: -0.015em;
+      line-height: 1.25;
+    }
+
+    .modal-panel-subtitle {
+      color: var(--ui-text-soft);
+      font-size: 12.5px;
+      line-height: 1.35;
     }
 
     .modal-panel-close {
-      width: 28px;
-      height: 28px;
-      border: none;
-      background: transparent;
-      color: inherit;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      margin-left: auto;
+      flex-shrink: 0;
+      padding: 7px;
+      border: 1px solid var(--ui-line);
+      border-radius: 50%;
+      background: var(--ui-bg-soft);
+      color: var(--ui-text-soft);
       cursor: pointer;
-      opacity: 0.6;
-      transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      padding: 0;
+      transition: color 0.2s ease, background-color 0.2s ease, transform 0.35s var(--ui-ease-spring);
     }
 
     .modal-panel-close:hover {
-      opacity: 1;
+      color: var(--ui-text);
       transform: rotate(90deg);
+    }
+
+    .overlay a:focus-visible,
+    .overlay button:focus-visible,
+    .overlay input:focus-visible,
+    .overlay select:focus-visible,
+    .overlay textarea:focus-visible,
+    .help-panel pre:focus-visible {
+      outline: 2px solid var(--ui-focus);
+      outline-offset: 2px;
+      box-shadow: none;
+    }
+
+    .builder {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    @container (min-width: 660px) {
+      .builder {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 28px;
+      }
+
+      .builder-output {
+        position: sticky;
+        top: 94px;
+      }
+    }
+
+    .builder-group {
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .builder-group+.builder-group {
+      margin-top: 20px;
+    }
+
+    .builder-group-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 0;
+      color: var(--ui-text-soft);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .builder-group-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--ui-line);
     }
 
     .embed-controls {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px 16px;
-      margin-bottom: 16px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
     }
 
-    #embedClockColorField {
-      margin-top: 10px;
+    @container (max-width: 340px) {
+      .embed-controls {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .embed-field {
+      min-width: 0;
+    }
+
+    .embed-field-wide {
+      grid-column: 1 / -1;
     }
 
     .embed-field label {
       display: block;
-      font-size: 11px;
-      opacity: 0.6;
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      color: var(--ui-text-soft);
+      font-size: 12px;
+      font-weight: 550;
     }
 
     .embed-field input,
     .embed-field select,
     .dashboard-tz-input-row input {
-      padding: 6px 8px;
-      border: 1px solid rgba(128, 128, 128, 0.3);
-      border-radius: 6px;
-      background: rgba(128, 128, 128, 0.1);
-      color: inherit;
-      font-size: 13px;
+      width: 100%;
+      min-width: 0;
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--ui-line-strong);
+      border-radius: 10px;
+      background-color: var(--ui-field);
+      color: var(--ui-text);
       font-family: inherit;
+      font-size: 13.5px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
-    .embed-field input,
-    .embed-field select {
-      width: 100%;
+    .embed-color-pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .embed-color-item {
+      min-width: 0;
+    }
+
+    .embed-color-item label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .embed-field input[type="color"] {
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    .embed-field input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .embed-field input[type="color"]::-webkit-color-swatch {
+      border: 0;
+      border-radius: 6px;
+    }
+
+    .embed-field input[type="color"]::-moz-color-swatch {
+      border: 0;
+      border-radius: 6px;
+    }
+
+    .embed-field input::placeholder,
+    .dashboard-tz-input-row input::placeholder {
+      color: var(--ui-text-soft);
+      opacity: 0.8;
+    }
+
+    .embed-field input:hover,
+    .embed-field select:hover,
+    .dashboard-tz-input-row input:hover {
+      border-color: var(--ui-text-soft);
     }
 
     .embed-field input:focus,
     .embed-field select:focus,
-    .dashboard-tz-input-row input:focus,
-    .embed-code:focus {
-      border-color: rgba(128, 128, 128, 0.6);
+    .dashboard-tz-input-row input:focus {
+      border-color: var(--ui-accent);
+      box-shadow: 0 0 0 3px var(--ui-accent-soft);
     }
 
-    button:focus-visible,
-    a:focus-visible,
-    .embed-field input:focus-visible,
-    .embed-field select:focus-visible,
-    .dashboard-tz-input-row input:focus-visible,
-    .embed-code:focus-visible,
-    .help-panel pre:focus-visible {
-      outline: 2px solid var(--focus-ring);
-      outline-offset: 2px;
-      box-shadow: 0 0 0 4px var(--focus-ring-contrast);
+    .embed-field input:user-invalid,
+    .dashboard-tz-input-row input:user-invalid {
+      border-color: var(--ui-danger);
+    }
+
+    .embed-field select {
+      padding-right: 34px;
+      -webkit-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%238a8a96' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
+      background-position: right 10px center;
+      background-repeat: no-repeat;
+      background-size: 16px 16px;
+      cursor: pointer;
     }
 
     .embed-field select option {
-      background: #ffffff;
-      color: #222;
+      background: var(--ui-bg);
+      color: var(--ui-text);
     }
 
-    .dark-mode .embed-field select option {
-      background: #1a1a1a;
-      color: #eee;
+    @supports (appearance: base-select) {
+
+      .embed-field select,
+      .embed-field select::picker(select) {
+        appearance: base-select;
+      }
+
+      .embed-field select {
+        display: flex;
+        align-items: center;
+        background-image: none;
+        padding-right: 10px;
+      }
+
+      .embed-field select::picker-icon {
+        content: '';
+        width: 16px;
+        height: 16px;
+        margin-left: auto;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%238a8a96' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E") center / 16px no-repeat;
+        transition: transform 0.25s var(--ui-ease-out);
+      }
+
+      .embed-field select:open::picker-icon {
+        transform: rotate(180deg);
+      }
+
+      .embed-field select::picker(select) {
+        margin-top: 6px;
+        padding: 5px;
+        border: 1px solid var(--ui-line);
+        border-radius: 12px;
+        background: var(--ui-bg);
+        color: var(--ui-text);
+        box-shadow: var(--ui-shadow);
+        opacity: 0;
+        transform: translateY(-4px) scale(0.98);
+        transition: opacity 0.18s ease, transform 0.22s var(--ui-ease-out), overlay 0.22s allow-discrete,
+          display 0.22s allow-discrete;
+      }
+
+      .embed-field select:open::picker(select) {
+        opacity: 1;
+        transform: none;
+      }
+
+      @starting-style {
+        .embed-field select:open::picker(select) {
+          opacity: 0;
+          transform: translateY(-4px) scale(0.98);
+        }
+      }
+
+      .embed-field select option {
+        gap: 8px;
+        padding: 7px 10px;
+        border-radius: 8px;
+        background: transparent;
+        font-size: 13px;
+      }
+
+      .embed-field select option:hover,
+      .embed-field select option:focus-visible {
+        background: var(--ui-bg-soft);
+        outline: none;
+      }
+
+      .embed-field select option:checked {
+        font-weight: 600;
+      }
+
+      .embed-field select option::checkmark {
+        color: var(--ui-accent);
+        order: 1;
+        margin-left: auto;
+      }
+    }
+
+    .preview-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      color: var(--ui-text-soft);
+      font-size: 12px;
+      font-weight: 550;
+    }
+
+    .preview-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .preview-live-dot {
+      position: relative;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+    }
+
+    .preview-live-dot::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: inherit;
+      animation: preview-live-pulse 2s ease-out infinite paused;
+    }
+
+    .overlay.visible .preview-live-dot::after {
+      animation-play-state: running;
+    }
+
+    @keyframes preview-live-pulse {
+      from {
+        opacity: 0.7;
+        transform: scale(1);
+      }
+
+      to {
+        opacity: 0;
+        transform: scale(2.6);
+      }
+    }
+
+    .preview-meta {
+      font-family: var(--ui-mono);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
     }
 
     .embed-preview-wrap {
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: 16px;
+      min-height: 190px;
+      margin-bottom: 14px;
       padding: 16px;
-      background: rgba(128, 128, 128, 0.08);
-      border-radius: 8px;
+      overflow: hidden;
+      border-radius: 14px;
+      background-color: var(--ui-stage);
+      box-shadow: inset 0 0 0 1px var(--ui-line);
     }
 
     .embed-preview-wrap.transparent-preview {
@@ -726,163 +1521,603 @@ SOFTWARE.
 
     .embed-preview-wrap iframe {
       border: none;
+      box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.55);
+    }
+
+    .embed-preview-wrap.transparent-preview iframe {
+      box-shadow: none;
+    }
+
+    .dashboard-preview-wrap iframe {
+      border-radius: 8px;
+    }
+
+    .dashboard-preview-wrap.is-empty iframe {
+      visibility: hidden;
+    }
+
+    .preview-empty {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 20px;
+      color: var(--ui-text-soft);
+      font-size: 12.5px;
+      text-align: center;
+    }
+
+    .preview-empty svg {
+      width: 36px;
+      height: 36px;
+      opacity: 0.7;
+    }
+
+    .dashboard-preview-wrap.is-empty .preview-empty {
+      display: flex;
     }
 
     .embed-code-wrap {
-      position: relative;
-      margin-bottom: 8px;
+      margin-bottom: 14px;
+      padding: 0 4px 4px;
+      border-radius: 14px;
+      background: var(--ui-code-bg);
+      color: var(--ui-code-text);
+      box-shadow: inset 0 0 0 1px var(--ui-line);
+    }
+
+    .code-card-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0 -4px 4px;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--ui-line);
+      color: var(--ui-code-soft);
+      font-family: var(--ui-mono);
+      font-size: 11px;
+    }
+
+    .code-card-dots {
+      display: inline-flex;
+      gap: 5px;
+    }
+
+    .code-card-dots::before,
+    .code-card-dots::after,
+    .code-card-dots span {
+      content: '';
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: #ff5f57;
+    }
+
+    .code-card-dots span {
+      background: #febc2e;
+    }
+
+    .code-card-dots::after {
+      background: #28c840;
     }
 
     .embed-code {
       display: block;
       width: 100%;
-      padding: 10px 12px;
-      border: 1px solid rgba(128, 128, 128, 0.3);
-      border-radius: 6px;
-      background: rgba(0, 0, 0, 0.05);
+      min-height: 118px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
       color: inherit;
-      font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
-      font-size: 11px;
-      line-height: 1.5;
+      font-family: var(--ui-mono);
+      font-size: 11.5px;
+      line-height: 1.65;
       resize: vertical;
-      min-height: 60px;
     }
 
-    .dark-mode .embed-code {
-      background: rgba(255, 255, 255, 0.06);
+    #dashboardUrl {
+      min-height: 76px;
+    }
+
+    .embed-code::selection {
+      background: rgba(142, 197, 255, 0.35);
+    }
+
+    .overlay .embed-code:focus-visible {
+      outline-offset: 0;
     }
 
     .embed-copy-btn,
     .dashboard-add-btn {
-      border: none;
-      border-radius: 6px;
-      background: #3b82f6;
-      color: #fff;
-      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 38px;
+      padding: 0 16px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--ui-accent);
+      color: #ffffff;
       font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
       cursor: pointer;
-      transition: background 0.2s;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 18px -10px var(--ui-accent);
+      transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
     }
 
     .embed-copy-btn:hover,
     .dashboard-add-btn:hover {
-      background: #2563eb;
+      background-color: var(--ui-accent-hover);
+    }
+
+    .embed-copy-btn:active,
+    .dashboard-add-btn:active {
+      transform: scale(0.97);
+    }
+
+    .embed-copy-btn::before,
+    .dashboard-add-btn::before {
+      content: '';
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+      background-color: currentColor;
+      -webkit-mask: var(--btn-icon) center / contain no-repeat;
+      mask: var(--btn-icon) center / contain no-repeat;
     }
 
     .embed-copy-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 14px;
+      --btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.7' stroke-linejoin='round'%3E%3Crect x='7' y='7' width='10' height='10' rx='2'/%3E%3Cpath d='M13 4.5V4a1.5 1.5 0 0 0-1.5-1.5h-7A1.5 1.5 0 0 0 3 4v7a1.5 1.5 0 0 0 1.5 1.5H5'/%3E%3C/svg%3E");
+    }
+
+    .embed-copy-btn[data-state="copied"] {
+      --btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4.5 10.5 3.5 3.5 7.5-8'/%3E%3C/svg%3E");
+      background-color: var(--ui-success);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 8px 18px -10px var(--ui-success);
+    }
+
+    .embed-copy-btn[data-state="failed"] {
+      --btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M10 5v6M10 14.5v.5'/%3E%3C/svg%3E");
+      background-color: var(--ui-danger);
+      box-shadow: none;
+    }
+
+    .embed-copy-btn[data-state] {
+      animation: copy-feedback 0.4s var(--ui-ease-spring);
+    }
+
+    @keyframes copy-feedback {
+      40% {
+        transform: scale(1.05);
+      }
+    }
+
+    .dashboard-open-btn {
+      --btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 4H5a1.5 1.5 0 0 0-1.5 1.5v9.5A1.5 1.5 0 0 0 5 16.5h9.5A1.5 1.5 0 0 0 16 15v-3M11 3.5h5.5V9M16.5 3.5 9 11'/%3E%3C/svg%3E");
+      background-color: var(--ui-bg-soft);
+      color: var(--ui-text);
+      box-shadow: inset 0 0 0 1px var(--ui-line-strong);
+    }
+
+    .dashboard-open-btn:hover {
+      background-color: var(--ui-line);
+    }
+
+    .dashboard-add-btn {
+      --btn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M10 4.5v11M4.5 10h11'/%3E%3C/svg%3E");
+      padding: 0 14px 0 12px;
     }
 
     .overlay-actions-row,
     .dashboard-actions {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
     }
 
     .overlay-sustainability {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       margin-left: auto;
-      max-width: 260px;
-      font-size: 11px;
+      color: var(--ui-text-soft);
+      font-size: 11.5px;
       line-height: 1.35;
-      opacity: 0.72;
-      text-align: right;
     }
 
-    .overlay-sustainability a {
-      color: inherit;
+    .overlay-sustainability::before {
+      content: '';
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      background-color: #2f9e62;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M16.5 3.5C9 3.5 4.5 7 4.5 12.2c0 1.3.4 2.4 1 3.3-1 .6-1.7 1.2-2 1.5l1 .9c.5-.5 2.7-2.6 6.5-4.4-2.4 1.6-4 3.2-4.6 3.9.8.4 1.7.6 2.7.6 5.2 0 7.9-5.5 7.4-14.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M16.5 3.5C9 3.5 4.5 7 4.5 12.2c0 1.3.4 2.4 1 3.3-1 .6-1.7 1.2-2 1.5l1 .9c.5-.5 2.7-2.6 6.5-4.4-2.4 1.6-4 3.2-4.6 3.9.8.4 1.7.6 2.7.6 5.2 0 7.9-5.5 7.4-14.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+
+    .overlay-sustainability a,
+    .help-panel a {
+      color: var(--ui-link);
       text-decoration: underline;
+      text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
       text-underline-offset: 2px;
-      opacity: 0.9;
+      border-radius: 3px;
     }
 
-    .overlay-sustainability a:hover {
-      opacity: 1;
+    .overlay-sustainability a:hover,
+    .help-panel a:hover {
+      text-decoration-color: currentColor;
     }
 
     .dashboard-tz-input-row {
       display: flex;
       gap: 8px;
-      margin-bottom: 12px;
     }
 
     .dashboard-tz-input-row input {
       flex: 1;
-      min-width: 0;
     }
 
     .dashboard-add-btn {
-      padding: 6px 14px;
-      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .tz-suggestions-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .tz-suggestions-label {
+      margin-right: 2px;
+      color: var(--ui-text-soft);
+      font-size: 11.5px;
+    }
+
+    .tz-suggestions {
+      display: contents;
+    }
+
+    .tz-suggestion {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 28px;
+      padding: 0 10px 0 8px;
+      border: 1px dashed var(--ui-line-strong);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ui-text-soft);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 550;
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, transform 0.2s var(--ui-ease-spring);
+    }
+
+    .tz-suggestion::before {
+      content: '+';
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    .tz-suggestion:hover {
+      border-style: solid;
+      border-color: var(--ui-accent);
+      background: var(--ui-accent-soft);
+      color: var(--ui-accent-text);
+      transform: translateY(-1px);
+    }
+
+    .tz-suggestion-local::after {
+      content: 'you';
+      margin-left: 2px;
+      padding: 2px 5px;
+      border-radius: 999px;
+      background: var(--ui-bg-soft);
+      font-size: 10px;
+      line-height: 1;
     }
 
     .tz-chips {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 6px;
-      margin-bottom: 14px;
-      min-height: 28px;
+      min-height: 44px;
+      margin-top: 12px;
+      padding: 7px;
+      border: 1px dashed var(--ui-line-strong);
+      border-radius: 12px;
     }
 
     .tz-chip {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 4px 8px 4px 10px;
-      border-radius: 14px;
-      background: rgba(128, 128, 128, 0.2);
+      gap: 6px;
+      max-width: 100%;
+      height: 30px;
+      padding: 0 4px 0 12px;
+      border-radius: 999px;
+      background: var(--ui-accent-soft);
+      color: var(--ui-accent-text);
       font-size: 12px;
+      font-weight: 600;
       line-height: 1;
       white-space: nowrap;
+      animation: tz-chip-in 0.35s var(--ui-ease-spring);
+    }
+
+    @keyframes tz-chip-in {
+      from {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+    }
+
+    .tz-chip-offset {
+      padding-left: 6px;
+      border-left: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+      font-family: var(--ui-mono);
+      font-size: 10.5px;
+      font-weight: 500;
+      opacity: 0.85;
     }
 
     .tz-chip-remove {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 16px;
-      height: 16px;
+      width: 22px;
+      height: 22px;
+      padding: 0;
       border: none;
       border-radius: 50%;
-      background: rgba(128, 128, 128, 0.3);
+      background: transparent;
       color: inherit;
-      font-size: 11px;
+      font-size: 14px;
       line-height: 1;
       cursor: pointer;
-      padding: 0;
-      transition: background 0.2s;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     .tz-chip-remove:hover {
-      background: rgba(220, 60, 60, 0.6);
+      background: var(--ui-danger);
+      color: #ffffff;
     }
 
-    .dashboard-preview-wrap iframe {
-      border-radius: 6px;
+    .tz-chips-empty {
+      padding: 0 6px;
+      color: var(--ui-text-soft);
+      font-size: 12px;
     }
 
-    .dashboard-open-btn {
-      background: #22c55e;
+    .help-toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: -6px 0 20px;
     }
 
-    .dashboard-open-btn:hover {
-      background: #16a34a;
+    .help-panel .help-toc a {
+      padding: 5px 11px;
+      border: 1px solid var(--ui-line);
+      border-radius: 999px;
+      background: var(--ui-bg-soft);
+      color: var(--ui-text);
+      font-size: 12px;
+      font-weight: 550;
+      text-decoration: none;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .help-panel .help-toc a:hover {
+      border-color: var(--ui-line-strong);
+      background: var(--ui-bg);
+    }
+
+    .help-section {
+      scroll-margin-top: 90px;
+    }
+
+    .help-section+.help-section {
+      margin-top: 22px;
+      padding-top: 20px;
+      border-top: 1px solid var(--ui-line);
+    }
+
+    .help-panel h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: -0.005em;
+    }
+
+    .help-panel h3:focus {
+      outline: none;
+    }
+
+    .help-panel h4 {
+      margin: 0 0 4px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .help-panel p {
+      margin: 0 0 8px;
+      color: var(--ui-text-soft);
+    }
+
+    .help-panel p strong {
+      color: var(--ui-text);
+    }
+
+    .help-panel code {
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: var(--ui-bg-soft);
+      box-shadow: inset 0 0 0 1px var(--ui-line);
+      color: var(--ui-text);
+      font-family: var(--ui-mono);
+      font-size: 11.5px;
+    }
+
+    .help-panel pre {
+      margin: 6px 0 10px;
+      padding: 12px 14px;
+      overflow-x: auto;
+      border-radius: 12px;
+      background: var(--ui-code-bg);
+      box-shadow: inset 0 0 0 1px var(--ui-line);
+      color: var(--ui-code-text);
+      font-family: var(--ui-mono);
+      font-size: 11.5px;
+      line-height: 1.7;
+    }
+
+    .overlay .help-panel pre:focus-visible {
+      outline-color: var(--ui-focus);
+    }
+
+    .help-panel table {
+      width: 100%;
+      margin: 6px 0 4px;
+      table-layout: fixed;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid var(--ui-line);
+      border-radius: 12px;
+      font-size: 12.5px;
+    }
+
+    .help-panel th,
+    .help-panel td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--ui-line);
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+
+    .help-panel tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .help-panel th {
+      background: var(--ui-bg-soft);
+      color: var(--ui-text-soft);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .help-cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @container (max-width: 480px) {
+      .help-cards {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .help-card {
+      padding: 14px;
+      border: 1px solid var(--ui-line);
+      border-radius: 14px;
+      background: var(--ui-bg-soft);
+    }
+
+    .help-card p {
+      margin: 0;
+      font-size: 12.5px;
+    }
+
+    .help-panel .help-card code {
+      background: var(--ui-bg);
     }
 
     @media (max-width: 560px) {
+      .overlay {
+        align-items: flex-end;
+        padding: 12px 0 0;
+      }
+
+      .modal-panel {
+        width: 100%;
+        max-height: calc(var(--app-height, 100dvh) - 12px);
+        padding: 0 16px 20px;
+        border-bottom: 0;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(40px);
+      }
+
+      .embed-panel,
+      .dashboard-panel,
+      .help-panel {
+        width: 100%;
+      }
+
+      .modal-panel-header {
+        margin: 0 -16px 16px;
+        padding: 14px 12px 12px 16px;
+      }
+
+      .modal-panel-icon {
+        display: none;
+      }
+
       .overlay-sustainability {
-        margin-left: 0;
-        max-width: none;
-        text-align: left;
         flex-basis: 100%;
+        margin-left: 0;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .modal-panel-subtitle {
+        display: none;
+      }
+    }
+
+    @media (forced-colors: active) {
+
+      .about-bubble,
+      .modal-panel,
+      .menu-tile,
+      .menu-switch,
+      .tz-chip,
+      .tz-suggestion,
+      .embed-code-wrap {
+        border: 1px solid CanvasText;
+      }
+
+      .embed-copy-btn::before,
+      .dashboard-add-btn::before,
+      .overlay-sustainability::before,
+      .about-btn-icon::before,
+      .about-btn-icon::after {
+        background-color: ButtonText;
+        forced-color-adjust: none;
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
+
       body,
       .toggle-wrapper,
       .toggle-label,
@@ -893,93 +2128,24 @@ SOFTWARE.
       .second-mode-icon,
       .toggle-label[data-tooltip]::after,
       .about-btn,
+      .about-btn-icon::before,
+      .about-btn-icon::after,
       .about-bubble,
-      .clock-container,
-      .clock-grid,
+      .about-bubble *,
       .overlay,
-      .modal-panel,
-      .modal-panel-close,
-      .embed-copy-btn,
-      .dashboard-add-btn,
-      .tz-chip-remove {
+      .overlay *,
+      .overlay *::before,
+      .overlay *::after {
+        transition: none;
+        animation: none;
+      }
+
+      .menu-logo-hand,
+      .preview-live-dot::after,
+      .embed-field select::picker(select) {
+        animation: none;
         transition: none;
       }
-    }
-
-    .tz-chips-empty {
-      font-size: 12px;
-      opacity: 0.4;
-      padding: 4px 0;
-    }
-
-    .help-panel h3 {
-      font-size: 13px;
-      font-weight: 600;
-      margin: 14px 0 6px;
-    }
-
-    .help-panel h3:first-of-type {
-      margin-top: 0;
-    }
-
-    .help-panel h4 {
-      font-size: 12px;
-      font-weight: 600;
-      margin: 10px 0 4px;
-    }
-
-    .help-panel p {
-      margin: 0 0 6px;
-    }
-
-    .help-panel code {
-      background: rgba(0, 0, 0, 0.08);
-      padding: 1px 4px;
-      border-radius: 3px;
-      font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
-      font-size: 11px;
-    }
-
-    .dark-mode .help-panel code {
-      background: rgba(255, 255, 255, 0.12);
-    }
-
-    .help-panel pre {
-      background: rgba(0, 0, 0, 0.06);
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
-      font-size: 11px;
-      line-height: 1.6;
-      overflow-x: auto;
-      margin: 4px 0 8px;
-    }
-
-    .dark-mode .help-panel pre {
-      background: rgba(255, 255, 255, 0.08);
-    }
-
-    .help-panel table {
-      width: 100%;
-      table-layout: fixed;
-      border-collapse: collapse;
-      margin: 4px 0 8px;
-      font-size: 12px;
-    }
-
-    .help-panel th,
-    .help-panel td {
-      text-align: left;
-      padding: 8px;
-      border-bottom: 1px solid rgba(128, 128, 128, 0.15);
-      overflow-wrap: anywhere;
-    }
-
-    .help-panel th {
-      opacity: 0.6;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     .sr-only {
@@ -1015,6 +2181,11 @@ SOFTWARE.
           : colorParam === 'dark' || colorParam === 'light' ? colorParam : 'dark';
         if (isHexColor) {
           document.documentElement.style.setProperty('--custom-clock-color', '#' + colorParam);
+        }
+        const secondColorParam = params.get('secondcolor');
+        if (/^(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(secondColorParam || '')) {
+          document.documentElement.dataset.secondColor = 'custom';
+          document.documentElement.style.setProperty('--custom-second-color', '#' + secondColorParam);
         }
         return;
       }
@@ -1096,29 +2267,92 @@ SOFTWARE.
     </label>
     <div class="about-wrapper">
       <button class="about-btn" id="aboutBtn" aria-label="Menu" aria-haspopup="dialog" aria-expanded="false"
-        aria-controls="aboutBubble">MENU
+        aria-controls="aboutBubble"><span class="about-btn-icon" aria-hidden="true"></span>MENU
       </button>
       <div class="about-bubble" id="aboutBubble" role="dialog" aria-modal="false" aria-label="Menu"
-        aria-hidden="true" inert>
-        <a href="#" id="embedLink">Embed this analog clock &rarr;</a><br>
-        <a href="https://chromewebstore.google.com/detail/clocksimulatorcom/ljbpiigocbebamekohcpemgepjickldb"
-          target="_blank" rel="noopener">Chrome Extension &rarr;</a><br>
-        <a href="#" id="dashboardLink">Build dashboard &rarr;</a><br>
-        <a href="#" id="helpLink">How to use &rarr;</a><br>
-        <a href="/digital/" id="digitalClockLink">Digital clock &rarr;</a><br>
-        <br>
-        <label class="toggle-label save-settings-toggle" id="saveSettingsLabel"
-          data-tooltip="Save settings to local storage.">
-          <input type="checkbox" id="saveSettingsToggle" role="switch" aria-label="Save settings">
-          <span class="toggle-slider"></span>
-          <span>Save settings</span>
-        </label><br>
-        <br>
-        Made by Timo Heimonen<br>
-        <a href="mailto:timo.heimonen@proton.me">timo.heimonen@proton.me</a><br>
-        <a href="https://clocksimulator.com/privacy">Privacy</a> &middot; <a
-          href="https://clocksimulator.com/TOS">Terms</a> &middot;
-        <a href="https://github.com/timoheimonen/clocksimulator" target="_blank" rel="noopener">GitHub</a>
+        aria-hidden="true" tabindex="-1" inert>
+        <div class="menu-head">
+          <span class="menu-logo" aria-hidden="true">
+            <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6" />
+              <path d="M10 5.5V10l3 2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <line class="menu-logo-hand" x1="10" y1="10" x2="10" y2="3.8" stroke="#ef4444" stroke-width="1"
+                stroke-linecap="round" />
+            </svg>
+          </span>
+          <span class="menu-head-text">
+            <span class="menu-brand">Clocksimulator.com</span>
+            <span class="menu-zone" id="menuZone"></span>
+          </span>
+          <span class="menu-version" id="menuVersion"></span>
+        </div>
+        <div class="menu-grid">
+          <a href="#" id="embedLink" class="menu-tile menu-tile-embed">
+            <span class="menu-tile-icon" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 6 3 10l4 4M13 6l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+            </span>
+            <span class="menu-tile-title">Embed</span>
+            <span class="menu-tile-text">Websites, Notion &amp; OBS</span>
+          </a>
+          <a href="#" id="dashboardLink" class="menu-tile menu-tile-dashboard">
+            <span class="menu-tile-icon" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.7" />
+                <rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.7" />
+                <rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.7" />
+                <rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.7" />
+              </svg>
+            </span>
+            <span class="menu-tile-title">Build dashboard</span>
+            <span class="menu-tile-text">Many timezones at once</span>
+          </a>
+          <a href="#" id="helpLink" class="menu-tile menu-tile-help menu-tile-wide">
+            <span class="menu-tile-icon" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.7" />
+                <path d="M7.9 7.8a2.2 2.2 0 1 1 3 2.1c-.6.3-.9.7-.9 1.3v.4" stroke="currentColor" stroke-width="1.7"
+                  stroke-linecap="round" />
+                <circle cx="10" cy="14.2" r="0.9" fill="currentColor" />
+              </svg>
+            </span>
+            <span class="menu-tile-body">
+              <span class="menu-tile-title">How to use</span>
+              <span class="menu-tile-text">Controls, URL options &amp; tips</span>
+            </span>
+          </a>
+        </div>
+        <a href="/digital/" id="digitalClockLink" class="menu-switch">
+          <span class="menu-switch-preview" aria-hidden="true"><span id="menuSwitchTime">00:00</span></span>
+          <span class="menu-switch-text">
+            <span class="menu-tile-title">Digital clock</span>
+            <span class="menu-tile-text">Switch to the digital view</span>
+          </span>
+          <svg class="menu-switch-arrow" aria-hidden="true" viewBox="0 0 20 20" fill="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 10h11M11 5.5 15.5 10 11 14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </a>
+        <div class="menu-section">
+          <label class="toggle-label save-settings-toggle" id="saveSettingsLabel"
+            data-tooltip="Remember theme and toggles on this device">
+            <input type="checkbox" id="saveSettingsToggle" role="switch" aria-label="Save settings">
+            <span class="toggle-slider"></span>
+            <span class="save-settings-title">Save settings</span>
+          </label>
+        </div>
+        <div class="menu-foot">
+          <p>Made by Timo Heimonen &middot; <a href="mailto:timo.heimonen@proton.me">timo.heimonen@proton.me</a></p>
+          <p class="menu-links">
+            <a href="https://clocksimulator.com/privacy">Privacy</a>
+            <a href="https://clocksimulator.com/TOS">Terms</a>
+            <a href="https://github.com/timoheimonen/clocksimulator" target="_blank" rel="noopener">GitHub</a>
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -1189,219 +2423,330 @@ SOFTWARE.
   </main>
 
   <div class="embed-overlay overlay" id="embedOverlay" role="dialog" aria-modal="true" aria-labelledby="embedPanelTitle"
-    aria-hidden="true" inert>
+    aria-describedby="embedPanelDesc" aria-hidden="true" inert>
     <div class="modal-panel embed-panel">
       <div class="modal-panel-header">
-        <span class="modal-panel-title" id="embedPanelTitle">Embed this analog clock</span>
+        <span class="modal-panel-icon menu-tile-embed" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M7 6 3 10l4 4M13 6l4 4-4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+        </span>
+        <div class="modal-panel-heading">
+          <span class="modal-panel-title" id="embedPanelTitle">Embed this analog clock</span>
+          <span class="modal-panel-subtitle" id="embedPanelDesc">Configure, preview and copy an iframe for any website or OBS.</span>
+        </div>
         <button class="modal-panel-close" id="embedCloseBtn" aria-label="Close">
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%"
             height="100%">
-            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
           </svg>
         </button>
       </div>
-      <div class="embed-controls">
-        <div class="embed-field">
-          <label for="embedTz">Timezone</label>
-          <input type="text" id="embedTz" placeholder="e.g. Europe/Helsinki">
+      <div class="builder">
+        <div class="builder-controls">
+          <fieldset class="builder-group">
+            <legend class="builder-group-title">Time</legend>
+            <div class="embed-controls">
+              <div class="embed-field embed-field-wide">
+                <label for="embedTz">Timezone</label>
+                <input type="text" id="embedTz" placeholder="e.g. Europe/Helsinki" autocomplete="off" spellcheck="false">
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="builder-group">
+            <legend class="builder-group-title">Appearance</legend>
+            <div class="embed-controls">
+              <div class="embed-field">
+                <label for="embedTheme">Theme</label>
+                <select id="embedTheme">
+                  <option value="light">Light</option>
+                  <option value="dark" selected>Dark</option>
+                  <option value="transparent">Transparent</option>
+                </select>
+              </div>
+              <div class="embed-field" id="embedClockColorField" hidden>
+                <label for="embedClockColor">Clock color</label>
+                <select id="embedClockColor">
+                  <option value="dark" selected>Dark</option>
+                  <option value="light">Light</option>
+                  <option value="custom">Custom&hellip;</option>
+                </select>
+              </div>
+              <div class="embed-field" id="embedCustomColorField" hidden>
+                <div class="embed-color-pair">
+                  <div class="embed-color-item">
+                    <label for="embedCustomColor">Clock</label>
+                    <input type="color" id="embedCustomColor" value="#ff8800" aria-label="Custom clock color">
+                  </div>
+                  <div class="embed-color-item">
+                    <label for="embedSecondColor">Second hand</label>
+                    <input type="color" id="embedSecondColor" value="#d63031" aria-label="Custom second hand color">
+                  </div>
+                </div>
+              </div>
+              <div class="embed-field">
+                <label for="embedSeconds">Second hand</label>
+                <select id="embedSeconds">
+                  <option value="tick">Tick</option>
+                  <option value="smooth">Smooth</option>
+                  <option value="hide">Hidden</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="embedBorder">Clock border</label>
+                <select id="embedBorder">
+                  <option value="show">Show</option>
+                  <option value="hide">Hide</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="embedShape">Shape</label>
+                <select id="embedShape">
+                  <option value="round">Round</option>
+                  <option value="square">Square</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="embedDayNight">Day/Night</label>
+                <select id="embedDayNight">
+                  <option value="hide">Hide</option>
+                  <option value="show">Show</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="embedNumbers">Numbers</label>
+                <select id="embedNumbers">
+                  <option value="show">Show</option>
+                  <option value="hide">Hide</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="embedShadows">Shadows</label>
+                <select id="embedShadows">
+                  <option value="true">Show</option>
+                  <option value="false">Hide</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="builder-group">
+            <legend class="builder-group-title">Size</legend>
+            <div class="embed-controls">
+              <div class="embed-field">
+                <label for="embedWidth">Width (px)</label>
+                <input type="number" id="embedWidth" value="200" min="50" max="1000" required>
+              </div>
+              <div class="embed-field">
+                <label for="embedHeight">Height (px)</label>
+                <input type="number" id="embedHeight" value="200" min="50" max="1000" required>
+              </div>
+            </div>
+          </fieldset>
         </div>
-        <div class="embed-field">
-          <label for="embedTheme">Theme</label>
-          <select id="embedTheme">
-            <option value="light">Light</option>
-            <option value="dark" selected>Dark</option>
-            <option value="transparent">Transparent</option>
-          </select>
-          <div class="embed-field" id="embedClockColorField" hidden>
-            <label for="embedClockColor">Clock color</label>
-            <select id="embedClockColor">
-              <option value="dark" selected>Dark</option>
-              <option value="light">Light</option>
-            </select>
+        <div class="builder-output">
+          <div class="preview-head">
+            <span class="preview-label"><span class="preview-live-dot" aria-hidden="true"></span>Live preview</span>
+            <span class="preview-meta" id="embedPreviewMeta" aria-hidden="true"></span>
+          </div>
+          <div class="embed-preview-wrap">
+            <iframe id="embedPreview" width="120" height="120" title="Clock preview" tabindex="-1"></iframe>
+          </div>
+          <div class="embed-code-wrap">
+            <div class="code-card-head" aria-hidden="true"><span class="code-card-dots"><span></span></span>embed.html</div>
+            <textarea class="embed-code" id="embedCode" readonly rows="4" aria-label="Embed code" spellcheck="false"></textarea>
+          </div>
+          <div class="overlay-actions-row">
+            <button class="embed-copy-btn" id="embedCopyBtn">Copy code</button>
+            <p class="overlay-sustainability"><span>A+ carbon rating. <a
+                  href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank"
+                  rel="noopener">Report</a>.</span></p>
           </div>
         </div>
-        <div class="embed-field">
-          <label for="embedSeconds">Second hand</label>
-          <select id="embedSeconds">
-            <option value="tick">Tick</option>
-            <option value="smooth">Smooth</option>
-            <option value="hide">Hidden</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="embedBorder">Clock border</label>
-          <select id="embedBorder">
-            <option value="show">Show</option>
-            <option value="hide">Hide</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="embedShape">Shape</label>
-          <select id="embedShape">
-            <option value="round">Round</option>
-            <option value="square">Square</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="embedDayNight">Day/Night</label>
-          <select id="embedDayNight">
-            <option value="hide">Hide</option>
-            <option value="show">Show</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="embedNumbers">Numbers</label>
-          <select id="embedNumbers">
-            <option value="show">Show</option>
-            <option value="hide">Hide</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="embedShadows">Shadows</label>
-          <select id="embedShadows">
-            <option value="true">Show</option>
-            <option value="false">Hide</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="embedWidth">Width (px)</label>
-          <input type="number" id="embedWidth" value="200" min="50" max="1000" required>
-        </div>
-        <div class="embed-field">
-          <label for="embedHeight">Height (px)</label>
-          <input type="number" id="embedHeight" value="200" min="50" max="1000" required>
-        </div>
-      </div>
-      <div class="embed-preview-wrap">
-        <iframe id="embedPreview" width="120" height="120" title="Clock preview" tabindex="-1"></iframe>
-      </div>
-      <div class="embed-code-wrap">
-        <textarea class="embed-code" id="embedCode" readonly rows="3" aria-label="Embed code"></textarea>
-      </div>
-      <div class="overlay-actions-row">
-        <button class="embed-copy-btn" id="embedCopyBtn">Copy code</button>
-        <p class="overlay-sustainability">A+ carbon rating. <a
-            href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">Report</a>.
-        </p>
       </div>
     </div>
   </div>
 
   <div class="dashboard-overlay overlay" id="dashboardOverlay" role="dialog" aria-modal="true"
-    aria-labelledby="dashboardPanelTitle" aria-hidden="true" inert>
+    aria-labelledby="dashboardPanelTitle" aria-describedby="dashboardPanelDesc" aria-hidden="true" inert>
     <div class="modal-panel dashboard-panel">
       <div class="modal-panel-header">
-        <span class="modal-panel-title" id="dashboardPanelTitle">Build dashboard</span>
+        <span class="modal-panel-icon menu-tile-dashboard" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.7" />
+            <rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.7" />
+            <rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.7" />
+            <rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.7" />
+          </svg>
+        </span>
+        <div class="modal-panel-heading">
+          <span class="modal-panel-title" id="dashboardPanelTitle">Build dashboard</span>
+          <span class="modal-panel-subtitle" id="dashboardPanelDesc">Show several timezones side by side on one screen.</span>
+        </div>
         <button class="modal-panel-close" id="dashboardCloseBtn" aria-label="Close">
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%"
             height="100%">
-            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
           </svg>
         </button>
       </div>
-      <div class="embed-field dashboard-tz-field">
-        <label for="dashboardTzInput">Timezone</label>
-        <div class="dashboard-tz-input-row">
-          <input type="text" id="dashboardTzInput" placeholder="e.g. Europe/Helsinki">
-          <button class="dashboard-add-btn" id="dashboardAddBtn">Add</button>
+      <div class="builder">
+        <div class="builder-controls">
+          <fieldset class="builder-group">
+            <legend class="builder-group-title">Timezones</legend>
+            <div class="embed-field dashboard-tz-field">
+              <label for="dashboardTzInput">Timezone</label>
+              <div class="dashboard-tz-input-row">
+                <input type="text" id="dashboardTzInput" placeholder="e.g. Europe/Helsinki" autocomplete="off"
+                  spellcheck="false">
+                <button class="dashboard-add-btn" id="dashboardAddBtn">Add</button>
+              </div>
+            </div>
+            <div class="tz-suggestions-row" id="tzSuggestionsRow">
+              <span class="tz-suggestions-label" id="tzSuggestionsLabel">Quick add</span>
+              <div class="tz-suggestions" id="tzSuggestions" role="group" aria-labelledby="tzSuggestionsLabel"></div>
+            </div>
+            <div class="tz-chips" id="tzChips" aria-live="polite"></div>
+          </fieldset>
+          <fieldset class="builder-group">
+            <legend class="builder-group-title">Layout &amp; appearance</legend>
+            <div class="embed-controls">
+              <div class="embed-field">
+                <label for="dashboardRows">Rows</label>
+                <select id="dashboardRows">
+                  <option value="0">Auto</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="dashboardTheme">Theme</label>
+                <select id="dashboardTheme">
+                  <option value="dark">Dark</option>
+                  <option value="light">Light</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="dashboardSeconds">Second hand</label>
+                <select id="dashboardSeconds">
+                  <option value="tick">Tick</option>
+                  <option value="smooth">Smooth</option>
+                  <option value="hide">Hidden</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="dashboardNumbers">Numbers</label>
+                <select id="dashboardNumbers">
+                  <option value="show">Show</option>
+                  <option value="hide">Hide</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="dashboardShadows">Shadows</label>
+                <select id="dashboardShadows">
+                  <option value="false">Hide</option>
+                  <option value="true">Show</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="dashboardDayNight">Day/night</label>
+                <select id="dashboardDayNight">
+                  <option value="hide">Hide</option>
+                  <option value="show">Show</option>
+                </select>
+              </div>
+              <div class="embed-field">
+                <label for="dashboardBorder">Border</label>
+                <select id="dashboardBorder">
+                  <option value="show">Show</option>
+                  <option value="hide">Hide</option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
         </div>
-      </div>
-      <div class="tz-chips" id="tzChips"></div>
-      <div class="embed-controls">
-        <div class="embed-field">
-          <label for="dashboardRows">Rows</label>
-          <select id="dashboardRows">
-            <option value="0">Auto</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-          </select>
+        <div class="builder-output">
+          <div class="preview-head">
+            <span class="preview-label"><span class="preview-live-dot" aria-hidden="true"></span>Live preview</span>
+            <span class="preview-meta" id="dashboardPreviewMeta" aria-hidden="true"></span>
+          </div>
+          <div class="embed-preview-wrap dashboard-preview-wrap is-empty">
+            <iframe id="dashboardPreview" width="280" height="160" title="Dashboard preview" tabindex="-1"></iframe>
+            <div class="preview-empty" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2" />
+                <rect x="11" y="3" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"
+                  stroke-dasharray="2 2" />
+                <rect x="3" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"
+                  stroke-dasharray="2 2" />
+                <rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" stroke-width="1.2"
+                  stroke-dasharray="2 2" />
+              </svg>
+              <span>Add two or more timezones to preview your dashboard</span>
+            </div>
+          </div>
+          <div class="embed-code-wrap">
+            <div class="code-card-head" aria-hidden="true"><span class="code-card-dots"><span></span></span>dashboard.url</div>
+            <textarea class="embed-code" id="dashboardUrl" readonly rows="3" aria-label="Dashboard URL" spellcheck="false"></textarea>
+          </div>
+          <div class="dashboard-actions">
+            <button class="embed-copy-btn" id="dashboardCopyBtn">Copy link</button>
+            <button class="embed-copy-btn dashboard-open-btn" id="dashboardOpenBtn">Open dashboard</button>
+            <p class="overlay-sustainability"><span>A+ carbon rating. <a
+                  href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank"
+                  rel="noopener">Report</a>.</span></p>
+          </div>
         </div>
-        <div class="embed-field">
-          <label for="dashboardTheme">Theme</label>
-          <select id="dashboardTheme">
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="dashboardSeconds">Second hand</label>
-          <select id="dashboardSeconds">
-            <option value="tick">Tick</option>
-            <option value="smooth">Smooth</option>
-            <option value="hide">Hidden</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="dashboardNumbers">Numbers</label>
-          <select id="dashboardNumbers">
-            <option value="show">Show</option>
-            <option value="hide">Hide</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="dashboardShadows">Shadows</label>
-          <select id="dashboardShadows">
-            <option value="false">Hide</option>
-            <option value="true">Show</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="dashboardDayNight">Day/night</label>
-          <select id="dashboardDayNight">
-            <option value="hide">Hide</option>
-            <option value="show">Show</option>
-          </select>
-        </div>
-        <div class="embed-field">
-          <label for="dashboardBorder">Border</label>
-          <select id="dashboardBorder">
-            <option value="show">Show</option>
-            <option value="hide">Hide</option>
-          </select>
-        </div>
-      </div>
-      <div class="embed-preview-wrap dashboard-preview-wrap">
-        <iframe id="dashboardPreview" width="280" height="160" title="Dashboard preview" tabindex="-1"></iframe>
-      </div>
-      <div class="embed-code-wrap">
-        <textarea class="embed-code" id="dashboardUrl" readonly rows="2" aria-label="Dashboard URL"></textarea>
-      </div>
-      <div class="dashboard-actions">
-        <button class="embed-copy-btn" id="dashboardCopyBtn">Copy link</button>
-        <button class="embed-copy-btn dashboard-open-btn" id="dashboardOpenBtn">Open dashboard</button>
-        <p class="overlay-sustainability">A+ carbon rating. <a
-            href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">Report</a>.
-        </p>
       </div>
     </div>
   </div>
 
   <div class="help-overlay overlay" id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpPanelTitle"
-    aria-hidden="true" inert>
+    aria-describedby="helpPanelDesc" aria-hidden="true" inert>
     <div class="modal-panel help-panel">
       <div class="modal-panel-header">
-        <span class="modal-panel-title" id="helpPanelTitle">How to use</span>
+        <span class="modal-panel-icon menu-tile-help" aria-hidden="true">
+          <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.7" />
+            <path d="M7.9 7.8a2.2 2.2 0 1 1 3 2.1c-.6.3-.9.7-.9 1.3v.4" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" />
+            <circle cx="10" cy="14.2" r="0.9" fill="currentColor" />
+          </svg>
+        </span>
+        <div class="modal-panel-heading">
+          <span class="modal-panel-title" id="helpPanelTitle">How to use</span>
+          <span class="modal-panel-subtitle" id="helpPanelDesc">Controls, URL options and tips.</span>
+        </div>
         <button class="modal-panel-close" id="helpCloseBtn" aria-label="Close">
           <svg aria-hidden="true" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" width="100%"
             height="100%">
-            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <line x1="5" y1="5" x2="15" y2="15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            <line x1="15" y1="5" x2="5" y2="15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
           </svg>
         </button>
       </div>
-      <h3>Controls</h3>
-      <table>
-        <thead>
+      <nav class="help-toc" aria-label="Help sections">
+        <a href="#helpControls">Controls</a>
+        <a href="#helpTimezones">Timezones</a>
+        <a href="#helpDashboard">Dashboard</a>
+        <a href="#helpEmbedding">Embedding</a>
+        <a href="#helpParameters">URL parameters</a>
+        <a href="#helpTips">Tips</a>
+      </nav>
+      <section class="help-section">
+        <h3 id="helpControls" tabindex="-1">Controls</h3>
+        <table>
+          <thead>
           <tr>
             <th>Control</th>
             <th>Description</th>
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           <tr>
             <td><strong>Theme</strong> (moon/sun icon)</td>
             <td>Switch between dark and light mode</td>
@@ -1418,52 +2763,44 @@ SOFTWARE.
             <td><strong>Menu</strong> (MENU button)</td>
             <td>Open clock tools, settings, help, and site links</td>
           </tr>
-        </tbody>
-      </table>
-      <h3>Screen burn-in protection</h3>
-      <p>To protect OLED and AMOLED displays, the clock subtly shifts its position every 10 minutes in a slow circular
-        pattern. Dark Mode further reduces the risk of burn-in. Protection does not apply in embedded mode or when your
-        device prefers reduced motion. Use <code>?burnin=false</code> to disable.
-      </p>
-      <h3>Install as app (PWA)</h3>
-      <p>This site works as a Progressive Web App. You can install it on your phone or computer for a full-screen clock
-        and offline use. Use your browser&rsquo;s menu (e.g. &ldquo;Add to Home Screen&rdquo; or &ldquo;Install
-        app&rdquo;) to install.</p>
-      <h3>Timezones</h3>
-      <p>Add <code>?tz=</code> to the URL with any <a
-          href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener">IANA
-          timezone</a>:</p>
-      <pre tabindex="0" role="region" aria-label="Timezone URL examples">clocksimulator.com/?tz=America/New_York
+          </tbody>
+        </table>
+      </section>
+      <section class="help-section">
+        <h3 id="helpTimezones" tabindex="-1">Timezones</h3>
+        <p>Add <code>?tz=</code> to the URL with any <a
+            href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones" target="_blank" rel="noopener">IANA
+            timezone</a>:</p>
+        <pre tabindex="0" role="region" aria-label="Timezone URL examples">clocksimulator.com/?tz=America/New_York
 clocksimulator.com/?tz=Europe/London
 clocksimulator.com/?tz=Asia/Tokyo</pre>
-      <h3>Multi-clock dashboard</h3>
-      <p>Show multiple clocks at once by separating timezones with commas. This automatically enables
-        <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:
-      </p>
-      <pre tabindex="0" role="region" aria-label="Dashboard URL examples">clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
+      </section>
+      <section class="help-section">
+        <h3 id="helpDashboard" tabindex="-1">Multi-clock dashboard</h3>
+        <p>Show multiple clocks at once by separating timezones with commas. This automatically enables
+          <code>dashboardMode</code>. Use <code>&amp;rows=</code> to control the grid layout:
+        </p>
+        <pre tabindex="0" role="region" aria-label="Dashboard URL examples">clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York
 clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=2 (dashboardMode)</pre>
-      <p>You can also use the dashboard builder (<strong>MENU</strong> &rarr; <strong>Build dashboard</strong>) to
-        visually add timezones and configure the grid.</p>
-      <h3>Embedding</h3>
-      <p>Embed the clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed panel
-        (<strong>MENU</strong> &rarr; <strong>Embed this analog clock</strong>) to configure and copy the code.</p>
-      <h3>Privacy</h3>
-      <p>Read the privacy policy at <a href="/privacy">/privacy</a> and the terms of service at <a
-          href="/TOS">/TOS</a>.</p>
-      <h3>Sustainability</h3>
-      <p>This web app runs on sustainable energy and achieves an <strong>A+ carbon rating</strong>. <a
-          href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">View
-          the carbon report</a>.</p>
-      <h4>URL parameters</h4>
-      <table>
-        <thead>
+        <p>You can also use the dashboard builder (<strong>MENU</strong> &rarr; <strong>Build dashboard</strong>) to
+          visually add timezones and configure the grid.</p>
+      </section>
+      <section class="help-section">
+        <h3 id="helpEmbedding" tabindex="-1">Embedding</h3>
+        <p>Embed the clock on any website via an <code>&lt;iframe&gt;</code>. Use the built-in embed builder (<strong>MENU</strong> &rarr; <strong>Embed</strong>) to
+          configure, preview and copy the code.</p>
+      </section>
+      <section class="help-section">
+        <h3 id="helpParameters" tabindex="-1">URL parameters</h3>
+        <table>
+          <thead>
           <tr>
             <th>Parameter</th>
             <th>Values</th>
             <th>Default</th>
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           <tr>
             <td><code>embed</code></td>
             <td><code>true</code></td>
@@ -1488,6 +2825,11 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             <td><code>color</code></td>
             <td><code>dark</code>, <code>light</code>, or 3/6-digit hex without <code>#</code> (e.g. <code>0af</code>, <code>FF8800</code>; clock color with <code>theme=transparent</code>). Invalid or missing values use the default.</td>
             <td><code>dark</code></td>
+          </tr>
+          <tr>
+            <td><code>secondcolor</code></td>
+            <td>3/6-digit hex without <code>#</code> (e.g. <code>f00</code>, <code>FF3B30</code>); second hand and center dot color with <code>theme=transparent</code>. Invalid or missing values keep the default second hand color.</td>
+            <td>&mdash;</td>
           </tr>
           <tr>
             <td><code>seconds</code></td>
@@ -1519,8 +2861,37 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             <td><code>true</code>, <code>false</code></td>
             <td><code>true</code></td>
           </tr>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </section>
+      <section class="help-section">
+        <h3 id="helpTips" tabindex="-1">Tips</h3>
+        <div class="help-cards">
+          <div class="help-card">
+            <h4>Screen burn-in protection</h4>
+            <p>To protect OLED and AMOLED displays, the clock subtly shifts its position every 10 minutes in a slow
+              circular pattern. Dark Mode further reduces the risk of burn-in. Protection does not apply in embedded
+              mode or when your device prefers reduced motion. Use <code>?burnin=false</code> to disable.</p>
+          </div>
+          <div class="help-card">
+            <h4>Install as app (PWA)</h4>
+            <p>This site works as a Progressive Web App. You can install it on your phone or computer for a
+              full-screen clock and offline use. Use your browser&rsquo;s menu (e.g. &ldquo;Add to Home Screen&rdquo; or &ldquo;Install
+            app&rdquo;) to install.</p>
+          </div>
+          <div class="help-card">
+            <h4>Privacy</h4>
+            <p>No ads and no tracking. Read the privacy policy at <a href="/privacy">/privacy</a> and the terms of
+              service at <a href="/TOS">/TOS</a>.</p>
+          </div>
+          <div class="help-card">
+            <h4>Sustainability</h4>
+            <p>This web app runs on sustainable energy and achieves an <strong>A+ carbon rating</strong>. <a
+                href="https://www.websitecarbon.com/website/clocksimulator-com/" target="_blank" rel="noopener">View
+                the carbon report</a>.</p>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -1633,9 +3004,16 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         if (isHexColor) {
           document.documentElement.style.setProperty('--custom-clock-color', '#' + colorParam);
         }
+        const secondColorParam = params.get('secondcolor');
+        if (/^(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(secondColorParam || '')) {
+          document.documentElement.dataset.secondColor = 'custom';
+          document.documentElement.style.setProperty('--custom-second-color', '#' + secondColorParam);
+        }
       } else {
         delete document.documentElement.dataset.clockColor;
         document.documentElement.style.removeProperty('--custom-clock-color');
+        delete document.documentElement.dataset.secondColor;
+        document.documentElement.style.removeProperty('--custom-second-color');
       }
       themeToggle.checked = activeTheme === 'dark';
 
@@ -2023,6 +3401,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         document.documentElement.classList.remove('transparent-mode');
         delete document.documentElement.dataset.clockColor;
         document.documentElement.style.removeProperty('--custom-clock-color');
+        delete document.documentElement.dataset.secondColor;
+        document.documentElement.style.removeProperty('--custom-second-color');
         document.documentElement.classList.toggle('dark-mode', this.checked);
         saveSettings();
       });
@@ -2042,6 +3422,71 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       const aboutBtn = document.getElementById('aboutBtn');
       const aboutBubble = document.getElementById('aboutBubble');
       let hideTimer;
+
+      const menuSwitchTime = document.getElementById('menuSwitchTime');
+
+      function updateMenuPreview() {
+        const t = getTime();
+        menuSwitchTime.textContent = String(t.hours).padStart(2, '0') + ':' + String(t.minutes).padStart(2, '0');
+      }
+
+      const menuZone = document.getElementById('menuZone');
+      const menuVersion = document.getElementById('menuVersion');
+      const versionMeta = document.querySelector('meta[name="version"]');
+      if (versionMeta) menuVersion.textContent = 'v' + versionMeta.getAttribute('content');
+
+      function updateMenuContext() {
+        let zoneText;
+        if (dashboardMode) {
+          zoneText = validTimezones.length + ' timezones';
+        } else if (timezone) {
+          zoneText = timezone.replace(/_/g, ' ');
+        } else {
+          let localZone = '';
+          try {
+            localZone = new Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+          } catch (e) { }
+          zoneText = 'Local time' + (localZone ? ' \u00b7 ' + localZone.replace(/_/g, ' ') : '');
+        }
+        menuZone.textContent = zoneText;
+        aboutBubble.style.setProperty('--menu-origin-x', (aboutBtn.offsetLeft + aboutBtn.offsetWidth / 2) + 'px');
+        updateMenuPreview();
+      }
+
+      aboutBubble.addEventListener('keydown', function (e) {
+        const keys = ['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft', 'Home', 'End'];
+        if (keys.indexOf(e.key) === -1) return;
+        const items = Array.prototype.filter.call(
+          aboutBubble.querySelectorAll('a[href], input'),
+          function (el) { return !el.disabled; });
+        const index = items.indexOf(document.activeElement);
+        if (index === -1) return;
+        e.preventDefault();
+        let next;
+        if (e.key === 'Home') {
+          next = 0;
+        } else if (e.key === 'End') {
+          next = items.length - 1;
+        } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+          next = (index + 1) % items.length;
+        } else {
+          next = (index - 1 + items.length) % items.length;
+        }
+        items[next].focus();
+      });
+
+      aboutBubble.addEventListener('pointermove', function (e) {
+        const item = e.target.closest('.menu-tile, .menu-switch');
+        if (!item) return;
+        const rect = item.getBoundingClientRect();
+        const x = Math.min(1, Math.max(0, (e.clientX - rect.left - rect.width / 2) / item.offsetWidth + 0.5));
+        const y = Math.min(1, Math.max(0, (e.clientY - rect.top - rect.height / 2) / item.offsetHeight + 0.5));
+        item.style.setProperty('--mx', (x * item.offsetWidth) + 'px');
+        item.style.setProperty('--my', (y * item.offsetHeight) + 'px');
+        item.style.setProperty('--tilt-x', ((0.5 - y) * 10).toFixed(2) + 'deg');
+        item.style.setProperty('--tilt-y', ((x - 0.5) * 10).toFixed(2) + 'deg');
+      });
+
 
       const embedOverlay = document.getElementById('embedOverlay');
       const dashboardOverlay = document.getElementById('dashboardOverlay');
@@ -2140,8 +3585,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         btn.dataset.copyOriginal = original;
         if (existingTimer) clearTimeout(existingTimer);
         btn.textContent = text;
+        btn.dataset.state = text === 'Copied!' ? 'copied' : 'failed';
         const timer = setTimeout(function () {
           btn.textContent = original;
+          delete btn.dataset.state;
           copyFlashTimers.delete(btn);
         }, COPY_FEEDBACK_MS);
         copyFlashTimers.set(btn, timer);
@@ -2172,8 +3619,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             closeDashboardPanel();
           } else if (embedOverlay.classList.contains('visible')) {
             closeEmbedPanel();
-          } else {
+          } else if (aboutBubble.classList.contains('visible')) {
+            const focusWasInMenu = aboutBubble.contains(document.activeElement);
             closeAboutBubble();
+            if (focusWasInMenu) aboutBtn.focus();
           }
         }
       });
@@ -2202,6 +3651,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         if (isOpen) {
           closeAboutBubble();
         } else {
+          updateMenuContext();
           aboutBubble.removeAttribute('inert');
           aboutBubble.classList.add('visible');
           aboutBubble.setAttribute('aria-hidden', 'false');
@@ -2241,8 +3691,12 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             showToggle();
           }
         });
-        window.addEventListener('focus', showToggle);
+        let windowWasBlurred = false;
+        window.addEventListener('focus', function () {
+          if (windowWasBlurred) showToggle();
+        });
         window.addEventListener('blur', function () {
+          windowWasBlurred = true;
           clearTimeout(hideTimer);
           toggleWrapper.classList.remove('visible');
           toggleWrapper.setAttribute('inert', '');
@@ -2425,6 +3879,9 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const embedThemeSelect = document.getElementById('embedTheme');
         const embedClockColorField = document.getElementById('embedClockColorField');
         const embedClockColorSelect = document.getElementById('embedClockColor');
+        const embedCustomColorField = document.getElementById('embedCustomColorField');
+        const embedCustomColorInput = document.getElementById('embedCustomColor');
+        const embedSecondColorInput = document.getElementById('embedSecondColor');
         const embedSecondsSelect = document.getElementById('embedSeconds');
         const embedBorderSelect = document.getElementById('embedBorder');
         const embedShapeSelect = document.getElementById('embedShape');
@@ -2436,9 +3893,20 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const embedPreview = document.getElementById('embedPreview');
         const embedCodeEl = document.getElementById('embedCode');
         const embedCopyBtn = document.getElementById('embedCopyBtn');
+        const embedPreviewMeta = document.getElementById('embedPreviewMeta');
         const localBase = window.location.origin + window.location.pathname;
         const prodBase = 'https://clocksimulator.com/';
         let embedDebounceTimer;
+        let embedThemeChosen = false;
+
+        function currentPageTheme() {
+          return document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light';
+        }
+
+        function syncEmbedTheme() {
+          if (embedThemeChosen) return;
+          embedThemeSelect.value = currentPageTheme();
+        }
 
         function appendCommonParams(p, themeVal, secondsVal, borderVal, daynightVal, numbersVal) {
           p.push('theme=' + themeVal);
@@ -2446,6 +3914,23 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           if (borderVal !== 'show') p.push('border=' + borderVal);
           if (daynightVal === 'show') p.push('daynight=show');
           if (numbersVal === 'hide') p.push('numbers=hide');
+        }
+
+        function embedClockColorValue() {
+          return embedClockColorSelect.value === 'custom'
+            ? embedCustomColorInput.value.slice(1).toLowerCase()
+            : embedClockColorSelect.value;
+        }
+
+        function isLightClockColor() {
+          const value = embedClockColorValue();
+          if (value === 'light') return true;
+          if (!/^[0-9a-f]{6}$/.test(value)) return false;
+          const channels = [0, 2, 4].map(function (index) {
+            const channel = parseInt(value.substr(index, 2), 16) / 255;
+            return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+          });
+          return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2] > 0.2;
         }
 
         function buildEmbedParams() {
@@ -2469,13 +3954,17 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           const shadows = embedShadowsSelect.value;
           if (shadows === 'false') p.push('shadows=false');
           if (embedThemeSelect.value === 'transparent') {
-            p.push('color=' + embedClockColorSelect.value);
+            p.push('color=' + embedClockColorValue());
+            if (embedClockColorSelect.value === 'custom') {
+              p.push('secondcolor=' + embedSecondColorInput.value.slice(1).toLowerCase());
+            }
           }
           return '?' + p.join('&');
         }
 
         function updateEmbed() {
           embedClockColorField.hidden = embedThemeSelect.value !== 'transparent';
+          embedCustomColorField.hidden = embedClockColorField.hidden || embedClockColorSelect.value !== 'custom';
           if (!embedWidthInput.checkValidity()) {
             embedWidthInput.reportValidity();
             return;
@@ -2487,6 +3976,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           const qs = buildEmbedParams();
           const w = embedWidthInput.valueAsNumber;
           const h = embedHeightInput.valueAsNumber;
+          embedPreviewMeta.textContent = w + ' \u00d7 ' + h + ' px';
           const isRound = embedShapeSelect.value === 'round';
           const radius = isRound ? ' border-radius:50%;' : '';
           embedPreview.src = localBase + qs;
@@ -2497,7 +3987,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           embedPreview.parentElement.classList.toggle(
             'transparent-preview', embedThemeSelect.value === 'transparent');
           embedPreview.parentElement.classList.toggle(
-            'light-clock-preview', embedThemeSelect.value === 'transparent' && embedClockColorSelect.value === 'light');
+            'light-clock-preview', embedThemeSelect.value === 'transparent' && isLightClockColor());
           const transparent = embedThemeSelect.value === 'transparent' ? ' allowtransparency="true"' : '';
           const code = '<iframe src="' + prodBase + qs + '" title="Analog clock"\n' +
             '  width="' + w + '" height="' + h + '"' + transparent + '\n' +
@@ -2513,6 +4003,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
         function openEmbedPanel(e) {
           openPanel(e, embedOverlay);
+          syncEmbedTheme();
           updateEmbed();
           trapFocus(embedOverlay);
         }
@@ -2534,6 +4025,15 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         }
 
         helpLink.addEventListener('click', openHelpPanel);
+        Array.prototype.forEach.call(helpOverlay.querySelectorAll('.help-toc a'), function (link) {
+          link.addEventListener('click', function (e) {
+            const target = document.getElementById(link.getAttribute('href').slice(1));
+            if (!target) return;
+            e.preventDefault();
+            target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' });
+            target.focus({ preventScroll: true });
+          });
+        });
         helpCloseBtn.addEventListener('click', closeHelpPanel);
         helpOverlay.addEventListener('click', function (e) {
           if (e.target === helpOverlay && overlayMouseDownTarget === helpOverlay) closeHelpPanel();
@@ -2546,8 +4046,13 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         });
 
         embedTzInput.addEventListener('input', updateEmbedDebounced);
-        embedThemeSelect.addEventListener('change', updateEmbed);
+        embedThemeSelect.addEventListener('change', function () {
+          embedThemeChosen = true;
+          updateEmbed();
+        });
         embedClockColorSelect.addEventListener('change', updateEmbed);
+        embedCustomColorInput.addEventListener('input', updateEmbedDebounced);
+        embedSecondColorInput.addEventListener('input', updateEmbedDebounced);
         embedSecondsSelect.addEventListener('change', updateEmbed);
         embedBorderSelect.addEventListener('change', updateEmbed);
         embedShapeSelect.addEventListener('change', updateEmbed);
@@ -2567,7 +4072,6 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const tzChipsEl = document.getElementById('tzChips');
         const dashboardRowsSelect = document.getElementById('dashboardRows');
         const dashboardThemeSelect = document.getElementById('dashboardTheme');
-        dashboardThemeSelect.value = document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light';
         const dashboardSecondsSelect = document.getElementById('dashboardSeconds');
         const dashboardNumbersSelect = document.getElementById('dashboardNumbers');
         const dashboardShadowsSelect = document.getElementById('dashboardShadows');
@@ -2577,11 +4081,42 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const dashboardUrlEl = document.getElementById('dashboardUrl');
         const dashboardCopyBtn = document.getElementById('dashboardCopyBtn');
         const dashboardOpenBtn = document.getElementById('dashboardOpenBtn');
+        const dashboardPreviewMeta = document.getElementById('dashboardPreviewMeta');
+        const tzSuggestionsEl = document.getElementById('tzSuggestions');
+        const tzSuggestionsRow = document.getElementById('tzSuggestionsRow');
+        const suggestedTimezones = [undefined, 'UTC', 'America/New_York', 'Europe/London', 'Asia/Tokyo',
+          'Australia/Sydney'];
         const dashboardTimezones = [];
         let dashboardDebounceTimer;
+        let dashboardThemeChosen = false;
+
+        function syncDashboardTheme() {
+          if (dashboardThemeChosen) return;
+          dashboardThemeSelect.value = currentPageTheme();
+        }
+
+        function timezoneOffsetLabel(tz) {
+          try {
+            const offsetPart = new Intl.DateTimeFormat('en-US', { timeZone: tz, timeZoneName: 'shortOffset' })
+              .formatToParts(new Date())
+              .filter(function (part) { return part.type === 'timeZoneName'; })[0];
+            return offsetPart ? offsetPart.value : '';
+          } catch (e) {
+            return '';
+          }
+        }
+
+        function canonicalTimezone(raw) {
+          try {
+            return new Intl.DateTimeFormat(undefined, { timeZone: raw }).resolvedOptions().timeZone;
+          } catch (e) {
+            return null;
+          }
+        }
 
         function renderTzChips() {
           tzChipsEl.innerHTML = '';
+          renderTzSuggestions();
           if (dashboardTimezones.length === 0) {
             const hint = document.createElement('span');
             hint.className = 'tz-chips-empty';
@@ -2593,15 +4128,26 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             const chip = document.createElement('span');
             chip.className = 'tz-chip';
             chip.textContent = dashboardTimezones[i];
+            const offsetLabel = timezoneOffsetLabel(dashboardTimezones[i]);
+            if (offsetLabel) {
+              const offset = document.createElement('span');
+              offset.className = 'tz-chip-offset';
+              offset.textContent = offsetLabel;
+              chip.appendChild(offset);
+            }
             const btn = document.createElement('button');
             btn.className = 'tz-chip-remove';
             btn.setAttribute('aria-label', 'Remove ' + dashboardTimezones[i]);
             btn.textContent = '\u00d7';
             btn.dataset.idx = i;
             btn.addEventListener('click', function () {
-              dashboardTimezones.splice(parseInt(this.dataset.idx), 1);
+              const removedIndex = parseInt(this.dataset.idx, 10);
+              dashboardTimezones.splice(removedIndex, 1);
               renderTzChips();
               updateDashboardPreview();
+              const removeButtons = tzChipsEl.querySelectorAll('.tz-chip-remove');
+              const nextFocus = removeButtons[Math.min(removedIndex, removeButtons.length - 1)] || dashboardTzInput;
+              nextFocus.focus();
             });
             chip.appendChild(btn);
             tzChipsEl.appendChild(chip);
@@ -2614,26 +4160,54 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           }
         }
 
+        function renderTzSuggestions() {
+          tzSuggestionsEl.innerHTML = '';
+          const localTimezone = canonicalTimezone(undefined);
+          const shown = [];
+          suggestedTimezones.forEach(function (raw) {
+            const canonical = canonicalTimezone(raw);
+            if (!canonical || shown.indexOf(canonical) !== -1 ||
+              dashboardTimezones.indexOf(canonical) !== -1) return;
+            shown.push(canonical);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = canonical === localTimezone ? 'tz-suggestion tz-suggestion-local' : 'tz-suggestion';
+            btn.textContent = canonical === 'UTC' ? 'UTC' : canonical.split('/').pop().replace(/_/g, ' ');
+            btn.setAttribute('aria-label', 'Add ' + canonical);
+            btn.addEventListener('click', function () {
+              const suggestionIndex = Array.prototype.indexOf.call(tzSuggestionsEl.children, btn);
+              addTimezoneValue(canonical);
+              const remaining = tzSuggestionsEl.querySelectorAll('.tz-suggestion');
+              const nextFocus = remaining[Math.min(suggestionIndex, remaining.length - 1)] || dashboardTzInput;
+              nextFocus.focus();
+            });
+            tzSuggestionsEl.appendChild(btn);
+          });
+          tzSuggestionsRow.hidden = shown.length === 0;
+        }
+
+        function addTimezoneValue(raw) {
+          const canonical = canonicalTimezone(raw);
+          if (!canonical) {
+            dashboardTzInput.setCustomValidity('Invalid timezone');
+            dashboardTzInput.reportValidity();
+            return false;
+          }
+          dashboardTzInput.setCustomValidity('');
+          if (dashboardTimezones.indexOf(canonical) === -1) {
+            dashboardTimezones.push(canonical);
+            renderTzChips();
+            updateDashboardPreview();
+          }
+          return true;
+        }
+
         function addTimezone() {
           const raw = dashboardTzInput.value.trim();
           if (!raw) return;
-          let canonical;
-          try {
-            canonical = new Intl.DateTimeFormat(undefined, { timeZone: raw }).resolvedOptions().timeZone;
-          } catch (e) {
-            dashboardTzInput.setCustomValidity('Invalid timezone');
-            dashboardTzInput.reportValidity();
-            return;
-          }
-          dashboardTzInput.setCustomValidity('');
-          if (dashboardTimezones.indexOf(canonical) !== -1) {
+          if (addTimezoneValue(raw)) {
             dashboardTzInput.value = '';
-            return;
           }
-          dashboardTimezones.push(canonical);
-          dashboardTzInput.value = '';
-          renderTzChips();
-          updateDashboardPreview();
         }
 
         function buildDashboardParams() {
@@ -2656,6 +4230,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             dashboardUrlEl.value = '';
             dashboardPreview.src = 'about:blank';
           }
+          dashboardPreview.parentElement.classList.toggle('is-empty', !qs);
+          dashboardPreviewMeta.textContent = dashboardTimezones.length
+            ? dashboardTimezones.length + (dashboardTimezones.length === 1 ? ' timezone' : ' timezones')
+            : '';
         }
 
         function debouncedDashboardPreview() {
@@ -2665,6 +4243,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
         function openDashboardPanel(e) {
           openPanel(e, dashboardOverlay);
+          syncDashboardTheme();
           renderTzChips();
           updateDashboardPreview();
           trapFocus(dashboardOverlay);
@@ -2686,7 +4265,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         });
 
         dashboardRowsSelect.addEventListener('change', debouncedDashboardPreview);
-        dashboardThemeSelect.addEventListener('change', debouncedDashboardPreview);
+        dashboardThemeSelect.addEventListener('change', function () {
+          dashboardThemeChosen = true;
+          debouncedDashboardPreview();
+        });
         dashboardSecondsSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardNumbersSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardShadowsSelect.addEventListener('change', debouncedDashboardPreview);

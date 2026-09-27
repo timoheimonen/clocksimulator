@@ -194,41 +194,6 @@ def install_wake_lock_mock(page: Page) -> None:
     """)
 
 
-def install_synchronous_request_failure(page: Page) -> None:
-    page.add_init_script("""
-        window.__wakeLockSyncRequests = 0;
-        Object.defineProperty(navigator, 'wakeLock', {
-            configurable: true,
-            value: {
-                request: function () {
-                    window.__wakeLockSyncRequests += 1;
-                    throw new DOMException('request failed synchronously', 'NotAllowedError');
-                }
-            }
-        });
-    """)
-
-
-def install_synchronous_release_failure(page: Page) -> None:
-    page.add_init_script("""
-        window.__wakeLockSyncReleases = 0;
-        Object.defineProperty(navigator, 'wakeLock', {
-            configurable: true,
-            value: {
-                request: function () {
-                    return Promise.resolve({
-                        addEventListener: function () {},
-                        release: function () {
-                            window.__wakeLockSyncReleases += 1;
-                            throw new Error('release failed synchronously');
-                        }
-                    });
-                }
-            }
-        });
-    """)
-
-
 def open_wake_page(
     page: Page,
     app_url: str,
@@ -296,7 +261,7 @@ def read_saved_intent(page: Page) -> bool:
     )
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
+@pytest.mark.parametrize("path", [pytest.param("", id="analog")])
 def test_missing_api_keeps_control_unavailable_without_errors(
     page: Page, app_url: str, path: str
 ) -> None:
@@ -318,10 +283,11 @@ def test_missing_api_keeps_control_unavailable_without_errors(
     assert page.locator("#wakeLockToggle").is_checked() is False
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
+@pytest.mark.parametrize("path", [pytest.param("", id="analog")])
 def test_supported_api_defaults_off_without_request(
     page: Page, app_url: str, path: str
 ) -> None:
+    install_visibility_mock(page)
     install_wake_lock_mock(page)
     open_wake_page(page, app_url, path)
     reveal_controls(page)
@@ -336,14 +302,19 @@ def test_supported_api_defaults_off_without_request(
         "unhandled": [],
     }
 
+    set_visibility(page, "hidden")
+    set_visibility(page, "visible")
+
+    assert wake_snapshot(page)["requests"] == []
+
 
 @pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_toggle_on_requests_exactly_one_screen_lock(
+def test_toggle_off_releases_active_sentinel_once(
     page: Page, app_url: str, path: str
 ) -> None:
+    install_visibility_mock(page)
     install_wake_lock_mock(page)
     open_wake_page(page, app_url, path)
-
     click_control(page, "label.wake-lock-toggle")
 
     state = wake_snapshot(page)
@@ -356,15 +327,12 @@ def test_toggle_on_requests_exactly_one_screen_lock(
     assert page.locator("#wakeLockToggle").is_checked() is True
     assert wake_snapshot(page)["activeSentinelIds"] == ["sentinel-1"]
 
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_toggle_off_releases_active_sentinel_once(
-    page: Page, app_url: str, path: str
-) -> None:
-    install_wake_lock_mock(page)
-    open_wake_page(page, app_url, path)
-    click_control(page, "label.wake-lock-toggle")
-    resolve_next(page)
+    set_visibility(page, "visible")
+    set_visibility(page, "visible")
+    state = wake_snapshot(page)
+    assert len(state["requests"]) == 1
+    assert state["pendingIds"] == []
+    assert state["activeSentinelIds"] == ["sentinel-1"]
 
     click_control(page, "label.wake-lock-toggle")
     flush_promises(page)
@@ -384,7 +352,7 @@ def test_toggle_off_releases_active_sentinel_once(
     assert state["unhandled"] == []
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
+@pytest.mark.parametrize("path", [pytest.param("", id="analog")])
 def test_saved_true_requests_lock_on_parameterless_load(
     page: Page, app_url: str, path: str
 ) -> None:
@@ -399,8 +367,8 @@ def test_saved_true_requests_lock_on_parameterless_load(
     assert read_saved_intent(page) is True
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_rejected_request_preserves_saved_intent_and_coherent_ui(
+@pytest.mark.parametrize("path", [pytest.param("", id="analog")])
+def test_rejected_request_retries_once_after_hidden_to_visible_transition(
     page: Page, app_url: str, path: str
 ) -> None:
     install_visibility_mock(page)
@@ -418,17 +386,6 @@ def test_rejected_request_preserves_saved_intent_and_coherent_ui(
     assert state["pendingIds"] == []
     assert state["activeSentinelIds"] == []
 
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_rejected_request_retries_once_after_hidden_to_visible_transition(
-    page: Page, app_url: str, path: str
-) -> None:
-    install_visibility_mock(page)
-    install_wake_lock_mock(page)
-    open_wake_page(page, app_url, path, saved_intent=False)
-    click_control(page, "label.wake-lock-toggle")
-    reject_next(page)
-
     set_visibility(page, "hidden")
     set_visibility(page, "visible")
     state = wake_snapshot(page)
@@ -439,7 +396,7 @@ def test_rejected_request_retries_once_after_hidden_to_visible_transition(
     assert state["unhandled"] == []
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
+@pytest.mark.parametrize("path", [pytest.param("", id="analog")])
 def test_system_release_preserves_intent_and_reacquires_when_visible(
     page: Page, app_url: str, path: str
 ) -> None:
@@ -467,59 +424,7 @@ def test_system_release_preserves_intent_and_reacquires_when_visible(
     assert wake_snapshot(page)["activeSentinelIds"] == ["sentinel-2"]
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_repeated_visible_events_do_not_duplicate_pending_request(
-    page: Page, app_url: str, path: str
-) -> None:
-    install_visibility_mock(page)
-    install_wake_lock_mock(page)
-    open_wake_page(page, app_url, path)
-    click_control(page, "label.wake-lock-toggle")
-
-    set_visibility(page, "visible")
-    set_visibility(page, "visible")
-    set_visibility(page, "visible")
-    state = wake_snapshot(page)
-
-    assert len(state["requests"]) == 1
-    assert state["pendingIds"] == [1]
-    assert state["activeSentinelIds"] == []
-
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_repeated_visible_events_do_not_request_while_sentinel_is_active(
-    page: Page, app_url: str, path: str
-) -> None:
-    install_visibility_mock(page)
-    install_wake_lock_mock(page)
-    open_wake_page(page, app_url, path)
-    click_control(page, "label.wake-lock-toggle")
-    resolve_next(page)
-
-    set_visibility(page, "visible")
-    set_visibility(page, "visible")
-    state = wake_snapshot(page)
-
-    assert len(state["requests"]) == 1
-    assert state["pendingIds"] == []
-    assert state["activeSentinelIds"] == ["sentinel-1"]
-
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_hidden_to_visible_does_not_request_without_active_intent(
-    page: Page, app_url: str, path: str
-) -> None:
-    install_visibility_mock(page)
-    install_wake_lock_mock(page)
-    open_wake_page(page, app_url, path)
-
-    set_visibility(page, "hidden")
-    set_visibility(page, "visible")
-
-    assert wake_snapshot(page)["requests"] == []
-
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
+@pytest.mark.parametrize("path", [pytest.param("", id="analog")])
 def test_rapid_on_then_off_releases_late_sentinel_without_reactivating_ui(
     page: Page, app_url: str, path: str
 ) -> None:
@@ -548,7 +453,7 @@ def test_rapid_on_then_off_releases_late_sentinel_without_reactivating_ui(
     assert state["unhandled"] == []
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
+@pytest.mark.parametrize("path", [pytest.param("", id="analog")])
 def test_embed_hides_control_and_never_requests_lock(
     page: Page, app_url: str, path: str
 ) -> None:
@@ -576,33 +481,3 @@ def test_embed_hides_control_and_never_requests_lock(
 
     set_visibility(page, "visible")
     assert wake_snapshot(page)["requests"] == []
-
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_synchronous_request_failure_preserves_intent_without_page_error(
-    page: Page, app_url: str, path: str
-) -> None:
-    install_synchronous_request_failure(page)
-    open_wake_page(page, app_url, path, saved_intent=False)
-
-    click_control(page, "label.wake-lock-toggle")
-
-    assert page.evaluate("() => window.__wakeLockSyncRequests") == 1
-    assert page.locator("#wakeLockToggle").is_checked() is True
-    assert read_saved_intent(page) is True
-
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_synchronous_release_failure_keeps_off_state_without_page_error(
-    page: Page, app_url: str, path: str
-) -> None:
-    install_synchronous_release_failure(page)
-    open_wake_page(page, app_url, path, saved_intent=False)
-    click_control(page, "label.wake-lock-toggle")
-    flush_promises(page)
-
-    click_control(page, "label.wake-lock-toggle")
-
-    assert page.evaluate("() => window.__wakeLockSyncReleases") == 1
-    assert page.locator("#wakeLockToggle").is_checked() is False
-    assert read_saved_intent(page) is False

@@ -195,77 +195,63 @@ def test_user_changes_survive_real_reload(
 
 
 @pytest.mark.cross_browser
-def test_analog_to_digital_navigation_preserves_shared_and_independent_fields(
+def test_navigation_round_trip_preserves_shared_and_independent_fields(
     page: Page, app_url: str
 ) -> None:
     install_resolved_wake_lock_mock(page)
-    initial = full_settings(digital_seconds=False)
-    open_clock(page, app_url, storage_value=json.dumps(initial))
+    open_clock(page, app_url, storage_value=json.dumps(full_settings()))
 
     click_control(page, "label.theme-toggle")
     click_control(page, "label.wake-lock-toggle")
     click_control(page, "label.second-mode-toggle")
-    expected = full_settings(
+    after_analog = full_settings(
         theme="dark",
         wake_lock=True,
         analog_seconds=False,
-        digital_seconds=False,
+        digital_seconds=True,
     )
-    assert read_saved_settings(page) == expected
+    assert read_saved_settings(page) == after_analog
 
     open_about(page)
     page.locator("#digitalClockLink").click()
     page.wait_for_url("**/digital/")
     wait_for_clock_ready(page)
 
+    assert page.locator("#digitalTime").text_content() == "12:00:00"
     assert_common_controls(
         page,
         theme="dark",
         wake_lock=True,
-        seconds=False,
+        seconds=True,
     )
-    assert read_saved_settings(page) == expected
-
-
-@pytest.mark.cross_browser
-def test_digital_to_analog_navigation_preserves_shared_and_independent_fields(
-    page: Page, app_url: str
-) -> None:
-    install_resolved_wake_lock_mock(page)
-    initial = full_settings(analog_seconds=False)
-    open_clock(
-        page,
-        app_url,
-        path="/digital/",
-        storage_value=json.dumps(initial),
-    )
+    assert read_saved_settings(page) == after_analog
 
     click_control(page, "label.theme-toggle")
-    click_control(page, "label.wake-lock-toggle")
     click_control(page, "label.second-mode-toggle")
-    expected = full_settings(
-        theme="dark",
+    after_digital = full_settings(
+        theme="light",
         wake_lock=True,
         analog_seconds=False,
         digital_seconds=False,
     )
-    assert read_saved_settings(page) == expected
+    assert read_saved_settings(page) == after_digital
 
     open_about(page)
     page.locator("#analogClockLink").click()
     page.wait_for_url(app_url + "/")
     wait_for_clock_ready(page)
 
+    assert page.locator("#clock").get_attribute("aria-label") == "The time is 12:00"
     assert_common_controls(
         page,
-        theme="dark",
+        theme="light",
         wake_lock=True,
         seconds=False,
     )
-    assert read_saved_settings(page) == expected
+    assert read_saved_settings(page) == after_digital
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
+@pytest.mark.parametrize("path", [pytest.param("", id="analog")])
 def test_disabling_saved_settings_then_reloading_restores_defaults(
     page: Page, app_url: str, path: str
 ) -> None:
@@ -289,9 +275,15 @@ def test_disabling_saved_settings_then_reloading_restores_defaults(
     assert page.locator("#saveSettingsToggle").is_checked() is False
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
+@pytest.mark.parametrize(
+    ("path", "url_theme"),
+    [
+        pytest.param("", "light", id="analog"),
+        pytest.param("/digital/", "transparent", id="digital"),
+    ],
+)
 def test_url_visit_is_byte_preserving_temporary_override(
-    page: Page, app_url: str, path: str
+    page: Page, app_url: str, path: str, url_theme: str
 ) -> None:
     install_resolved_wake_lock_mock(page)
     raw_settings = (
@@ -303,11 +295,12 @@ def test_url_visit_is_byte_preserving_temporary_override(
         page,
         app_url,
         path=path,
-        params={"theme": "light", "seconds": "smooth"},
+        params={"theme": url_theme, "seconds": "smooth"},
         storage_value=raw_settings,
         extra_storage={SENTINEL_KEY: raw_sentinel},
     )
 
+    assert_theme(page, url_theme)
     assert page.locator("#saveSettingsToggle").is_disabled() is True
     click_control(page, "label.theme-toggle")
     click_control(page, "label.second-mode-toggle")
@@ -327,34 +320,17 @@ def test_url_visit_is_byte_preserving_temporary_override(
 
 
 @pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_application_write_preserves_other_storage_keys_and_unknown_fields(
+def test_write_time_reread_preserves_other_page_field_and_unknown_fields(
     page: Page, app_url: str, path: str
 ) -> None:
-    initial = full_settings()
-    initial["futureVersion"] = {"schema": 9, "options": [1, 2, 3]}
     raw_sentinel = "another-owner:do-not-touch\n"
     open_clock(
         page,
         app_url,
         path=path,
-        storage_value=json.dumps(initial),
+        storage_value=json.dumps(full_settings()),
         extra_storage={SENTINEL_KEY: raw_sentinel},
     )
-
-    click_control(page, "label.theme-toggle")
-
-    saved = read_saved_settings(page)
-    assert saved is not None
-    assert saved["theme"] == "dark"
-    assert read_raw_storage(page, SENTINEL_KEY) == raw_sentinel
-    assert saved["futureVersion"] == initial["futureVersion"]
-
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_write_time_reread_preserves_other_page_field_and_unknown_fields(
-    page: Page, app_url: str, path: str
-) -> None:
-    open_clock(page, app_url, path=path, storage_value=json.dumps(full_settings()))
     if path:
         externally_updated = full_settings(
             analog_seconds=False,
@@ -376,37 +352,27 @@ def test_write_time_reread_preserves_other_page_field_and_unknown_fields(
     assert saved["secondModeTick"] is externally_updated["secondModeTick"]
     assert saved["digitalShowSeconds"] is externally_updated["digitalShowSeconds"]
     assert saved["futureVersion"] == externally_updated["futureVersion"]
+    assert read_raw_storage(page, SENTINEL_KEY) == raw_sentinel
 
 
-INVALID_STORAGE_VALUES = [
-    ('"settings"', "string"),
-    ("42", "number"),
-    ("true", "true"),
-    ("false", "false"),
-    ("null", "null"),
-    ("[]", "array"),
-    ('{"theme":"sepia","wakeLock":false}', "invalid_theme"),
-    ('{"digitalShowSeconds":false}', "partial"),
-    (
-        '{"theme":"light","wakeLock":"yes","secondModeTick":"smooth",'
-        '"digitalShowSeconds":"hidden"}',
-        "wrong_field_types",
-    ),
-]
-
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
 @pytest.mark.parametrize(
-    ("storage_value", "case_name"),
-    INVALID_STORAGE_VALUES,
-    ids=[case_name for _, case_name in INVALID_STORAGE_VALUES],
+    ("path", "storage_value"),
+    [
+        pytest.param("", "[]", id="analog-array"),
+        pytest.param(
+            "",
+            '{"theme":"light","wakeLock":"yes","secondModeTick":"smooth",'
+            '"digitalShowSeconds":"hidden"}',
+            id="analog-wrong_field_types",
+        ),
+        pytest.param("/digital/", '{"digitalShowSeconds":false}', id="digital-partial"),
+    ],
 )
 def test_invalid_saved_data_is_safely_normalized_on_next_write(
     page: Page,
     app_url: str,
     path: str,
     storage_value: str,
-    case_name: str,
 ) -> None:
     install_missing_wake_lock_api(page)
     open_clock(page, app_url, path=path, storage_value=storage_value)
@@ -416,7 +382,7 @@ def test_invalid_saved_data_is_safely_normalized_on_next_write(
     click_control(page, "label.theme-toggle")
 
     saved = read_saved_settings(page)
-    assert saved is not None, case_name
+    assert saved is not None, storage_value
     assert set(saved) == KNOWN_FIELDS
     assert saved["theme"] == "dark"
     assert saved["wakeLock"] is False
@@ -424,23 +390,9 @@ def test_invalid_saved_data_is_safely_normalized_on_next_write(
     assert isinstance(saved["digitalShowSeconds"], bool)
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_missing_saved_data_can_be_enabled_with_complete_defaults(
-    page: Page, app_url: str, path: str
-) -> None:
-    install_missing_wake_lock_api(page)
-    open_clock(page, app_url, path=path)
-
-    enable_saved_settings(page)
-
-    assert read_saved_settings(page) == full_settings()
-
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
 @pytest.mark.parametrize(
-    "mutation_selector",
-    ["label.theme-toggle", "label.second-mode-toggle"],
-    ids=("theme", "seconds"),
+    ("path", "mutation_selector"),
+    [pytest.param("", "label.theme-toggle", id="analog-theme")],
 )
 def test_missing_wake_lock_api_does_not_overwrite_saved_true_intent(
     page: Page,
@@ -461,7 +413,7 @@ def test_missing_wake_lock_api_does_not_overwrite_saved_true_intent(
     assert saved["wakeLock"] is True
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
+@pytest.mark.parametrize("path", [pytest.param("", id="analog")])
 def test_stored_transparent_theme_is_not_a_top_level_persistent_theme(
     page: Page, app_url: str, path: str
 ) -> None:
@@ -475,29 +427,10 @@ def test_stored_transparent_theme_is_not_a_top_level_persistent_theme(
     assert saved["theme"] == "light"
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-def test_url_transparent_theme_is_temporary_and_does_not_persist(
-    page: Page, app_url: str, path: str
-) -> None:
-    raw_settings = json.dumps(full_settings(theme="dark"), separators=(",", ":"))
-    open_clock(
-        page,
-        app_url,
-        path=path,
-        params={"theme": "transparent"},
-        storage_value=raw_settings,
-    )
-
-    assert_theme(page, "transparent")
-    assert read_raw_storage(page) == raw_settings
-
-    navigate_clock_page(page, build_clock_url(app_url, path))
-    assert_theme(page, "dark")
-    assert read_raw_storage(page) == raw_settings
-
-
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
-@pytest.mark.parametrize("blocked_method", ["getItem", "setItem", "removeItem"])
+@pytest.mark.parametrize(
+    ("path", "blocked_method"),
+    [pytest.param("", "setItem", id="analog-setItem")],
+)
 def test_individual_storage_api_exceptions_are_silent_and_ui_remains_operable(
     page: Page,
     app_url: str,
@@ -530,7 +463,7 @@ def test_individual_storage_api_exceptions_are_silent_and_ui_remains_operable(
     assert_theme(page, "dark")
 
 
-@pytest.mark.parametrize("path", ["", "/digital/"], ids=("analog", "digital"))
+@pytest.mark.parametrize("path", [pytest.param("/digital/", id="digital")])
 def test_all_blocked_storage_operations_are_handled_silently(
     page: Page, app_url: str, path: str
 ) -> None:

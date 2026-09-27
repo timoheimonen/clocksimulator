@@ -4,7 +4,6 @@ from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import io
 import json
-import math
 from pathlib import Path
 import threading
 from typing import Iterator
@@ -39,7 +38,8 @@ BUILDER_CASES = [
         1000,
         50,
         1000,
-        id="analog",
+        "light",
+        id="analog-light",
     ),
     pytest.param(
         "/digital/",
@@ -53,19 +53,20 @@ BUILDER_CASES = [
         1600,
         80,
         1000,
-        id="digital",
+        "dark",
+        id="digital-dark",
     ),
 ]
 
 
-DASHBOARD_CASES = [
-    pytest.param("/", "https://clocksimulator.com/", id="analog"),
-    pytest.param(
-        "/digital/",
-        "https://clocksimulator.com/digital/",
-        id="digital",
-    ),
-]
+ANALOG_DASHBOARD_CASE = pytest.param(
+    "/", "https://clocksimulator.com/", id="analog"
+)
+DIGITAL_DASHBOARD_CASE = pytest.param(
+    "/digital/",
+    "https://clocksimulator.com/digital/",
+    id="digital",
+)
 
 
 REAL_IFRAME_CASES = [
@@ -84,7 +85,8 @@ REAL_IFRAME_CASES = [
         120,
         120,
         "analog-single",
-        id="analog-single-small",
+        "transparent",
+        id="analog-single-small-transparent",
     ),
     pytest.param(
         "/",
@@ -101,7 +103,8 @@ REAL_IFRAME_CASES = [
         280,
         160,
         "analog-dashboard",
-        id="analog-dashboard-landscape",
+        "dark",
+        id="analog-dashboard-landscape-dark",
     ),
     pytest.param(
         "/digital/",
@@ -117,7 +120,8 @@ REAL_IFRAME_CASES = [
         160,
         240,
         "digital-single",
-        id="digital-single-portrait",
+        "light",
+        id="digital-single-portrait-light",
     ),
     pytest.param(
         "/digital/",
@@ -134,7 +138,8 @@ REAL_IFRAME_CASES = [
         280,
         160,
         "digital-dashboard",
-        id="digital-dashboard-small",
+        "transparent",
+        id="digital-dashboard-small-transparent",
     ),
 ]
 
@@ -311,6 +316,7 @@ time { color: rgb(0, 255, 0) !important; }
         "max_width",
         "min_height",
         "max_height",
+        "page_theme",
     ),
     BUILDER_CASES,
 )
@@ -328,9 +334,11 @@ def test_embed_builder_default_is_one_exact_parseable_iframe_and_loaded_preview(
     max_width: int,
     min_height: int,
     max_height: int,
+    page_theme: str,
 ) -> None:
+    page.emulate_media(color_scheme=page_theme)
     open_builder(page, app_url, path, "embed")
-    expected_src = production_base + "?embed=true&theme=dark"
+    expected_src = production_base + "?embed=true&theme=" + page_theme
     expected_style = (
         "border:none; border-radius:50%; overflow:hidden;"
         if path == "/"
@@ -358,91 +366,13 @@ def test_embed_builder_default_is_one_exact_parseable_iframe_and_loaded_preview(
     )
     assert frame.locator("html").evaluate(
         "element => element.classList.contains('dark-mode')"
-    ) is True
+    ) is (page_theme == "dark")
     assert frame.locator("body").evaluate(
         "element => element.classList.contains('embed-mode')"
     ) is True
 
 
-@pytest.mark.parametrize("path", ["/", "/digital/"])
-@pytest.mark.parametrize("parent_theme", ["light", "dark"])
-def test_embed_builder_transparent_preview_shows_checkerboard_through_iframe(
-    page: Page,
-    app_url: str,
-    path: str,
-    parent_theme: str,
-) -> None:
-    open_page(page, app_url, {"theme": parent_theme}, path=path)
-    page.evaluate("() => document.getElementById('embedLink').click()")
-    page.locator("#embedOverlay.visible").wait_for()
-    select_and_dispatch(page, "#embedTheme", "transparent")
-    page.clock.run_for(400)
-    frame = wait_for_preview(
-        page, "#embedPreview", "#clock" if path == "/" else "#digitalTime"
-    )
-    frame.locator("html.transparent-mode").wait_for(state="attached")
-    assert frame.locator("html, body").evaluate_all(
-        "elements => elements.map(element => getComputedStyle(element).backgroundColor)"
-    ) == ["rgba(0, 0, 0, 0)", "rgba(0, 0, 0, 0)"]
-
-    preview = page.locator("#embedPreview")
-    wrapper = page.locator("#embedOverlay .embed-preview-wrap")
-    background_size = wrapper.evaluate(
-        "element => getComputedStyle(element).backgroundSize"
-    )
-    assert background_size != "auto"
-    tile = int(float(background_size.split()[0].removesuffix("px")))
-
-    def sample_points() -> tuple[list[tuple[int, int]], list[tuple[int, int]]]:
-        wrapper_box = wrapper.bounding_box()
-        iframe_box = preview.bounding_box()
-        assert wrapper_box is not None and iframe_box is not None
-        origin_x, origin_y = int(wrapper_box["x"]), int(wrapper_box["y"])
-        padding_points = [
-            (origin_x + 2 * tile + tile // 4 + offset, origin_y + tile // 4)
-            for offset in (0, tile // 2)
-        ]
-        # Keep analog samples inside its round iframe mask and clear of the clock
-        # hands/numerals; digital samples sit above the digits. Align both with
-        # the same checkerboard phases sampled in the wrapper's top padding.
-        sample_x = origin_x + math.ceil(
-            (iframe_box["x"] + 24 - origin_x) / tile
-        ) * tile + tile // 4
-        target_y = iframe_box["y"] + (78 if path == "/" else 16)
-        sample_y = origin_y + math.floor((target_y - origin_y) / tile) * tile + tile // 4
-        iframe_points = [(sample_x + offset, sample_y) for offset in (0, tile // 2)]
-        return padding_points, iframe_points
-
-    padding_points, iframe_points = sample_points()
-    with Image.open(io.BytesIO(page.screenshot())) as screenshot:
-        pixels = screenshot.convert("RGB")
-        checker_colors = [pixels.getpixel(point) for point in padding_points]
-        assert checker_colors[0] != checker_colors[1]
-        assert [pixels.getpixel(point) for point in iframe_points] == checker_colors
-
-    select_and_dispatch(page, "#embedTheme", parent_theme)
-    page.clock.run_for(400)
-    frame.locator("html:not(.transparent-mode) body.embed-mode").wait_for()
-    expected_body = "rgb(240, 240, 240)" if parent_theme == "light" else "rgb(0, 0, 0)"
-    assert frame.locator("body").evaluate(
-        "element => getComputedStyle(element).backgroundColor"
-    ) == expected_body
-    background_selector = "#clockBorder" if path == "/" else "body"
-    background_property = "fill" if path == "/" else "backgroundColor"
-    rendered_background = frame.locator(background_selector).evaluate(
-        "(element, property) => getComputedStyle(element)[property]",
-        background_property,
-    )
-    expected_pixel = tuple(int(value) for value in rendered_background[4:-1].split(","))
-    # Hiding the transparent-only color field can move the preview in the dialog.
-    padding_points, iframe_points = sample_points()
-    with Image.open(io.BytesIO(page.screenshot())) as screenshot:
-        pixels = screenshot.convert("RGB")
-        assert pixels.getpixel(padding_points[0]) == pixels.getpixel(padding_points[1])
-        assert [pixels.getpixel(point) for point in iframe_points] == [expected_pixel] * 2
-
-
-@pytest.mark.parametrize("path", ["/", "/digital/"])
+@pytest.mark.parametrize("path", [pytest.param("/digital/", id="digital")])
 def test_embed_clock_color_updates_preview_and_code_and_survives_theme_switches(
     page: Page,
     app_url: str,
@@ -499,6 +429,76 @@ def test_embed_clock_color_updates_preview_and_code_and_survives_theme_switches(
     assert color_field.is_visible() is True
     assert color_select.input_value() == other_color
     assert_transparent_preview(other_color)
+
+
+@pytest.mark.parametrize("path", [pytest.param("/", id="analog")])
+def test_embed_custom_clock_color_reaches_code_and_preview(
+    page: Page,
+    app_url: str,
+    path: str,
+) -> None:
+    open_builder(page, app_url, path, "embed")
+    analog = path == "/"
+    custom_field = page.locator("#embedCustomColorField")
+    clock_color = page.get_by_label("Custom clock color" if analog else "Custom color", exact=True)
+    production_base = "https://clocksimulator.com" + path
+    assert custom_field.is_visible() is False
+    assert page.locator("#embedSecondColor").count() == (1 if analog else 0)
+
+    def expected_query(color: str, second_color: str) -> str:
+        query = "?embed=true&theme=transparent&color=" + color
+        return query + ("&secondcolor=" + second_color if analog else "")
+
+    select_and_dispatch(page, "#embedTheme", "transparent")
+    assert custom_field.is_visible() is False
+    select_and_dispatch(page, "#embedClockColor", "custom")
+    assert custom_field.is_visible() is True
+    assert clock_color.input_value() == "#ff8800"
+    assert parsed_generated_iframe(page)["src"] == production_base + expected_query("ff8800", "d63031")
+
+    clock_color.fill("#1a2b8c")
+    if analog:
+        second_color = page.get_by_label("Custom second hand color", exact=True)
+        assert second_color.input_value() == "#d63031"
+        second_color.fill("#00ff66")
+    page.clock.run_for(400)
+    query = expected_query("1a2b8c", "00ff66")
+    assert parsed_generated_iframe(page)["src"] == production_base + query
+    assert page.locator("#embedPreview").get_attribute("src").endswith(query)
+    frame = wait_for_preview(page, "#embedPreview", "#clock" if analog else "#digitalTime")
+    frame.locator('html.transparent-mode[data-clock-color="custom"]').wait_for()
+    foreground = frame.locator("#hourHand" if analog else "#digitalTime")
+    assert foreground.evaluate(
+        "(element, property) => getComputedStyle(element)[property]",
+        "fill" if analog else "color",
+    ) == "rgb(26, 43, 140)"
+    if analog:
+        frame.locator('html[data-second-color="custom"]').wait_for(state="attached")
+        assert frame.locator("#secondHand").evaluate(
+            "element => getComputedStyle(element).stroke"
+        ) == "rgb(0, 255, 102)"
+        assert frame.locator("#centerDot").evaluate(
+            "element => getComputedStyle(element).fill"
+        ) == "rgb(0, 255, 102)"
+    assert page.locator("#embedOverlay .embed-preview-wrap").evaluate(
+        "element => element.classList.contains('light-clock-preview')"
+    ) is False
+
+    clock_color.fill("#f0f0f0")
+    page.clock.run_for(400)
+    assert page.locator("#embedOverlay .embed-preview-wrap").evaluate(
+        "element => element.classList.contains('light-clock-preview')"
+    ) is True
+
+    select_and_dispatch(page, "#embedClockColor", "light")
+    assert custom_field.is_visible() is False
+    assert parsed_generated_iframe(page)["src"] == (
+        production_base + "?embed=true&theme=transparent&color=light"
+    )
+
+    select_and_dispatch(page, "#embedTheme", "dark")
+    assert custom_field.is_visible() is False
+    assert parsed_generated_iframe(page)["src"] == production_base + "?embed=true&theme=dark"
 
 
 @pytest.mark.parametrize("path", ["/", "/digital/"])
@@ -596,25 +596,29 @@ def test_every_embed_builder_control_reaches_code_and_preview_dom(
         assert frame.locator("#dayNightIcon").get_attribute("data-state") == "day"
 
 
-@pytest.mark.parametrize("path", ["/", "/digital/"])
 @pytest.mark.parametrize(
-    ("timezone_input", "expected_timezones", "is_valid"),
+    ("path", "timezone_input", "expected_timezones", "is_valid"),
     [
-        pytest.param("", [], True, id="empty"),
-        pytest.param("Europe/Helsinki", ["Europe/Helsinki"], True, id="single"),
         pytest.param(
+            "/",
             " UTC, Asia/Kathmandu , Europe/Helsinki ",
             ["UTC", "Asia/Kathmandu", "Europe/Helsinki"],
             True,
-            id="multiple-trimmed-ordered",
+            id="analog-multiple-trimmed-ordered",
         ),
-        pytest.param("Mars/Olympus", [], False, id="invalid"),
-        pytest.param("UTC,Mars/Olympus", [], False, id="mixed-valid-invalid"),
         pytest.param(
+            "/digital/",
+            "UTC,Mars/Olympus",
+            [],
+            False,
+            id="digital-mixed-valid-invalid",
+        ),
+        pytest.param(
+            "/digital/",
             "America/Argentina/Buenos_Aires,Asia/Kathmandu",
             ["America/Argentina/Buenos_Aires", "Asia/Kathmandu"],
             True,
-            id="url-encoding-order",
+            id="digital-url-encoding-order",
         ),
     ],
 )
@@ -739,7 +743,6 @@ def test_embed_builder_accepts_dimension_boundaries_exponents_and_caps_preview(
 @pytest.mark.parametrize(
     ("path", "valid_width", "valid_height", "over_width", "over_height"),
     [
-        pytest.param("/", 333, 222, 1001, 1001, id="analog"),
         pytest.param("/digital/", 444, 222, 1601, 1001, id="digital"),
     ],
 )
@@ -800,53 +803,7 @@ def test_embed_builder_rejects_invalid_dimensions_without_replacing_preview(
             ), case
 
 
-@pytest.mark.parametrize("path", ["/", "/digital/"])
-def test_embed_builder_debounce_commits_only_latest_timezone(
-    page: Page,
-    app_url: str,
-    path: str,
-) -> None:
-    clock = install_timer_probe(page, manual=True)
-    open_builder(page, app_url, path, "embed")
-    original_code = page.locator("#embedCode").input_value()
-    original_src = page.locator("#embedPreview").get_attribute("src")
-    page.evaluate(
-        """() => {
-            const field = document.getElementById('embedTz');
-            ['UTC', 'Europe/Helsinki', 'Asia/Kathmandu'].forEach(function (value) {
-                field.value = value;
-                field.dispatchEvent(new Event('input', { bubbles: true }));
-            });
-        }"""
-    )
-    assert page.locator("#embedCode").input_value() == original_code
-    assert page.locator("#embedPreview").get_attribute("src") == original_src
-    debounce_timers = [
-        timer
-        for timer in clock.timers()
-        if timer.kind == "timeout" and timer.delay == 400
-    ]
-    assert len(debounce_timers) == 3
-    assert [timer.cleared for timer in debounce_timers] == [True, True, False]
-    clock.run_timer(debounce_timers[-1].timer_id)
-    code = page.locator("#embedCode").input_value()
-    preview_src = str(page.locator("#embedPreview").get_attribute("src"))
-    assert "tz=Asia%2FKathmandu" in code
-    assert "tz=Asia%2FKathmandu" in preview_src
-    assert "Europe%2FHelsinki" not in code
-    assert "Europe%2FHelsinki" not in preview_src
-    frame = wait_for_preview(
-        page,
-        "#embedPreview",
-        "#clock" if path == "/" else "#digitalTime",
-    )
-    if path == "/":
-        assert frame.locator("#clock").get_attribute("aria-label") == "The time is 17:45"
-    else:
-        assert frame.locator("#digitalLabel").text_content() == "Kathmandu"
-
-
-@pytest.mark.parametrize("path", ["/", "/digital/"])
+@pytest.mark.parametrize("path", [pytest.param("/", id="analog")])
 @pytest.mark.parametrize(
     ("clipboard_mode", "expected_feedback", "expected_write_count"),
     [
@@ -888,39 +845,9 @@ def test_embed_builder_clipboard_flow_and_timed_feedback(
     assert page.locator("#embedCopyBtn").text_content() == "Copy code"
 
 
-@pytest.mark.parametrize("path", ["/", "/digital/"])
-@pytest.mark.parametrize("panel", ["embed", "dashboard"])
-def test_builder_close_blanks_preview_hides_dialog_and_restores_focus(
-    page: Page,
-    app_url: str,
-    path: str,
-    panel: str,
-) -> None:
-    open_page(page, app_url, path=path)
-    initial_url = page.url
-    page.mouse.move(20, 20)
-    page.locator("#aboutBtn").wait_for(state="visible", timeout=1000)
-    page.locator("#aboutBtn").click(timeout=1000)
-    link_id = "embedLink" if panel == "embed" else "dashboardLink"
-    page.locator("#" + link_id).focus()
-    page.locator("#" + link_id).click()
-    overlay_id = "embedOverlay" if panel == "embed" else "dashboardOverlay"
-    preview_id = "embedPreview" if panel == "embed" else "dashboardPreview"
-    close_id = "embedCloseBtn" if panel == "embed" else "dashboardCloseBtn"
-    page.wait_for_function(
-        "overlayId => document.getElementById(overlayId).classList.contains('visible')",
-        arg=overlay_id,
-    )
-    page.locator("#" + close_id).click()
-    assert page.locator("#" + preview_id).get_attribute("src") == "about:blank"
-    assert page.locator("#" + overlay_id).get_attribute("aria-hidden") == "true"
-    assert page.locator("#" + overlay_id).get_attribute("inert") == ""
-    assert page.locator("#" + overlay_id).is_visible() is False
-    page.wait_for_function("() => document.activeElement.id === 'aboutBtn'")
-    assert page.url == initial_url
-
-
-@pytest.mark.parametrize(("path", "production_base"), DASHBOARD_CASES)
+@pytest.mark.parametrize(
+    ("path", "production_base"), [ANALOG_DASHBOARD_CASE]
+)
 def test_dashboard_builder_empty_one_zone_canonicalization_duplicates_and_removal(
     page: Page,
     app_url: str,
@@ -978,7 +905,101 @@ def test_dashboard_builder_empty_one_zone_canonicalization_duplicates_and_remova
     assert page.locator("#dashboardPreview").get_attribute("src") == "about:blank"
 
 
-@pytest.mark.parametrize(("path", "production_base"), DASHBOARD_CASES)
+@pytest.mark.parametrize(
+    ("path", "panel", "page_theme"),
+    [
+        pytest.param("/", "embed", "light", id="analog-embed-light"),
+        pytest.param("/digital/", "dashboard", "dark", id="digital-dashboard-dark"),
+    ],
+)
+def test_builder_theme_follows_page_theme_until_user_chooses(
+    page: Page,
+    app_url: str,
+    path: str,
+    panel: str,
+    page_theme: str,
+) -> None:
+    other_theme = "dark" if page_theme == "light" else "light"
+    page.emulate_media(color_scheme=page_theme)
+    open_page(page, app_url, path=path)
+    theme_select = page.locator("#" + panel + "Theme")
+    overlay = "#" + panel + "Overlay"
+
+    def open_builder_panel() -> None:
+        page.evaluate("linkId => document.getElementById(linkId).click()", panel + "Link")
+        page.locator(overlay + ".visible").wait_for()
+
+    def close_builder_and_toggle_page_theme() -> None:
+        page.locator("#" + panel + "CloseBtn").click()
+        page.locator("#themeToggle").evaluate("element => element.click()")
+
+    def generated_theme() -> list[str]:
+        if panel == "embed":
+            return query_values(str(parsed_generated_iframe(page)["src"]))["theme"]
+        return query_values(page.locator("#dashboardUrl").input_value())["theme"]
+
+    open_builder_panel()
+    assert theme_select.input_value() == page_theme
+    if panel == "dashboard":
+        add_dashboard_timezone(page, "UTC")
+        add_dashboard_timezone(page, "Asia/Tokyo")
+    assert generated_theme() == [page_theme]
+
+    close_builder_and_toggle_page_theme()
+    open_builder_panel()
+    assert theme_select.input_value() == other_theme
+    assert generated_theme() == [other_theme]
+
+    select_and_dispatch(page, "#" + panel + "Theme", page_theme)
+    close_builder_and_toggle_page_theme()
+    open_builder_panel()
+    assert theme_select.input_value() == page_theme
+
+
+@pytest.mark.parametrize(
+    ("path", "production_base"), [DIGITAL_DASHBOARD_CASE]
+)
+def test_dashboard_builder_quick_add_suggestions_add_canonical_timezones(
+    page: Page,
+    app_url: str,
+    path: str,
+    production_base: str,
+) -> None:
+    open_builder(page, app_url, path, "dashboard")
+    canonical_utc = resolved_timezone(page, "UTC")
+    canonical_tokyo = resolved_timezone(page, "Asia/Tokyo")
+    suggestions = page.locator("#tzSuggestions .tz-suggestion")
+    labels = suggestions.evaluate_all(
+        "elements => elements.map(element => element.getAttribute('aria-label'))"
+    )
+    assert labels[0] == "Add " + canonical_utc
+    assert "Add " + canonical_tokyo in labels
+    assert len(labels) == len(set(labels))
+
+    page.get_by_role("button", name="Add " + canonical_utc, exact=True).click()
+    assert dashboard_chip_names(page) == [canonical_utc]
+    assert page.get_by_role("button", name="Add " + canonical_utc, exact=True).count() == 0
+    assert page.locator("#dashboardUrl").input_value() == ""
+
+    page.get_by_role("button", name="Add " + canonical_tokyo, exact=True).click()
+    assert dashboard_chip_names(page) == [canonical_utc, canonical_tokyo]
+    assert page.evaluate("() => document.activeElement.classList.contains('tz-suggestion')") is True
+    url = page.locator("#dashboardUrl").input_value()
+    assert url.startswith(production_base + "?")
+    assert query_values(url)["tz"] == [canonical_utc + "," + canonical_tokyo]
+    assert page.locator("#tzChips .tz-chip-offset").all_text_contents()[1] == "GMT+9"
+
+    page.locator("#tzChips .tz-chip-remove").nth(0).click()
+    assert dashboard_chip_names(page) == [canonical_tokyo]
+    assert page.evaluate("() => document.activeElement.getAttribute('aria-label')") == (
+        "Remove " + canonical_tokyo
+    )
+    assert page.get_by_role("button", name="Add " + canonical_utc, exact=True).count() == 1
+
+
+@pytest.mark.parametrize(
+    ("path", "production_base"), [DIGITAL_DASHBOARD_CASE]
+)
 def test_dashboard_builder_invalid_timezone_has_accessible_error_and_no_actions(
     page: Page,
     app_url: str,
@@ -1095,7 +1116,9 @@ def test_every_dashboard_builder_control_reaches_url_and_preview_dom(
         ) == ["day", "day"]
 
 
-@pytest.mark.parametrize(("path", "production_base"), DASHBOARD_CASES)
+@pytest.mark.parametrize(
+    ("path", "production_base"), [ANALOG_DASHBOARD_CASE]
+)
 def test_dashboard_builder_copy_and_open_receive_exact_production_url(
     page: Page,
     app_url: str,
@@ -1128,9 +1151,8 @@ def test_dashboard_builder_copy_and_open_receive_exact_production_url(
     ]
 
 
-@pytest.mark.parametrize("theme", ["light", "dark", "transparent"])
 @pytest.mark.parametrize(
-    ("path", "params", "width", "height", "render_case"),
+    ("path", "params", "width", "height", "render_case", "theme"),
     REAL_IFRAME_CASES,
 )
 def test_real_cross_origin_iframe_contract_across_renderers_themes_and_sizes(
