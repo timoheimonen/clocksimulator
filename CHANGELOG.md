@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1 - 2026-09-27
+
+### Changed
+- The menu tile hover glow now follows the pointer across neighboring tiles and fades out smoothly when the pointer leaves the menu.
+
 ## 1.5.0 - 2026-09-27
 
 ### Added

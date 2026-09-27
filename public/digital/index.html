@@ -22,7 +22,7 @@
   <meta name="twitter:description"
     content="Free online digital clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png">
-  <meta name="version" content="1.5.0">
+  <meta name="version" content="1.5.1">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -805,7 +805,21 @@
       box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.45);
       color: inherit;
       text-decoration: none;
+      isolation: isolate;
       transition: transform 0.25s var(--ui-ease-out), border-color 0.2s ease, box-shadow 0.25s ease;
+    }
+
+    .menu-tile::before,
+    .menu-switch::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background: radial-gradient(180px circle at var(--mx, 50%) var(--my, 50%), var(--ui-tile-glow), transparent 70%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
     }
 
     .menu-tile {
@@ -828,11 +842,14 @@
 
     @media (hover: hover) {
 
-      .menu-tile:hover,
-      .menu-switch:hover {
-        background:
-          radial-gradient(140px circle at var(--mx, 50%) var(--my, 50%), var(--ui-tile-glow), transparent 70%),
-          var(--ui-tile-bg);
+      .about-bubble.menu-glow .menu-tile::before,
+      .about-bubble.menu-glow .menu-switch::before {
+        opacity: 0.6;
+      }
+
+      .about-bubble.menu-glow .menu-tile:hover::before,
+      .about-bubble.menu-glow .menu-switch:hover::before {
+        opacity: 1;
       }
     }
 
@@ -3354,15 +3371,24 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       });
 
       aboutBubble.addEventListener('pointermove', function (e) {
-        const item = e.target.closest('.menu-tile, .menu-switch');
-        if (!item) return;
-        const rect = item.getBoundingClientRect();
-        const x = Math.min(1, Math.max(0, (e.clientX - rect.left - rect.width / 2) / item.offsetWidth + 0.5));
-        const y = Math.min(1, Math.max(0, (e.clientY - rect.top - rect.height / 2) / item.offsetHeight + 0.5));
-        item.style.setProperty('--mx', (x * item.offsetWidth) + 'px');
-        item.style.setProperty('--my', (y * item.offsetHeight) + 'px');
-        item.style.setProperty('--tilt-x', ((0.5 - y) * 10).toFixed(2) + 'deg');
-        item.style.setProperty('--tilt-y', ((x - 0.5) * 10).toFixed(2) + 'deg');
+        const hovered = e.target.closest('.menu-tile, .menu-switch');
+        aboutBubble.classList.add('menu-glow');
+        Array.prototype.forEach.call(aboutBubble.querySelectorAll('.menu-tile, .menu-switch'), function (item) {
+          const rect = item.getBoundingClientRect();
+          const x = (e.clientX - rect.left - rect.width / 2) / item.offsetWidth + 0.5;
+          const y = (e.clientY - rect.top - rect.height / 2) / item.offsetHeight + 0.5;
+          item.style.setProperty('--mx', (x * item.offsetWidth) + 'px');
+          item.style.setProperty('--my', (y * item.offsetHeight) + 'px');
+          if (item !== hovered) return;
+          const tiltX = Math.min(1, Math.max(0, x));
+          const tiltY = Math.min(1, Math.max(0, y));
+          item.style.setProperty('--tilt-x', ((0.5 - tiltY) * 10).toFixed(2) + 'deg');
+          item.style.setProperty('--tilt-y', ((tiltX - 0.5) * 10).toFixed(2) + 'deg');
+        });
+      });
+
+      aboutBubble.addEventListener('pointerleave', function () {
+        aboutBubble.classList.remove('menu-glow');
       });
 
 
@@ -3450,7 +3476,7 @@ clocksimulator.com/digital/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&a
       }
 
       function closeAboutBubble() {
-        aboutBubble.classList.remove('visible');
+        aboutBubble.classList.remove('visible', 'menu-glow');
         aboutBubble.setAttribute('aria-hidden', 'true');
         aboutBubble.setAttribute('inert', '');
         document.body.classList.remove('about-bubble-open');
