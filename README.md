@@ -117,7 +117,7 @@ The shape is controlled via the iframe's CSS `border-radius` — use `50%` for r
 
 ### Custom color on a transparent background
 
-In this example `theme=transparent&color=0066FF` for a blue clock. Hex colors are supplied without `#` in the URL.
+In this example `theme=transparent&color=0066FF` for a blue clock. Hex colors are supplied without `#` in the URL. On the analog clock, `secondcolor` sets a separate second hand color, e.g. `theme=transparent&color=0066FF&secondcolor=FF3B30`.
 
 Analog:
 
@@ -148,6 +148,7 @@ All parameters are optional and can be combined:
 | `rows`     | Number | Auto | Number of grid rows for multi-clock dashboard |
 | `theme`    | `dark`, `light`, `transparent` | OS preference (light fallback) | Color theme |
 | `color`    | `dark`, `light`, 3/6-digit hex without `#` (e.g. `0af`, `FF8800`) | `dark` (analog), `light` (digital) | Clock foreground color when `theme=transparent`; ignored in other themes. Invalid or missing values use the default |
+| `secondcolor` | 3/6-digit hex without `#` (e.g. `f00`, `FF3B30`) | Default second hand color | Analog second hand and center dot color when `theme=transparent`; ignored in other themes and on the digital clock. Invalid or missing values keep the default second hand color |
 | `seconds`  | `tick`, `smooth`, `hide` | `tick` | Second hand mode |
 | `border`   | `show`, `hide` | `show` | Clock border visibility |
 | `daynight` | `show`, `hide` | `hide` | Sun/moon indicator for day/night |

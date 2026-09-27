@@ -22,6 +22,90 @@ def icon_displays(page: Page) -> dict[str, str]:
     )
 
 
+def second_hand_colors(page: Page) -> dict[str, str]:
+    return page.evaluate(
+        """() => ({
+            hour: getComputedStyle(document.getElementById('hourHand')).fill,
+            second: getComputedStyle(document.getElementById('secondHand')).stroke,
+            dot: getComputedStyle(document.getElementById('centerDot')).fill
+        })"""
+    )
+
+
+@pytest.mark.cross_browser
+@pytest.mark.parametrize(
+    ("params", "expected"),
+    [
+        pytest.param(
+            {},
+            {"hour": "rgb(34, 34, 34)", "second": "rgb(214, 48, 49)", "dot": "rgb(214, 48, 49)"},
+            id="missing-default-dark",
+        ),
+        pytest.param(
+            {"color": "light"},
+            {"hour": "rgb(250, 250, 250)", "second": "rgb(239, 68, 68)", "dot": "rgb(239, 68, 68)"},
+            id="missing-named-light",
+        ),
+        pytest.param(
+            {"color": "0066ff"},
+            {"hour": "rgb(0, 102, 255)", "second": "rgb(0, 102, 255)", "dot": "rgb(0, 102, 255)"},
+            id="missing-custom-clock-color",
+        ),
+        pytest.param(
+            {"color": "0066ff", "secondcolor": "ff3b30"},
+            {"hour": "rgb(0, 102, 255)", "second": "rgb(255, 59, 48)", "dot": "rgb(255, 59, 48)"},
+            id="custom-both",
+        ),
+        pytest.param(
+            {"color": "dark", "secondcolor": "0f0"},
+            {"hour": "rgb(34, 34, 34)", "second": "rgb(0, 255, 0)", "dot": "rgb(0, 255, 0)"},
+            id="named-clock-color",
+        ),
+        pytest.param(
+            {"color": "0066ff", "secondcolor": "#ff3b30"},
+            {"hour": "rgb(0, 102, 255)", "second": "rgb(0, 102, 255)", "dot": "rgb(0, 102, 255)"},
+            id="invalid-falls-back-to-clock-color",
+        ),
+        pytest.param(
+            {"color": "light", "secondcolor": "12345"},
+            {"hour": "rgb(250, 250, 250)", "second": "rgb(239, 68, 68)", "dot": "rgb(239, 68, 68)"},
+            id="invalid-keeps-default-red",
+        ),
+    ],
+)
+def test_transparent_secondcolor_sets_second_hand_and_center_dot(
+    page: Page,
+    app_url: str,
+    params: dict[str, str],
+    expected: dict[str, str],
+) -> None:
+    open_page(page, app_url, {"embed": "true", "theme": "transparent", **params})
+    assert second_hand_colors(page) == expected
+
+
+@pytest.mark.cross_browser
+def test_secondcolor_is_ignored_outside_transparent_theme_and_cleared_by_theme_switch(
+    page: Page,
+    app_url: str,
+) -> None:
+    open_page(page, app_url, {"theme": "light", "secondcolor": "00ff00"})
+    assert page.locator("html").get_attribute("data-second-color") is None
+    assert second_hand_colors(page)["second"] == "rgb(214, 48, 49)"
+
+    open_page(page, app_url, {"theme": "transparent", "secondcolor": "00ff00"})
+    assert page.locator("html").get_attribute("data-second-color") == "custom"
+    page.mouse.move(20, 20)
+    page.wait_for_function(
+        "() => !document.querySelector('.toggle-wrapper').hasAttribute('inert')"
+    )
+    page.locator(".theme-toggle").click()
+    assert page.locator("html").get_attribute("data-second-color") is None
+    assert page.locator("html").evaluate(
+        "element => element.style.getPropertyValue('--custom-second-color')"
+    ) == ""
+    assert second_hand_colors(page)["second"] == "rgb(239, 68, 68)"
+
+
 def test_embed_mode_adds_embed_mode_class(page: Page, app_url: str) -> None:
     open_page(page, app_url, {"embed": "true"})
     assert page.evaluate("() => document.body.classList.contains('embed-mode')") is True

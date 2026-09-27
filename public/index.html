@@ -134,6 +134,11 @@ SOFTWARE.
       --center-dot: var(--custom-clock-color);
     }
 
+    html.transparent-mode[data-second-color="custom"] {
+      --second-hand: var(--custom-second-color);
+      --center-dot: var(--custom-second-color);
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -449,9 +454,10 @@ SOFTWARE.
       --ui-success: #15803d;
       --ui-danger: #b91c1c;
       --ui-focus: #005fcc;
-      --ui-code-bg: #15171c;
-      --ui-code-text: #e7e9ef;
-      --ui-code-soft: #9ba1ae;
+      --ui-code-bg: #f6f6f9;
+      --ui-code-text: #1d1d22;
+      --ui-code-soft: #5a5a66;
+      --ui-screen-bg: #15171c;
       --ui-menu-bg: rgba(250, 250, 252, 0.86);
       --ui-tile-bg: rgba(255, 255, 255, 0.78);
       --ui-tile-glow: rgba(37, 99, 235, 0.10);
@@ -486,6 +492,9 @@ SOFTWARE.
       --ui-danger: #c0392b;
       --ui-focus: #8ec5ff;
       --ui-code-bg: #0b0c0f;
+      --ui-code-text: #e7e9ef;
+      --ui-code-soft: #9ba1ae;
+      --ui-screen-bg: #0b0c0f;
       --ui-menu-bg: rgba(26, 26, 31, 0.84);
       --ui-tile-bg: rgba(255, 255, 255, 0.045);
       --ui-tile-glow: rgba(142, 197, 255, 0.12);
@@ -744,9 +753,7 @@ SOFTWARE.
       position: relative;
       border: 1px solid var(--ui-line);
       border-radius: 14px;
-      background:
-        radial-gradient(140px circle at var(--mx, -200px) var(--my, -200px), var(--ui-tile-glow), transparent 70%),
-        var(--ui-tile-bg);
+      background: var(--ui-tile-bg);
       color: inherit;
       text-decoration: none;
       transition: transform 0.25s var(--ui-ease-out), border-color 0.2s ease, box-shadow 0.25s ease;
@@ -765,6 +772,16 @@ SOFTWARE.
       border-color: var(--ui-line-strong);
       box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.45);
       transform: translateY(-2px);
+    }
+
+    @media (hover: hover) {
+
+      .menu-tile:hover,
+      .menu-switch:hover {
+        background:
+          radial-gradient(140px circle at var(--mx, 50%) var(--my, 50%), var(--ui-tile-glow), transparent 70%),
+          var(--ui-tile-bg);
+      }
     }
 
     .menu-tile:active,
@@ -855,7 +872,7 @@ SOFTWARE.
       height: 38px;
       flex-shrink: 0;
       border-radius: 10px;
-      background: var(--ui-code-bg);
+      background: var(--ui-screen-bg);
       color: #f5f5f7;
       font-size: 14px;
       font-weight: 600;
@@ -1263,6 +1280,22 @@ SOFTWARE.
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
+    .embed-color-pair {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .embed-color-item {
+      min-width: 0;
+    }
+
+    .embed-color-item label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
     .embed-field input[type="color"] {
       padding: 4px;
       cursor: pointer;
@@ -1528,7 +1561,7 @@ SOFTWARE.
       border-radius: 14px;
       background: var(--ui-code-bg);
       color: var(--ui-code-text);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 0 0 1px var(--ui-line);
     }
 
     .code-card-head {
@@ -1537,7 +1570,7 @@ SOFTWARE.
       gap: 12px;
       margin: 0 -4px 4px;
       padding: 9px 14px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid var(--ui-line);
       color: var(--ui-code-soft);
       font-family: var(--ui-mono);
       font-size: 11px;
@@ -1590,7 +1623,6 @@ SOFTWARE.
     }
 
     .overlay .embed-code:focus-visible {
-      outline-color: #8ec5ff;
       outline-offset: 0;
     }
 
@@ -1944,6 +1976,7 @@ SOFTWARE.
       overflow-x: auto;
       border-radius: 12px;
       background: var(--ui-code-bg);
+      box-shadow: inset 0 0 0 1px var(--ui-line);
       color: var(--ui-code-text);
       font-family: var(--ui-mono);
       font-size: 11.5px;
@@ -2145,6 +2178,11 @@ SOFTWARE.
           : colorParam === 'dark' || colorParam === 'light' ? colorParam : 'dark';
         if (isHexColor) {
           document.documentElement.style.setProperty('--custom-clock-color', '#' + colorParam);
+        }
+        const secondColorParam = params.get('secondcolor');
+        if (/^(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(secondColorParam || '')) {
+          document.documentElement.dataset.secondColor = 'custom';
+          document.documentElement.style.setProperty('--custom-second-color', '#' + secondColorParam);
         }
         return;
       }
@@ -2434,8 +2472,16 @@ SOFTWARE.
                 </select>
               </div>
               <div class="embed-field" id="embedCustomColorField" hidden>
-                <label for="embedCustomColor">Custom color</label>
-                <input type="color" id="embedCustomColor" value="#ff8800">
+                <div class="embed-color-pair">
+                  <div class="embed-color-item">
+                    <label for="embedCustomColor">Clock</label>
+                    <input type="color" id="embedCustomColor" value="#ff8800" aria-label="Custom clock color">
+                  </div>
+                  <div class="embed-color-item">
+                    <label for="embedSecondColor">Second hand</label>
+                    <input type="color" id="embedSecondColor" value="#d63031" aria-label="Custom second hand color">
+                  </div>
+                </div>
               </div>
               <div class="embed-field">
                 <label for="embedSeconds">Second hand</label>
@@ -2778,6 +2824,11 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             <td><code>dark</code></td>
           </tr>
           <tr>
+            <td><code>secondcolor</code></td>
+            <td>3/6-digit hex without <code>#</code> (e.g. <code>f00</code>, <code>FF3B30</code>); second hand and center dot color with <code>theme=transparent</code>. Invalid or missing values keep the default second hand color.</td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
             <td><code>seconds</code></td>
             <td><code>tick</code>, <code>smooth</code>, <code>hide</code></td>
             <td><code>tick</code></td>
@@ -2950,9 +3001,16 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         if (isHexColor) {
           document.documentElement.style.setProperty('--custom-clock-color', '#' + colorParam);
         }
+        const secondColorParam = params.get('secondcolor');
+        if (/^(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(secondColorParam || '')) {
+          document.documentElement.dataset.secondColor = 'custom';
+          document.documentElement.style.setProperty('--custom-second-color', '#' + secondColorParam);
+        }
       } else {
         delete document.documentElement.dataset.clockColor;
         document.documentElement.style.removeProperty('--custom-clock-color');
+        delete document.documentElement.dataset.secondColor;
+        document.documentElement.style.removeProperty('--custom-second-color');
       }
       themeToggle.checked = activeTheme === 'dark';
 
@@ -3340,6 +3398,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         document.documentElement.classList.remove('transparent-mode');
         delete document.documentElement.dataset.clockColor;
         document.documentElement.style.removeProperty('--custom-clock-color');
+        delete document.documentElement.dataset.secondColor;
+        document.documentElement.style.removeProperty('--custom-second-color');
         document.documentElement.classList.toggle('dark-mode', this.checked);
         saveSettings();
       });
@@ -3810,6 +3870,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const embedClockColorSelect = document.getElementById('embedClockColor');
         const embedCustomColorField = document.getElementById('embedCustomColorField');
         const embedCustomColorInput = document.getElementById('embedCustomColor');
+        const embedSecondColorInput = document.getElementById('embedSecondColor');
         const embedSecondsSelect = document.getElementById('embedSeconds');
         const embedBorderSelect = document.getElementById('embedBorder');
         const embedShapeSelect = document.getElementById('embedShape');
@@ -3825,6 +3886,17 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const localBase = window.location.origin + window.location.pathname;
         const prodBase = 'https://clocksimulator.com/';
         let embedDebounceTimer;
+        let embedThemeChosen = false;
+
+        function currentPageTheme() {
+          return document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light';
+        }
+
+        function syncEmbedTheme() {
+          // Follow the page theme until the user picks an embed theme explicitly.
+          if (embedThemeChosen) return;
+          embedThemeSelect.value = currentPageTheme();
+        }
 
         function appendCommonParams(p, themeVal, secondsVal, borderVal, daynightVal, numbersVal) {
           p.push('theme=' + themeVal);
@@ -3874,6 +3946,9 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           if (shadows === 'false') p.push('shadows=false');
           if (embedThemeSelect.value === 'transparent') {
             p.push('color=' + embedClockColorValue());
+            if (embedClockColorSelect.value === 'custom') {
+              p.push('secondcolor=' + embedSecondColorInput.value.slice(1).toLowerCase());
+            }
           }
           return '?' + p.join('&');
         }
@@ -3919,6 +3994,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
         function openEmbedPanel(e) {
           openPanel(e, embedOverlay);
+          syncEmbedTheme();
           updateEmbed();
           trapFocus(embedOverlay);
         }
@@ -3961,9 +4037,13 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         });
 
         embedTzInput.addEventListener('input', updateEmbedDebounced);
-        embedThemeSelect.addEventListener('change', updateEmbed);
+        embedThemeSelect.addEventListener('change', function () {
+          embedThemeChosen = true;
+          updateEmbed();
+        });
         embedClockColorSelect.addEventListener('change', updateEmbed);
         embedCustomColorInput.addEventListener('input', updateEmbedDebounced);
+        embedSecondColorInput.addEventListener('input', updateEmbedDebounced);
         embedSecondsSelect.addEventListener('change', updateEmbed);
         embedBorderSelect.addEventListener('change', updateEmbed);
         embedShapeSelect.addEventListener('change', updateEmbed);
@@ -3983,7 +4063,6 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         const tzChipsEl = document.getElementById('tzChips');
         const dashboardRowsSelect = document.getElementById('dashboardRows');
         const dashboardThemeSelect = document.getElementById('dashboardTheme');
-        dashboardThemeSelect.value = document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light';
         const dashboardSecondsSelect = document.getElementById('dashboardSeconds');
         const dashboardNumbersSelect = document.getElementById('dashboardNumbers');
         const dashboardShadowsSelect = document.getElementById('dashboardShadows');
@@ -4000,6 +4079,13 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           'Australia/Sydney'];
         const dashboardTimezones = [];
         let dashboardDebounceTimer;
+        let dashboardThemeChosen = false;
+
+        function syncDashboardTheme() {
+          // Follow the page theme until the user picks a dashboard theme explicitly.
+          if (dashboardThemeChosen) return;
+          dashboardThemeSelect.value = currentPageTheme();
+        }
 
         function timezoneOffsetLabel(tz) {
           try {
@@ -4149,6 +4235,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
 
         function openDashboardPanel(e) {
           openPanel(e, dashboardOverlay);
+          syncDashboardTheme();
           renderTzChips();
           updateDashboardPreview();
           trapFocus(dashboardOverlay);
@@ -4170,7 +4257,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         });
 
         dashboardRowsSelect.addEventListener('change', debouncedDashboardPreview);
-        dashboardThemeSelect.addEventListener('change', debouncedDashboardPreview);
+        dashboardThemeSelect.addEventListener('change', function () {
+          dashboardThemeChosen = true;
+          debouncedDashboardPreview();
+        });
         dashboardSecondsSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardNumbersSelect.addEventListener('change', debouncedDashboardPreview);
         dashboardShadowsSelect.addEventListener('change', debouncedDashboardPreview);
