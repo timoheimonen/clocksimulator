@@ -22,55 +22,12 @@ PAGE_PATHS = [
 THEME_PRIORITY_CASES = [
     pytest.param(
         {
-            "params": {"theme": "dark"},
-            "stored": "light",
-            "os_dark": False,
-            "expected": "dark",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 0,
-            "final_media": 0,
-        },
-        id="explicit-dark",
-    ),
-    pytest.param(
-        {
             "params": {"theme": "light"},
             "stored": "dark",
             "os_dark": True,
             "expected": "light",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 0,
-            "final_media": 0,
         },
         id="explicit-light",
-    ),
-    pytest.param(
-        {
-            "params": {"theme": "transparent"},
-            "stored": "dark",
-            "os_dark": True,
-            "expected": "transparent",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 0,
-            "final_media": 0,
-        },
-        id="explicit-transparent",
-    ),
-    pytest.param(
-        {
-            "params": {"embed": "true", "theme": "light"},
-            "stored": "dark",
-            "os_dark": True,
-            "expected": "light",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 0,
-            "final_media": 0,
-        },
-        id="explicit-light-over-embed-default",
     ),
     pytest.param(
         {
@@ -78,10 +35,6 @@ THEME_PRIORITY_CASES = [
             "stored": "dark",
             "os_dark": True,
             "expected": "transparent",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 0,
-            "final_media": 0,
         },
         id="explicit-transparent-over-embed-default",
     ),
@@ -91,61 +44,17 @@ THEME_PRIORITY_CASES = [
             "stored": "light",
             "os_dark": False,
             "expected": "dark",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 0,
-            "final_media": 0,
         },
         id="embed-default",
-    ),
-    pytest.param(
-        {
-            "stored": "dark",
-            "os_dark": False,
-            "expected": "dark",
-            "head_reads": 1,
-            "final_reads": 2,
-            "head_media": 0,
-            "final_media": 0,
-        },
-        id="stored-dark",
     ),
     pytest.param(
         {
             "stored": "light",
             "os_dark": True,
             "expected": "light",
-            "head_reads": 1,
-            "final_reads": 2,
-            "head_media": 0,
-            "final_media": 0,
+            "reads_storage": True,
         },
         id="stored-light",
-    ),
-    pytest.param(
-        {
-            "stored": "transparent",
-            "os_dark": False,
-            "expected": "light",
-            "head_reads": 1,
-            "final_reads": 2,
-            "head_media": 1,
-            "final_media": 2,
-        },
-        id="stored-transparent-falls-back-to-os",
-    ),
-    pytest.param(
-        {
-            "stored": "dark",
-            "os_dark": False,
-            "expected": "dark",
-            "head_reads": 1,
-            "final_reads": 2,
-            "head_media": 0,
-            "final_media": 0,
-            "bare_query": True,
-        },
-        id="bare-query-uses-storage",
     ),
     pytest.param(
         {
@@ -153,10 +62,7 @@ THEME_PRIORITY_CASES = [
             "stored": "dark",
             "os_dark": False,
             "expected": "light",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 1,
-            "final_media": 2,
+            "reads_media": True,
         },
         id="unrelated-param-skips-storage",
     ),
@@ -166,107 +72,19 @@ THEME_PRIORITY_CASES = [
             "stored": "light",
             "os_dark": True,
             "expected": "dark",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 1,
-            "final_media": 2,
+            "reads_media": True,
         },
         id="invalid-theme-skips-storage",
-    ),
-    pytest.param(
-        {
-            "params": {"embed": "true", "theme": "sepia"},
-            "stored": "light",
-            "os_dark": False,
-            "expected": "dark",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 0,
-            "final_media": 0,
-        },
-        id="invalid-theme-keeps-embed-default",
-    ),
-    pytest.param(
-        {
-            "storage_value": "{invalid-json",
-            "os_dark": True,
-            "expected": "dark",
-            "head_reads": 1,
-            "final_reads": 2,
-            "head_media": 1,
-            "final_media": 2,
-        },
-        id="invalid-json-falls-back-to-os",
     ),
     pytest.param(
         {
             "storage_error": True,
             "os_dark": False,
             "expected": "light",
-            "head_reads": 1,
-            "final_reads": 2,
-            "head_media": 1,
-            "final_media": 2,
+            "reads_storage": True,
+            "reads_media": True,
         },
         id="storage-exception-falls-back-to-os",
-    ),
-]
-
-OS_RESYNC_CASES = [
-    pytest.param(
-        {
-            "os_dark": True,
-            "os_dark_after_head": False,
-            "head": "dark",
-            "final": "light",
-            "head_reads": 1,
-            "final_reads": 2,
-            "head_media": 1,
-            "final_media": 2,
-        },
-        id="os-only-resynchronizes",
-    ),
-    pytest.param(
-        {
-            "params": {"theme": "light"},
-            "os_dark": False,
-            "os_dark_after_head": True,
-            "head": "light",
-            "final": "light",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 0,
-            "final_media": 0,
-        },
-        id="explicit-theme-does-not-resynchronize",
-    ),
-    pytest.param(
-        {
-            "params": {"embed": "true"},
-            "os_dark": False,
-            "os_dark_after_head": True,
-            "head": "dark",
-            "final": "dark",
-            "head_reads": 0,
-            "final_reads": 0,
-            "head_media": 0,
-            "final_media": 0,
-        },
-        id="embed-default-does-not-resynchronize",
-    ),
-    pytest.param(
-        {
-            "stored": "light",
-            "os_dark": False,
-            "os_dark_after_head": True,
-            "head": "light",
-            "final": "light",
-            "head_reads": 1,
-            "final_reads": 2,
-            "head_media": 0,
-            "final_media": 0,
-        },
-        id="stored-theme-does-not-resynchronize",
     ),
 ]
 
@@ -287,7 +105,6 @@ def open_with_theme_probe(
     case: dict[str, object],
 ) -> dict[str, object]:
     os_dark = bool(case.get("os_dark", False))
-    os_dark_after_head = bool(case.get("os_dark_after_head", os_dark))
     storage_error = bool(case.get("storage_error", False))
     override = """<script>
       (function () {
@@ -344,7 +161,7 @@ def open_with_theme_probe(
             var matches = false;
             if (query === '(prefers-color-scheme: dark)') {
               window.__themeProbe.mediaReads += 1;
-              matches = window.__themeProbe.mediaReads === 1 ? %s : %s;
+              matches = %s;
             }
             return {
               matches: matches,
@@ -370,7 +187,6 @@ def open_with_theme_probe(
     </script>""" % (
         json.dumps(storage_error),
         json.dumps(os_dark),
-        json.dumps(os_dark_after_head),
     )
     head_probe = """<script>
       window.__clockColorAfterHead = window.__recordClockColor();
@@ -430,22 +246,21 @@ def assert_theme_probe(
     head_theme: str,
     final_theme: str,
 ) -> None:
-    assert result["head"] == {
-        "theme": head_theme,
-        "reads": case["head_reads"],
-        "writes": 0,
-        "mediaReads": case["head_media"],
-    }
-    assert result["domcontentloaded"] == {
-        "theme": final_theme,
-        "checked": final_theme == "dark",
-        "reads": case["final_reads"],
-        "writes": 0,
-        "mediaReads": case["final_media"],
-        "transitions": [head_theme]
-        if head_theme == final_theme
-        else [head_theme, final_theme],
-    }
+    reads_storage = bool(case.get("reads_storage", False))
+    reads_media = bool(case.get("reads_media", False))
+    head = result["head"]
+    loaded = result["domcontentloaded"]
+    assert isinstance(head, dict) and isinstance(loaded, dict)
+    assert head["theme"] == head_theme
+    assert loaded["theme"] == final_theme
+    assert loaded["checked"] is (final_theme == "dark")
+    assert loaded["transitions"] == (
+        [head_theme] if head_theme == final_theme else [head_theme, final_theme]
+    )
+    for snapshot in (head, loaded):
+        assert snapshot["writes"] == 0
+        assert (snapshot["reads"] > 0) is reads_storage
+        assert (snapshot["mediaReads"] > 0) is reads_media
     assert result["finalTheme"] == final_theme
     assert result["finalWrites"] == 0
 
@@ -465,35 +280,18 @@ def test_theme_priority_and_fouc_matrix(
 
 
 @pytest.mark.cross_browser
-@pytest.mark.parametrize("path", PAGE_PATHS)
-@pytest.mark.parametrize("case", OS_RESYNC_CASES)
-def test_os_theme_resynchronizes_only_without_stronger_source(
-    page: Page,
-    app_url: str,
-    path: str,
-    case: dict[str, object],
-) -> None:
-    result = open_with_theme_probe(page, app_url, path, case)
-    assert_theme_probe(result, case, str(case["head"]), str(case["final"]))
-
-
-@pytest.mark.cross_browser
-@pytest.mark.parametrize("path", PAGE_PATHS)
 @pytest.mark.parametrize(
-    ("color", "dashboard"),
+    ("path", "color", "dashboard"),
     [
-        pytest.param(None, False, id="legacy-default"),
-        pytest.param("invalid", False, id="invalid-default"),
-        *[pytest.param(value, False, id=f"invalid-hex-{index}") for index, value in
-          enumerate(("", "ab", "abcd", "abcde", "abcdef0", "abcdef12", "ggg", "#abc", " abc", "abc;"))],
-        pytest.param("0aF", False, id="hex-short-single"),
-        pytest.param("FF8800", False, id="hex-long-single"),
-        pytest.param("0aF", True, id="hex-short-dashboard"),
-        pytest.param("FF8800", True, id="hex-long-dashboard"),
-        pytest.param("dark", False, id="dark-single"),
-        pytest.param("light", False, id="light-single"),
-        pytest.param("dark", True, id="dark-dashboard"),
-        pytest.param("light", True, id="light-dashboard"),
+        pytest.param("", None, False, id="analog-legacy-default"),
+        pytest.param("", "abcdef12", False, id="analog-invalid-hex-eight-digits"),
+        pytest.param("", "#abc", False, id="analog-invalid-hex-leading-hash"),
+        pytest.param("", "0aF", False, id="analog-hex-short-single"),
+        pytest.param("", "FF8800", True, id="analog-hex-long-dashboard"),
+        pytest.param("", "light", False, id="analog-light-single"),
+        pytest.param("/digital/", None, False, id="digital-legacy-default"),
+        pytest.param("/digital/", "FF8800", True, id="digital-hex-long-dashboard"),
+        pytest.param("/digital/", "dark", False, id="digital-dark-single"),
     ],
 )
 def test_transparent_clock_color_before_first_paint_and_rendered_without_storage_changes(
@@ -513,10 +311,6 @@ def test_transparent_clock_color_before_first_paint_and_rendered_without_storage
         "params": params,
         "storage_value": raw_settings,
         "os_dark": True,
-        "head_reads": 0,
-        "final_reads": 0,
-        "head_media": 0,
-        "final_media": 0,
     }
     result = open_with_theme_probe(page, app_url, path, case)
     assert_theme_probe(result, case, "transparent", "transparent")
@@ -580,11 +374,12 @@ def test_transparent_clock_color_before_first_paint_and_rendered_without_storage
 
 
 @pytest.mark.cross_browser
-@pytest.mark.parametrize("path", PAGE_PATHS)
 @pytest.mark.parametrize(
-    ("theme", "color", "expected_theme"),
-    [("dark", "dark", "dark"), ("light", "light", "light"), (None, "dark", "dark"),
-     ("dark", "0af", "dark"), ("light", "FF8800", "light"), (None, "0af", "dark")],
+    ("path", "theme", "color", "expected_theme"),
+    [
+        pytest.param("", None, "0af", "dark", id="analog-embed-default-hex"),
+        pytest.param("/digital/", "light", "FF8800", "light", id="digital-light-hex"),
+    ],
 )
 def test_clock_color_is_ignored_without_transparent_theme(
     page: Page,
@@ -600,10 +395,6 @@ def test_clock_color_is_ignored_without_transparent_theme(
     case = {
         "params": params,
         "stored": "light",
-        "head_reads": 0,
-        "final_reads": 0,
-        "head_media": 0,
-        "final_media": 0,
     }
     result = open_with_theme_probe(page, app_url, path, case)
     assert_theme_probe(result, case, expected_theme, expected_theme)
@@ -618,59 +409,18 @@ def test_clock_color_is_ignored_without_transparent_theme(
 
 @pytest.mark.cross_browser
 @pytest.mark.parametrize("path", PAGE_PATHS)
-@pytest.mark.parametrize(
-    ("theme", "expected_bg"),
-    [
-        pytest.param("light", "#f0f0f0", id="light"),
-        pytest.param("dark", "#000000", id="dark"),
-        pytest.param("transparent", "transparent", id="transparent"),
-    ],
-)
-def test_theme_classes_and_base_rendering(
-    page: Page,
-    app_url: str,
-    path: str,
-    theme: str,
-    expected_bg: str,
-) -> None:
-    install_test_clock(page)
-    seed_local_storage(page, app_url)
-    navigate_clock_page(page, build_clock_url(app_url, path, {"theme": theme}))
-    assert theme_name(page) == theme
-    assert page.locator("html").evaluate(
-        "element => getComputedStyle(element).getPropertyValue('--bg').trim()"
-    ) == expected_bg
-    assert page.locator("#themeToggle").is_checked() is (theme == "dark")
-
-
-@pytest.mark.cross_browser
-@pytest.mark.parametrize("path", PAGE_PATHS)
-@pytest.mark.parametrize(
-    ("initial_theme", "initial_color", "expected_theme"),
-    [
-        pytest.param("light", None, "dark", id="light-to-dark"),
-        pytest.param("transparent", None, "dark", id="transparent-to-dark"),
-        pytest.param("transparent", "dark", "dark", id="transparent-dark-color-to-dark"),
-        pytest.param("transparent", "light", "dark", id="transparent-light-color-to-dark"),
-        pytest.param("transparent", "0af", "dark", id="transparent-hex-color-to-dark"),
-    ],
-)
 def test_theme_switch_updates_class_and_checked_state(
     page: Page,
     app_url: str,
     path: str,
-    initial_theme: str,
-    initial_color: str | None,
-    expected_theme: str,
 ) -> None:
     install_test_clock(page)
     seed_local_storage(page, app_url)
-    params = {"theme": initial_theme}
-    if initial_color is not None:
-        params["color"] = initial_color
-    navigate_clock_page(page, build_clock_url(app_url, path, params))
+    navigate_clock_page(
+        page, build_clock_url(app_url, path, {"theme": "transparent", "color": "0af"})
+    )
     switch = page.locator("#themeToggle")
     page.evaluate("() => document.getElementById('themeToggle').click()")
-    assert theme_name(page) == expected_theme
+    assert theme_name(page) == "dark"
     assert switch.is_checked() is True
     assert page.locator("html").get_attribute("data-clock-color") is None

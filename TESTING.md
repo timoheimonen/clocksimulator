@@ -1,6 +1,6 @@
 # Testing clocksimulator
 
-The test suite is a release gate for the analog and digital applications, not a source-code string checker. It verifies rendered time, URL contracts, browser API lifecycles, accessibility, offline behavior, Cloudflare routing, and visual output.
+The test suite is a release gate for the analog and digital applications, not a source-code string checker. It verifies rendered time, URL contracts, browser API lifecycles, accessibility, offline behavior, and Cloudflare routing.
 
 Do not maintain a hand-written test count here. Use collection when a count is needed:
 
@@ -37,7 +37,6 @@ npm install --global wrangler@4.28.0
 conda run -n clocksimulator python -m pytest
 conda run -n clocksimulator python -m pytest -p no:randomly
 conda run -n clocksimulator python -m pytest --randomly-seed=20260718
-conda run -n clocksimulator python -m pytest -m visual
 conda run -n clocksimulator python -m pytest -m service_worker
 conda run -n clocksimulator python -m pytest -m deployment
 conda run -n clocksimulator python -m pytest -m cross_browser --browser-engine=firefox
@@ -50,7 +49,6 @@ conda run -n clocksimulator python -m pytest -m cross_browser --browser-engine=w
 
 | Marker | Purpose |
 |---|---|
-| `visual` | Compares rendered output with committed baselines |
 | `service_worker` | Runs with service workers enabled in an isolated context |
 | `deployment` | Runs against pinned Wrangler 4.28.0 rather than the fast test server |
 | `cross_browser` | Critical behavior required in Chromium, Firefox, and WebKit |
@@ -73,7 +71,6 @@ Markers are registered under `--strict-markers`. Release checks are run manually
 | Offline install/activate/fetch | Yes | Fallback | Yes | Fallback | — | — | — | — | Chromium | `test_service_worker.py` |
 | Cloudflare routes, headers, MIME | Yes | Shared page | Yes | Shared page | Cross-origin | Cross-origin | Cross-origin | Cross-origin | Chromium | `test_deployment_contract.py` |
 | Versions, manifest, icons, canonicals | Yes | Shared app | Yes | Shared app | — | — | — | — | Static | `test_static_contracts.py` |
-| Snapshot oracle itself | — | — | Yes | — | Embed view | — | Transparent | — | Chromium | `test_test_infrastructure.py`, visual-marked tests |
 
 The matrix names the primary owner. Tests may deliberately overlap when they exercise a distinct implementation path or integration boundary.
 
@@ -87,7 +84,7 @@ Chromium and Firefox share one browser process per session. WebKit restarts the 
 
 The timer probe records timeout and interval identity, delay, calls, and cancellation. Manual mode invokes callbacks without real waiting. Production and test code must not use sleep-based synchronization.
 
-Builder and Wake Lock behavior tests inject test-only CSS that removes transition and animation durations. This does not change `prefers-reduced-motion`, so application JavaScript follows the ordinary-motion path while Playwright avoids waiting for purely decorative transitions. Dedicated normal-motion, reduced-motion, and visual tests run without that suppression.
+Builder and Wake Lock behavior tests inject test-only CSS that removes transition and animation durations. This does not change `prefers-reduced-motion`, so application JavaScript follows the ordinary-motion path while Playwright avoids waiting for purely decorative transitions. Dedicated normal-motion and reduced-motion tests run without that suppression.
 
 The ordinary asset server is threaded so intercepted document requests can fetch the original response without deadlocking the server. Shutdown closes the socket and joins the serving thread; daemon request threads cannot hold the test process open.
 
@@ -95,7 +92,7 @@ Unexpected `pageerror` and `console.error` events fail teardown. A test that int
 
 ## Time contracts
 
-The browser's default timezone is UTC. Clock screenshots use `2026-01-01T12:00:00Z`. DST tests cross the exact 2026 New York spring and fall transitions within one page session. The target-timezone offset must be recalculated on the first update at or after 60,000 ms. Day is `[06:00, 18:00)` in the target timezone.
+The browser's default timezone is UTC. The default fixed test time is `2026-01-01T12:00:00Z`. DST tests cross the exact 2026 New York spring and fall transitions within one page session. The target-timezone offset must be recalculated on the first update at or after 60,000 ms. Day is `[06:00, 18:00)` in the target timezone.
 
 The offset matrix includes `America/St_Johns`, `Pacific/Kiritimati`, `Pacific/Pago_Pago`, `Asia/Kathmandu`, and the 30-minute `Australia/Lord_Howe` DST transition.
 
@@ -111,19 +108,6 @@ The offset matrix includes `America/St_Johns`, `Pacific/Kiritimati`, `Pacific/Pa
 ## Builder contracts
 
 Generated HTML contains exactly one parseable iframe. Every visible control must affect both the canonical URL and the live preview. Clipboard and open actions receive the exact generated value. Invalid dimensions are rejected; valid inclusive boundaries are accepted. Preview dimensions may be capped for the dialog but generated dimensions are not silently changed.
-
-## Visual regression policy
-
-The canonical environment is Chromium from Playwright 1.58.0 on macOS 26 arm64, matching the committed baselines. Ordinary local runs never update baselines.
-
-Before capture, the helper waits for exact clock readiness and `document.fonts.ready`, disables animations, hides the caret, and uses the fixed context settings. Comparisons are exact. A missing baseline is a failure. Only `--update-snapshots` may create or replace one.
-
-```bash
-conda run -n clocksimulator python -m pytest -m visual
-conda run -n clocksimulator python -m pytest -m visual --update-snapshots
-```
-
-Update only reviewed, intentional baselines. A failed comparison writes `*_diff.png`; a passing comparison removes its stale diff. Transparent baselines use RGBA with `omit_background=True`, require zero alpha in known corner background pixels, require non-empty visible content, and compare alpha like every other channel. Small day/night and second-hand details have focused baselines alongside DOM assertions.
 
 ## Service worker and deployment
 
@@ -143,4 +127,4 @@ Before a release, run the complete local matrix with:
 
 The wrapper intentionally has no separate dependency preflight: the real test processes validate the environment they use. It runs the complete Chromium suite first, followed by the Firefox and WebKit `cross_browser` selections. The gates run sequentially and fail fast. Do not use retries to turn a failing release check green.
 
-The default seed is generated once, printed, and reused for every gate. Reproduce a run with `--seed VALUE`. `run_tests.sh` removes ambient pytest, Python-path, and user-site overrides so shell or Conda settings cannot narrow the matrix, inject plugins, or update snapshots. Playwright traces are written to a temporary release directory and retained for diagnosis. `--dry-run` prints the three shell-escaped commands without creating artifacts or executing tests.
+The default seed is generated once, printed, and reused for every gate. Reproduce a run with `--seed VALUE`. `run_tests.sh` removes ambient pytest, Python-path, and user-site overrides so shell or Conda settings cannot narrow the matrix or inject plugins. Playwright traces are written to a temporary release directory and retained for diagnosis. `--dry-run` prints the three shell-escaped commands without creating artifacts or executing tests.

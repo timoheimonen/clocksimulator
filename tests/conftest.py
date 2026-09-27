@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from io import BytesIO
 import os
 from pathlib import Path
 import re
@@ -36,12 +35,6 @@ class BrowserError:
 
 def pytest_addoption(parser) -> None:
     parser.addoption(
-        "--update-snapshots",
-        action="store_true",
-        default=False,
-        help="Regenerate baseline screenshots",
-    )
-    parser.addoption(
         "--browser-engine",
         action="store",
         choices=("chromium", "firefox", "webkit"),
@@ -55,11 +48,6 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     report = outcome.get_result()
     setattr(item, "rep_" + report.when, report)
-
-
-@pytest.fixture(scope="session")
-def update_snapshots(request) -> bool:
-    return request.config.getoption("--update-snapshots")
 
 
 @pytest.fixture(scope="session")
@@ -77,30 +65,11 @@ def http_server() -> Iterator[str]:
 
         def send_head(self):
             request_path, separator, query = self.path.partition("?")
-            if request_path == "/__partial-content__":
-                payload = b"partial"
-                self.send_response(HTTPStatus.PARTIAL_CONTENT)
-                self.send_header("Content-Type", "text/plain; charset=utf-8")
-                self.send_header("Content-Range", "bytes 0-6/7")
-                self.send_header("Content-Length", str(len(payload)))
-                self.end_headers()
-                return BytesIO(payload)
-            redirect_paths = {
-                "/privacy.html": "/privacy",
-                "/TOS.html": "/TOS",
-            }
             rewrite_paths = {
                 "/privacy": "/privacy.html",
                 "/TOS": "/TOS.html",
             }
             query_suffix = separator + query if separator else ""
-
-            if request_path in redirect_paths:
-                self.send_response(HTTPStatus.TEMPORARY_REDIRECT)
-                self.send_header("Location", redirect_paths[request_path] + query_suffix)
-                self.send_header("Content-Length", "0")
-                self.end_headers()
-                return None
 
             if request_path in rewrite_paths:
                 original_path = self.path

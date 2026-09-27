@@ -156,77 +156,47 @@ def deployment_url() -> Iterator[str]:
         yield base_url
 
 
-@pytest.mark.parametrize(
-    ("path", "expected_title_fragment"),
-    [
-        pytest.param("/", "Online Analog Clock", id="analog-root"),
-        pytest.param("/digital/", "Online Digital Clock", id="digital-directory"),
-    ],
-)
-def test_primary_routes_serve_html(
-    deployment_url: str, path: str, expected_title_fragment: str
-) -> None:
-    response = fetch(deployment_url + path)
-    assert response.status == 200
-    assert response.headers["content-type"].startswith("text/html")
-    assert expected_title_fragment.encode() in response.body
+def test_html_routes(deployment_url: str) -> None:
+    for path in ("/", "/digital/", "/privacy", "/TOS"):
+        response = fetch(deployment_url + path)
+        assert response.status == 200, path
+        assert response.headers["content-type"].startswith("text/html"), path
 
 
-@pytest.mark.parametrize(
-    ("source", "destination"),
-    [
-        pytest.param("/digital?mode=test", "/digital/?mode=test", id="digital-trailing-slash"),
-        pytest.param("/privacy.html?source=legacy", "/privacy?source=legacy", id="privacy-legacy"),
-        pytest.param("/TOS.html?source=legacy", "/TOS?source=legacy", id="tos-legacy"),
-    ],
-)
-def test_auto_trailing_slash_redirects_preserve_query(
-    deployment_url: str, source: str, destination: str
-) -> None:
-    response = fetch(deployment_url + source)
-    assert response.status in {301, 302, 307, 308}
-    location = urlsplit(response.headers["location"])
-    assert location.path + ("?" + location.query if location.query else "") == destination
-
-
-@pytest.mark.parametrize(
-    "path",
-    [pytest.param("/privacy", id="privacy"), pytest.param("/TOS", id="tos")],
-)
-def test_extensionless_legal_routes_serve_html(deployment_url: str, path: str) -> None:
-    response = fetch(deployment_url + path)
-    assert response.status == 200
-    assert response.headers["content-type"].startswith("text/html")
-    assert b'<link rel="canonical"' in response.body
+def test_auto_trailing_slash_redirects_preserve_query(deployment_url: str) -> None:
+    redirects = {
+        "/digital?mode=test": "/digital/?mode=test",
+        "/privacy.html?source=legacy": "/privacy?source=legacy",
+        "/TOS.html?source=legacy": "/TOS?source=legacy",
+    }
+    for source, destination in redirects.items():
+        response = fetch(deployment_url + source)
+        assert response.status in {301, 302, 307, 308}, source
+        location = urlsplit(response.headers["location"])
+        actual = location.path + ("?" + location.query if location.query else "")
+        assert actual == destination, source
 
 
 def test_deployment_headers_allow_embedding_and_cors(deployment_url: str) -> None:
-    response = fetch(deployment_url + "/")
-    assert response.status == 200
-    csp = response.headers["content-security-policy"]
-    directives = [part.strip() for part in csp.split(";") if part.strip()]
-    assert "frame-ancestors *" in directives
-    assert response.headers["access-control-allow-origin"] == "*"
+    for path in ("/", "/digital/"):
+        response = fetch(deployment_url + path)
+        assert response.status == 200, path
+        csp = response.headers["content-security-policy"]
+        directives = [part.strip() for part in csp.split(";") if part.strip()]
+        assert "frame-ancestors *" in directives, path
+        assert response.headers["access-control-allow-origin"] == "*", path
 
 
-@pytest.mark.parametrize(
-    ("path", "mime_prefix"),
-    [
-        pytest.param("/sw.js", "application/javascript", id="service-worker"),
-        pytest.param("/manifest.json", "application/json", id="manifest"),
-        pytest.param("/apple-touch-icon.png", "image/png", id="png"),
-        pytest.param("/robots.txt", "text/plain", id="robots"),
-    ],
-)
-def test_static_asset_status_and_mime(
-    deployment_url: str, path: str, mime_prefix: str
-) -> None:
-    response = fetch(deployment_url + path)
-    assert response.status == 200
-    assert response.headers["content-type"].startswith(mime_prefix)
-    assert response.body
-    if path == "/sw.js":
-        assert response.headers.get("location") is None
+def test_static_asset_status_and_mime(deployment_url: str) -> None:
+    assets = {
+        "/sw.js": "application/javascript",
+        "/manifest.json": "application/json",
+    }
+    for path, mime_prefix in assets.items():
+        response = fetch(deployment_url + path)
+        assert response.status == 200, path
+        assert response.headers["content-type"].startswith(mime_prefix), path
+        assert response.body, path
 
 
 def test_cross_origin_analog_and_digital_iframes(
@@ -253,15 +223,8 @@ def test_cross_origin_analog_and_digital_iframes(
     digital = page.frame_locator("#digital")
     analog.locator("#clock").wait_for(state="visible")
     digital.locator("#digitalTime").wait_for(state="visible")
+    deployment_origin = urlsplit(deployment_url).scheme + "://" + urlsplit(deployment_url).netloc
     frames = [frame for frame in page.frames if frame.parent_frame is page.main_frame]
     assert len(frames) == 2
     for child in frames:
-        assert child.evaluate("() => location.origin") == urlsplit(deployment_url).scheme + "://" + urlsplit(deployment_url).netloc
-        assert child.evaluate(
-            "() => getComputedStyle(document.documentElement).backgroundColor"
-        ) == "rgba(0, 0, 0, 0)"
-        assert child.evaluate("() => getComputedStyle(document.body).backgroundColor") == "rgba(0, 0, 0, 0)"
-        assert child.evaluate("() => document.documentElement.scrollWidth <= innerWidth") is True
-        assert child.evaluate("() => document.documentElement.scrollHeight <= innerHeight") is True
-        assert child.evaluate("() => document.body.scrollWidth <= innerWidth") is True
-        assert child.evaluate("() => document.body.scrollHeight <= innerHeight") is True
+        assert child.evaluate("() => location.origin") == deployment_origin

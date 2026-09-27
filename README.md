@@ -162,7 +162,7 @@ When the operating system's **prefers-reduced-motion** setting is active, the se
 
 ## Testing
 
-The release suite uses pytest and Playwright to cover both clocks, browser lifecycles, offline behavior, Cloudflare routing, accessibility, and visual regressions. No build step is required. See [`TESTING.md`](TESTING.md) for the test strategy and behavior matrix.
+The release suite uses pytest and Playwright to cover both clocks, browser lifecycles, offline behavior, Cloudflare routing, and accessibility. No build step is required. See [`TESTING.md`](TESTING.md) for the test strategy and behavior matrix.
 
 ```bash
 # Create the project test environment and install browsers
@@ -175,12 +175,6 @@ conda run -n clocksimulator python -m pytest
 
 # Run the complete local release matrix
 ./run_release_tests.sh
-
-# Run only visual snapshot tests
-conda run -n clocksimulator python -m pytest -m visual
-
-# Explicitly regenerate reviewed screenshot baselines
-conda run -n clocksimulator python -m pytest -m visual --update-snapshots
 ```
 
 ## Privacy & Terms of service

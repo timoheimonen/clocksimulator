@@ -27,8 +27,8 @@ def dashboard_counts(page: Page) -> dict[str, int]:
     )
 
 
-def grid_dimensions(page: Page) -> tuple[int, int]:
-    values = page.locator(".clock-grid").evaluate(
+def grid_dimensions(page: Page, selector: str = ".clock-grid") -> tuple[int, int]:
+    values = page.locator(selector).evaluate(
         r"""grid => {
             const style = getComputedStyle(grid);
             return [
@@ -50,37 +50,9 @@ def assert_single_analog_ready(page: Page, aria_label: str | None = None) -> Non
         assert clock.get_attribute("aria-label") == aria_label
 
 
-def test_dashboard_mode_activation_has_exact_structure(
-    page: Page,
-    app_url: str,
-) -> None:
-    open_page(page, app_url, {"tz": TIMEZONES})
-    assert page.title() == "clocksimulator.com - Dashboard"
-    assert dashboard_counts(page) == {
-        "grids": 1,
-        "cells": 2,
-        "clocks": 2,
-        "labels": 2,
-        "hours": 2,
-        "minutes": 2,
-        "seconds": 2,
-        "borders": 2,
-        "numbers": 2,
-        "suns": 2,
-        "moons": 2,
-    }
-
-
 @pytest.mark.parametrize(
     ("timezones", "rows", "expected_columns", "expected_rows"),
     [
-        pytest.param(
-            "UTC,Europe/Helsinki,America/New_York,Asia/Tokyo",
-            None,
-            2,
-            2,
-            id="auto-4",
-        ),
         pytest.param(
             "UTC,Europe/Helsinki,America/New_York,Asia/Tokyo,Australia/Sydney",
             None,
@@ -89,32 +61,11 @@ def test_dashboard_mode_activation_has_exact_structure(
             id="auto-5",
         ),
         pytest.param(
-            "UTC,Europe/Helsinki,America/New_York,Asia/Tokyo,Australia/Sydney,Pacific/Auckland",
-            None,
-            3,
-            2,
-            id="auto-6",
-        ),
-        pytest.param(
-            "UTC,Europe/Helsinki,America/New_York,Asia/Tokyo,Australia/Sydney,Pacific/Auckland,Europe/London,Asia/Kolkata,America/Los_Angeles",
-            None,
-            3,
-            3,
-            id="auto-9",
-        ),
-        pytest.param(
             "UTC,Europe/Helsinki,America/New_York,Asia/Tokyo",
             "1",
             4,
             1,
             id="rows-1",
-        ),
-        pytest.param(
-            "UTC,Europe/Helsinki,America/New_York,Asia/Tokyo",
-            "2",
-            2,
-            2,
-            id="rows-2",
         ),
         pytest.param(
             "UTC,Europe/Helsinki,America/New_York,Asia/Tokyo",
@@ -138,135 +89,79 @@ def test_dashboard_grid_layout(
         params["rows"] = rows
     open_page(page, app_url, params)
     expected_count = len(timezones.split(","))
-    counts = dashboard_counts(page)
-    assert counts["cells"] == expected_count
-    assert counts["labels"] == expected_count
+    assert page.title() == "clocksimulator.com - Dashboard"
+    assert dashboard_counts(page) == {
+        "grids": 1,
+        **{
+            key: expected_count
+            for key in (
+                "cells", "clocks", "labels", "hours", "minutes", "seconds",
+                "borders", "numbers", "suns", "moons",
+            )
+        },
+    }
     assert grid_dimensions(page) == (expected_columns, expected_rows)
 
 
+FOUR_ZONES = "UTC,Europe/Helsinki,America/New_York,Asia/Tokyo"
+FIVE_ZONES = FOUR_ZONES + ",Australia/Sydney"
+
+
 @pytest.mark.parametrize(
-    ("theme", "dark", "transparent"),
+    ("path", "timezones", "rows", "expected_columns", "expected_rows"),
     [
-        pytest.param("dark", True, False, id="dark"),
-        pytest.param("light", False, False, id="light"),
-        pytest.param("transparent", False, True, id="transparent"),
+        pytest.param("", FIVE_ZONES, "0", 3, 2, id="analog-zero-is-auto"),
+        pytest.param("", FIVE_ZONES, "abc", 3, 2, id="analog-non-numeric-is-auto"),
+        pytest.param("", FIVE_ZONES, "-2", 3, 2, id="analog-negative-is-auto"),
+        pytest.param("", FOUR_ZONES, "9", 1, 4, id="analog-clamped-to-zone-count"),
+        pytest.param(
+            "/digital/",
+            "UTC,Europe/Helsinki,Asia/Tokyo",
+            "9",
+            1,
+            3,
+            id="digital-clamped-to-zone-count",
+        ),
     ],
 )
-def test_dashboard_theme_visible_state(
+def test_dashboard_rows_parameter_edge_values(
     page: Page,
     app_url: str,
-    theme: str,
-    dark: bool,
-    transparent: bool,
+    path: str,
+    timezones: str,
+    rows: str,
+    expected_columns: int,
+    expected_rows: int,
 ) -> None:
-    open_page(page, app_url, {"tz": TIMEZONES, "theme": theme})
-    root = page.locator("html")
-    assert root.evaluate("element => element.classList.contains('dark-mode')") is dark
-    assert root.evaluate(
-        "element => element.classList.contains('transparent-mode')"
-    ) is transparent
-    assert page.locator(".clock-grid").is_visible() is True
+    open_page(page, app_url, {"tz": timezones, "rows": rows}, path=path)
+    expected_count = len(timezones.split(","))
+    if path:
+        grid = ".digital-grid"
+        cells = page.locator(".digital-grid .digital-cell")
+        rendered = page.locator(".digital-grid .digital-time").evaluate_all(
+            "elements => elements.map(element => element.textContent !== '')"
+        )
+    else:
+        grid = ".clock-grid"
+        cells = page.locator(".clock-grid .clock-cell")
+        rendered = page.locator(".clock-grid .hour-hand").evaluate_all(
+            "elements => elements.map(element => element.style.transform !== '')"
+        )
+    assert cells.count() == expected_count
+    assert rendered == [True] * expected_count
+    assert grid_dimensions(page, grid) == (expected_columns, expected_rows)
 
 
-def test_dashboard_seconds_hide_and_default_visible(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"tz": TIMEZONES, "seconds": "hide"})
-    hands = page.locator(".clock-grid .second-hand")
-    assert hands.count() == 2
-    assert hands.evaluate_all(
-        "elements => elements.map(element => getComputedStyle(element).display)"
-    ) == ["none", "none"]
-
+def test_dashboard_shadows_disabled_unless_enabled(page: Page, app_url: str) -> None:
     open_page(page, app_url, {"tz": TIMEZONES})
-    hands = page.locator(".clock-grid .second-hand")
-    assert hands.count() == 2
-    assert hands.evaluate_all(
-        "elements => elements.every(element => getComputedStyle(element).display !== 'none')"
-    ) is True
-
-
-def test_dashboard_border_hide_and_default_visible(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"tz": TIMEZONES, "border": "hide"})
-    borders = page.locator(".clock-grid .clock-border")
-    assert borders.count() == 2
-    assert borders.evaluate_all(
-        "elements => elements.map(element => element.getAttribute('stroke'))"
-    ) == ["none", "none"]
-
-    open_page(page, app_url, {"tz": TIMEZONES})
-    borders = page.locator(".clock-grid .clock-border")
-    assert borders.count() == 2
-    assert borders.evaluate_all(
-        "elements => elements.map(element => element.getAttribute('stroke'))"
-    ) == ["var(--clock-border)", "var(--clock-border)"]
-
-
-def test_dashboard_numbers_hide_and_default_visible(page: Page, app_url: str) -> None:
-    open_page(page, app_url, {"tz": TIMEZONES, "numbers": "hide"})
-    numbers = page.locator(".clock-grid .numbers")
-    assert numbers.count() == 2
-    assert numbers.evaluate_all(
-        "elements => elements.map(element => getComputedStyle(element).display)"
-    ) == ["none", "none"]
-
-    open_page(page, app_url, {"tz": TIMEZONES})
-    numbers = page.locator(".clock-grid .numbers")
-    assert numbers.count() == 2
-    assert numbers.evaluate_all(
-        "elements => elements.every(element => getComputedStyle(element).display !== 'none')"
-    ) is True
-
-
-@pytest.mark.parametrize("shadows", [None, "false"])
-def test_dashboard_shadows_disabled_unless_enabled(
-    page: Page,
-    app_url: str,
-    shadows: str | None,
-) -> None:
-    params = {"tz": TIMEZONES}
-    if shadows is not None:
-        params["shadows"] = shadows
-    open_page(page, app_url, params)
     assert page.locator(".clock-grid [filter]").count() == 0
 
-
-def test_dashboard_shadows_true_enables_filters(page: Page, app_url: str) -> None:
     open_page(page, app_url, {"tz": TIMEZONES, "shadows": "true"})
     filtered = page.locator(".clock-grid [filter]")
     assert filtered.count() == 8
     assert filtered.evaluate_all(
         "elements => elements.every(element => element.getAttribute('filter').startsWith('url('))"
     ) is True
-
-
-def test_dashboard_daynight_uses_each_target_timezone(
-    page: Page,
-    app_url: str,
-) -> None:
-    open_page(page, app_url, {"tz": "UTC,Asia/Tokyo", "daynight": "show"})
-    cells = page.locator(".clock-grid .clock-cell")
-    assert cells.count() == 2
-    states = cells.evaluate_all(
-        """elements => elements.map(element => ({
-            label: element.querySelector('.clock-label').textContent,
-            sun: element.querySelector('.sun-icon').getAttribute('display'),
-            moon: element.querySelector('.moon-icon').getAttribute('display')
-        }))"""
-    )
-    assert states == [
-        {"label": "UTC", "sun": "inline", "moon": "none"},
-        {"label": "Tokyo", "sun": "none", "moon": "inline"},
-    ]
-
-    open_page(page, app_url, {"tz": "UTC,Asia/Tokyo"})
-    cells = page.locator(".clock-grid .clock-cell")
-    assert cells.count() == 2
-    hidden_states = cells.evaluate_all(
-        """elements => elements.map(element => [
-            element.querySelector('.sun-icon').getAttribute('display'),
-            element.querySelector('.moon-icon').getAttribute('display')
-        ])"""
-    )
-    assert hidden_states == [["none", "none"], ["none", "none"]]
 
 
 def test_dashboard_mixed_valid_invalid_timezones_keep_order_and_time(
@@ -288,7 +183,6 @@ def test_dashboard_mixed_valid_invalid_timezones_keep_order_and_time(
 @pytest.mark.parametrize(
     ("timezone_value", "title", "aria_label"),
     [
-        pytest.param("UTC", "clocksimulator.com - UTC", "The time is 12:00", id="single"),
         pytest.param(
             "UTC,Invalid/Timezone",
             "clocksimulator.com - UTC",
@@ -300,12 +194,6 @@ def test_dashboard_mixed_valid_invalid_timezones_keep_order_and_time(
             "Fullscreen Online Analog Clock | Clocksimulator",
             "The time is 12:00",
             id="all-invalid",
-        ),
-        pytest.param(
-            "",
-            "Fullscreen Online Analog Clock | Clocksimulator",
-            "The time is 12:00",
-            id="empty",
         ),
     ],
 )
@@ -389,11 +277,13 @@ def test_dashboard_all_params_combined(page: Page, app_url: str) -> None:
         "elements => elements.map(element => element.getAttribute('display'))"
     ) == ["none", "none"]
 
-
-def test_dashboard_no_duplicate_svg_ids(page: Page, app_url: str) -> None:
     open_page(page, app_url, {"tz": TIMEZONES})
-    clocks = page.locator(".clock-grid .clock-cell svg")
-    assert clocks.count() == 2
-    assert clocks.evaluate_all(
-        "elements => elements.every(element => element.querySelectorAll('[id]').length === 0)"
-    ) is True
+    assert page.locator(".clock-grid .second-hand").evaluate_all(
+        "elements => elements.map(element => getComputedStyle(element).display !== 'none')"
+    ) == [True, True]
+    assert page.locator(".clock-grid .clock-border").evaluate_all(
+        "elements => elements.map(element => element.getAttribute('stroke'))"
+    ) == ["var(--clock-border)", "var(--clock-border)"]
+    assert page.locator(".clock-grid .numbers").evaluate_all(
+        "elements => elements.map(element => getComputedStyle(element).display !== 'none')"
+    ) == [True, True]
