@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.5.2 - 2026-09-28
+
+### Changed
+- The analog clock does less work between seconds: in tick mode it updates every frame only during the second hand bounce and otherwise waits for the next second. With hidden seconds, reduced motion or dashboards in tick mode it updates once per second.
+- The analog second hand angle is now applied to the second hand, or to the clock grid on dashboards, instead of the whole page.
+- Analog hand shadows are updated only when their direction changes.
+
 ## 1.5.1 - 2026-09-27
 
 ### Changed

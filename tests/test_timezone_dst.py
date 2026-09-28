@@ -324,7 +324,7 @@ def test_analog_timezone_preserves_second_hand_mode_and_milliseconds(
     )
     state = single_analog_state(helsinki_page)
     initial_angle = helsinki_page.evaluate(
-        "() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--second-angle'))"
+        "() => parseFloat(getComputedStyle(document.getElementById('secondHand')).getPropertyValue('--second-angle'))"
     )
     assert state["minute"] == "rotate(180deg)"
     assert initial_angle == pytest.approx(5.4)
@@ -333,7 +333,7 @@ def test_analog_timezone_preserves_second_hand_mode_and_milliseconds(
         "() => document.getElementById('minuteHand').style.transform === 'rotate(180.1deg)'"
     )
     advanced_angle = helsinki_page.evaluate(
-        "() => parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--second-angle'))"
+        "() => parseFloat(getComputedStyle(document.getElementById('secondHand')).getPropertyValue('--second-angle'))"
     )
     assert advanced_angle == pytest.approx(6.6)
 
@@ -463,6 +463,10 @@ def test_timezone_offset_recalculated_at_60000ms_sla(page: Page, app_url: str) -
     })""")
     assert page.evaluate("() => window.__offsetFormatToPartsCalls") == initial_calls
     update_after_time_change(page, "", "2026-02-01T12:01:00Z")
+    page.wait_for_function(
+        "expected => window.__offsetFormatToPartsCalls >= expected",
+        arg=initial_calls + 2,
+    )
     assert page.evaluate("() => window.__offsetFormatToPartsCalls") == initial_calls + 2
 
 
