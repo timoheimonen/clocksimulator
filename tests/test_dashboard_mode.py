@@ -287,3 +287,17 @@ def test_dashboard_all_params_combined(page: Page, app_url: str) -> None:
     assert page.locator(".clock-grid .numbers").evaluate_all(
         "elements => elements.map(element => getComputedStyle(element).display !== 'none')"
     ) == [True, True]
+
+
+def test_dashboard_second_angle_is_scoped_to_clock_grid(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"tz": TIMEZONES}, fixed_time="2026-01-01T12:00:07.000Z")
+    state = page.evaluate(
+        """() => ({
+            root: document.documentElement.style.getPropertyValue('--second-angle'),
+            grid: document.querySelector('.clock-grid').style.getPropertyValue('--second-angle'),
+            hands: Array.from(document.querySelectorAll('.clock-grid .second-hand')).map(
+                element => getComputedStyle(element).getPropertyValue('--second-angle').trim()
+            )
+        })"""
+    )
+    assert state == {"root": "", "grid": "42deg", "hands": ["42deg", "42deg"]}
