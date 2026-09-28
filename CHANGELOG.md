@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.3 - 2026-09-28
+
+### Fixed
+- The Digital clock and Analog clock tiles in the menu now tilt as smoothly as the other menu tiles; a leftover menu opening animation delay made them lag behind the pointer.
+- Menu tiles no longer flicker in and out of their hover state when the pointer is at the very edge of a tilted tile.
+
 ## 1.5.2 - 2026-09-28
 
 ### Changed

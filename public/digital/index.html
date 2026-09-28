@@ -22,7 +22,7 @@
   <meta name="twitter:description"
     content="Free online digital clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png">
-  <meta name="version" content="1.5.2">
+  <meta name="version" content="1.5.3">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -714,10 +714,6 @@
       transition-delay: 90ms;
     }
 
-    .about-bubble.visible>:nth-child(5) {
-      transition-delay: 120ms;
-    }
-
     .menu-head {
       display: flex;
       align-items: center;
@@ -865,6 +861,14 @@
       .menu-switch:active {
         transform: perspective(700px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) scale(0.965);
       }
+
+      .menu-tile:hover::after,
+      .menu-switch:hover::after {
+        content: '';
+        position: absolute;
+        inset: -2px -8px;
+        z-index: -1;
+      }
     }
 
     .menu-tile-icon {
@@ -936,10 +940,10 @@
     }
 
     .menu-switch {
+      grid-column: 1 / -1;
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-top: 8px;
       padding: 9px 14px 9px 9px;
     }
 
@@ -2375,28 +2379,28 @@
               <span class="menu-tile-text">Controls, URL options &amp; tips</span>
             </span>
           </a>
-        </div>
-        <a href="/" id="analogClockLink" class="menu-switch">
-          <span class="menu-switch-preview" aria-hidden="true">
-            <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="16" cy="16" r="13.5" stroke="currentColor" stroke-width="1.6" />
-              <line id="menuSwitchHour" x1="16" y1="16" x2="16" y2="9" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" />
-              <line id="menuSwitchMinute" x1="16" y1="16" x2="16" y2="5.5" stroke="currentColor" stroke-width="1.5"
-                stroke-linecap="round" />
-              <circle cx="16" cy="16" r="1.6" fill="#ef4444" />
+          <a href="/" id="analogClockLink" class="menu-switch">
+            <span class="menu-switch-preview" aria-hidden="true">
+              <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="16" cy="16" r="13.5" stroke="currentColor" stroke-width="1.6" />
+                <line id="menuSwitchHour" x1="16" y1="16" x2="16" y2="9" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" />
+                <line id="menuSwitchMinute" x1="16" y1="16" x2="16" y2="5.5" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round" />
+                <circle cx="16" cy="16" r="1.6" fill="#ef4444" />
+              </svg>
+            </span>
+            <span class="menu-switch-text">
+              <span class="menu-tile-title">Analog clock</span>
+              <span class="menu-tile-text">Switch to the analog view</span>
+            </span>
+            <svg class="menu-switch-arrow" aria-hidden="true" viewBox="0 0 20 20" fill="none"
+              xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 10h11M11 5.5 15.5 10 11 14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round" />
             </svg>
-          </span>
-          <span class="menu-switch-text">
-            <span class="menu-tile-title">Analog clock</span>
-            <span class="menu-tile-text">Switch to the analog view</span>
-          </span>
-          <svg class="menu-switch-arrow" aria-hidden="true" viewBox="0 0 20 20" fill="none"
-            xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 10h11M11 5.5 15.5 10 11 14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
-              stroke-linejoin="round" />
-          </svg>
-        </a>
+          </a>
+        </div>
         <div class="menu-section">
           <label class="toggle-label save-settings-toggle" id="saveSettingsLabel"
             data-tooltip="Remember theme and toggles on this device">
