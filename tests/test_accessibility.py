@@ -892,6 +892,57 @@ def test_menu_arrow_keys_move_focus_and_escape_returns_to_menu_button(
 
 
 @pytest.mark.cross_browser
+@pytest.mark.parametrize(
+    ("path", "switch_id"),
+    [
+        pytest.param("", "digitalClockLink", id="analog"),
+        pytest.param("/digital/", "analogClockLink", id="digital"),
+    ],
+)
+def test_menu_tiles_tilt_without_delay_and_keep_hover_at_their_edges(
+    page: Page,
+    app_url: str,
+    path: str,
+    switch_id: str,
+) -> None:
+    open_clock(page, app_url, path)
+    page.mouse.move(100, 100)
+    page.mouse.move(120, 30, steps=5)
+    page.locator("#aboutBtn").click()
+    page.wait_for_function(
+        "() => document.getElementById('aboutBubble').classList.contains('visible')"
+    )
+    for tile_id in ["helpLink", switch_id, "embedLink", "dashboardLink"]:
+        left, top, width, height = page.locator("#" + tile_id).evaluate(
+            "element => { const r = element.getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; }"
+        )
+        y = top + height / 2
+        page.mouse.move(left + width / 2, y)
+        assert page.locator("#" + tile_id).evaluate(
+            "element => getComputedStyle(element).transitionDelay.split(', ').every(delay => delay === '0s')"
+        ) is True, tile_id
+        page.evaluate(
+            """id => {
+                const tile = document.getElementById(id);
+                const watcher = { lost: false };
+                window.__hoverWatcher = watcher;
+                (function watch() {
+                    if (window.__hoverWatcher !== watcher) return;
+                    if (!tile.matches(':hover')) watcher.lost = true;
+                    requestAnimationFrame(watch);
+                })();
+            }""",
+            tile_id,
+        )
+        for x in [left + 3, left + width - 3]:
+            page.mouse.move(x, y, steps=8)
+            page.wait_for_timeout(400)
+        assert page.evaluate(
+            "() => { const watcher = window.__hoverWatcher; window.__hoverWatcher = null; return watcher.lost; }"
+        ) is False, tile_id
+
+
+@pytest.mark.cross_browser
 def test_analog_single_and_dashboard_have_named_image_semantics(
     page: Page,
     app_url: str,
