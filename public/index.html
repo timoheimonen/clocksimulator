@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Free online analog clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.5.1">
+  <meta name="version" content="1.5.2">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -2916,6 +2916,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
     (function () {
       const OFFSET_RECALC_MS = 60000;
       const SHADOW_THROTTLE_MS = 100;
+      const TICK_BOUNCE_MS = 100;
       const BURN_IN_INTERVAL_MS = 600000;
       const EMBED_DEBOUNCE_MS = 400;
       const COPY_FEEDBACK_MS = 1500;
@@ -2932,10 +2933,10 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       const hourHand = document.getElementById('hourHand');
       const minuteHand = document.getElementById('minuteHand');
       const secondHand = document.getElementById('secondHand');
-      const hourDS = document.getElementById('hourDS');
-      const minuteDS = document.getElementById('minuteDS');
-      const secondDS = document.getElementById('secondDS');
-      const dotDS = document.getElementById('dotDS');
+      const hourShadow = { el: document.getElementById('hourDS'), distance: 0.8, angle: NaN };
+      const minuteShadow = { el: document.getElementById('minuteDS'), distance: 1.2, angle: NaN };
+      const secondShadow = { el: document.getElementById('secondDS'), distance: 1.8, angle: NaN };
+      const dotShadow = { el: document.getElementById('dotDS'), distance: 1.8, angle: NaN };
       const centerDot = document.getElementById('centerDot');
       let lastShadowUpdate = 0;
       const themeToggle = document.getElementById('themeToggle');
@@ -3206,6 +3207,11 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       secondModeToggle.addEventListener('change', function () {
         secondModeTick = this.checked;
         saveSettings();
+        if (clockUpdateTimer) {
+          clearTimeout(clockUpdateTimer);
+          clockUpdateTimer = 0;
+          requestAnimationFrame(updateClock);
+        }
       });
 
       const clocks = [];
@@ -3289,6 +3295,39 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       let lastAriaMinute = -1;
       let lastDayNightSecond = -1;
       const clockSvg = document.getElementById('clock');
+      const secondAngleHost = dashboardMode ? document.querySelector('.clock-grid') : secondHand;
+      let lastSecondAngle = '';
+      let clockUpdateTimer = 0;
+
+      function updateShadowOffset(shadow, angle) {
+        if (angle === shadow.angle) return;
+        shadow.angle = angle;
+        const rad = angle * Math.PI / 180;
+        shadow.el.setAttribute('dx', -shadow.distance * Math.cos(rad));
+        shadow.el.setAttribute('dy', -shadow.distance * Math.sin(rad));
+      }
+
+      function needsEveryFrame(millis) {
+        if (secondsHidden) return false;
+        if (!secondModeTick) return true;
+        return millis < TICK_BOUNCE_MS && !dashboardMode;
+      }
+
+      function scheduleClockUpdate(millis) {
+        if (document.hidden) {
+          document.addEventListener('visibilitychange', function resume() {
+            document.removeEventListener('visibilitychange', resume);
+            requestAnimationFrame(updateClock);
+          });
+        } else if (needsEveryFrame(millis)) {
+          requestAnimationFrame(updateClock);
+        } else {
+          clockUpdateTimer = setTimeout(function () {
+            clockUpdateTimer = 0;
+            requestAnimationFrame(updateClock);
+          }, 1000 - millis);
+        }
+      }
 
       function updateDayNightIcons(hours, sun, moon) {
         const isDay = hours >= 6 && hours < 18;
@@ -3305,13 +3344,17 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           let globalSecondAngle;
           if (secondModeTick) {
             globalSecondAngle = seconds * 6;
-            if (millis < 100 && !dashboardMode) {
+            if (millis < TICK_BOUNCE_MS && !dashboardMode) {
               globalSecondAngle += 0.5 * Math.exp(-millis / 25);
             }
           } else {
             globalSecondAngle = (seconds + millis / 1000) * 6;
           }
-          document.documentElement.style.setProperty('--second-angle', globalSecondAngle + 'deg');
+          const secondAngle = globalSecondAngle + 'deg';
+          if (secondAngle !== lastSecondAngle) {
+            lastSecondAngle = secondAngle;
+            secondAngleHost.style.setProperty('--second-angle', secondAngle);
+          }
         }
 
         if (dashboardMode) {
@@ -3376,23 +3419,12 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
               lastShadowUpdate = nowMs;
               const localHour = now.getHours() + now.getMinutes() / 60;
               const sunAngle = 90 + (localHour - 6) * 15;
-              const sunRad = sunAngle * Math.PI / 180;
-
-              const hourShadowRad = (hourAngle - sunAngle) * Math.PI / 180;
-              hourDS.setAttribute('dx', -0.8 * Math.cos(hourShadowRad));
-              hourDS.setAttribute('dy', -0.8 * Math.sin(hourShadowRad));
-
-              const minuteShadowRad = (minuteAngle - sunAngle) * Math.PI / 180;
-              minuteDS.setAttribute('dx', -1.2 * Math.cos(minuteShadowRad));
-              minuteDS.setAttribute('dy', -1.2 * Math.sin(minuteShadowRad));
-
               const secondHandAngle = secondModeTick ? t.seconds * 6 : (t.seconds + millis / 1000) * 6;
-              const secondShadowRad = (secondHandAngle - sunAngle) * Math.PI / 180;
-              secondDS.setAttribute('dx', -1.8 * Math.cos(secondShadowRad));
-              secondDS.setAttribute('dy', -1.8 * Math.sin(secondShadowRad));
 
-              dotDS.setAttribute('dx', -1.8 * Math.cos(sunRad));
-              dotDS.setAttribute('dy', -1.8 * Math.sin(sunRad));
+              updateShadowOffset(hourShadow, hourAngle - sunAngle);
+              updateShadowOffset(minuteShadow, minuteAngle - sunAngle);
+              updateShadowOffset(secondShadow, secondHandAngle - sunAngle);
+              updateShadowOffset(dotShadow, sunAngle);
             }
           }
 
@@ -3402,14 +3434,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           }
         }
 
-        if (!document.hidden) {
-          requestAnimationFrame(updateClock);
-        } else {
-          document.addEventListener('visibilitychange', function resume() {
-            document.removeEventListener('visibilitychange', resume);
-            requestAnimationFrame(updateClock);
-          });
-        }
+        scheduleClockUpdate(millis);
       }
 
       requestAnimationFrame(updateClock);

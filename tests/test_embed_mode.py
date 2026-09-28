@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from playwright.sync_api import Page
 
-from tests.helpers import open_page
+from tests.helpers import install_test_clock, install_timer_probe, open_page, set_test_time
 
 
 def hand_angle(page: Page, selector: str) -> float:
@@ -152,3 +152,124 @@ def test_embed_mode_all_params_combined(page: Page, app_url: str) -> None:
         "() => ['hourHand', 'minuteHand', 'secondHand', 'centerDot'].filter(id => document.getElementById(id).hasAttribute('filter'))"
     ) == []
     assert icon_displays(page) == {"sun": "inline", "moon": "none"}
+
+
+def install_shadow_mutation_probe(page: Page) -> None:
+    page.evaluate(
+        """() => {
+            window.__shadowMutations = [];
+            const observer = new MutationObserver(records => {
+                records.forEach(record => window.__shadowMutations.push(record.target.id));
+            });
+            ['hourDS', 'minuteDS', 'secondDS', 'dotDS'].forEach(id => {
+                observer.observe(document.getElementById(id), { attributes: true });
+            });
+        }"""
+    )
+
+
+def mutated_shadows(page: Page) -> list[str]:
+    return page.evaluate(
+        "() => Array.from(new Set(window.__shadowMutations.splice(0))).sort()"
+    )
+
+
+def test_second_angle_is_scoped_to_second_hand(page: Page, app_url: str) -> None:
+    open_page(page, app_url, {"seconds": "smooth"}, fixed_time="2026-01-01T12:00:07.500Z")
+    state = page.evaluate(
+        """() => ({
+            root: document.documentElement.style.getPropertyValue('--second-angle'),
+            hand: document.getElementById('secondHand').style.getPropertyValue('--second-angle'),
+            transform: getComputedStyle(document.getElementById('secondHand')).transform
+        })"""
+    )
+    assert state["root"] == ""
+    assert state["hand"] == "45deg"
+    assert state["transform"] != "none"
+
+
+def test_hand_shadows_are_rewritten_only_when_their_angle_changes(
+    page: Page, app_url: str
+) -> None:
+    open_page(page, app_url, fixed_time="2026-01-01T12:00:00.000Z")
+    assert page.evaluate(
+        "() => ['hourDS', 'minuteDS', 'secondDS', 'dotDS'].every(id => document.getElementById(id).getAttribute('dx') !== '0')"
+    ) is True
+    install_shadow_mutation_probe(page)
+
+    set_test_time(page, "2026-01-01T12:00:00.500Z")
+    page.evaluate("() => new Promise(resolve => requestAnimationFrame(() => resolve()))")
+    assert mutated_shadows(page) == []
+
+    set_test_time(page, "2026-01-01T12:00:01.000Z")
+    page.wait_for_function("() => window.__shadowMutations.length > 0")
+    assert mutated_shadows(page) == ["minuteDS", "secondDS"]
+
+
+def install_animation_frame_counter(page: Page, fixed_time: str) -> None:
+    install_test_clock(page, fixed_time)
+    page.add_init_script("""
+        window.__animationFrameRequests = 0;
+        const originalRequestAnimationFrame = window.requestAnimationFrame.bind(window);
+        window.requestAnimationFrame = function (callback) {
+            window.__animationFrameRequests += 1;
+            return originalRequestAnimationFrame(callback);
+        };
+    """)
+
+
+def animation_frame_requests_during(page: Page, milliseconds: int) -> int:
+    before = page.evaluate("() => window.__animationFrameRequests")
+    page.wait_for_timeout(milliseconds)
+    return page.evaluate("() => window.__animationFrameRequests") - before
+
+
+def pending_timeout_delays(clock) -> list[float]:
+    return [
+        timer.delay for timer in clock.timers()
+        if timer.kind == "timeout" and timer.calls == 0 and not timer.cleared
+    ]
+
+
+@pytest.mark.parametrize(
+    ("params", "fixed_time", "expected_delay"),
+    [
+        pytest.param({}, "2026-01-01T12:00:00.500Z", 500, id="tick-after-bounce"),
+        pytest.param({"seconds": "hide"}, "2026-01-01T12:00:00.000Z", 1000, id="seconds-hidden"),
+        pytest.param({"tz": "UTC,Europe/Helsinki"}, "2026-01-01T12:00:00.000Z", 1000, id="dashboard-tick"),
+    ],
+)
+def test_clock_waits_for_next_second_when_nothing_moves_between_seconds(
+    page: Page, app_url: str, params: dict[str, str], fixed_time: str, expected_delay: int
+) -> None:
+    clock = install_timer_probe(page, fixed_time)
+    install_animation_frame_counter(page, fixed_time)
+    open_page(page, app_url, params, fixed_time=fixed_time)
+    assert animation_frame_requests_during(page, 300) <= 1
+    assert expected_delay in pending_timeout_delays(clock)
+
+
+def test_clock_updates_every_frame_in_smooth_mode_and_tick_bounce(page: Page, app_url: str) -> None:
+    install_animation_frame_counter(page, "2026-01-01T12:00:00.500Z")
+    open_page(page, app_url, {"seconds": "smooth"}, fixed_time="2026-01-01T12:00:00.500Z")
+    assert animation_frame_requests_during(page, 300) > 5
+
+    open_page(page, app_url, fixed_time="2026-01-01T12:00:00.050Z")
+    assert animation_frame_requests_during(page, 300) > 5
+
+
+def test_switching_to_smooth_mode_cancels_wait_for_next_second(page: Page, app_url: str) -> None:
+    clock = install_timer_probe(page, "2026-01-01T12:00:00.500Z")
+    open_page(page, app_url, fixed_time="2026-01-01T12:00:00.500Z")
+    assert 500 in pending_timeout_delays(clock)
+    page.evaluate(
+        """() => {
+            const toggle = document.getElementById('secondModeToggle');
+            toggle.checked = false;
+            toggle.dispatchEvent(new Event('change'));
+        }"""
+    )
+    assert 500 not in pending_timeout_delays(clock)
+    page.wait_for_function(
+        "() => document.getElementById('secondHand').style.getPropertyValue('--second-angle') === '3deg'"
+    )
