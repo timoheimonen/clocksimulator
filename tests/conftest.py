@@ -136,7 +136,7 @@ def browser_fixture_scope(fixture_name: str, config: pytest.Config) -> str:
 def browser(browser_engine: str) -> Iterator[Browser]:
     playwright = sync_playwright().start()
     browser_type = getattr(playwright, browser_engine)
-    launched_browser = browser_type.launch()
+    launched_browser = browser_type.launch(chromium_sandbox=True)
     try:
         yield launched_browser
     finally:
