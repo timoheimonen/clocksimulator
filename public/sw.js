@@ -1,15 +1,13 @@
-const CACHE_NAME = 'clocksimulator-v1.5.3';
+const CACHE_NAME = 'clocksimulator-v1.5.4';
 const ASSETS = [
   '/',
   '/digital/',
   '/privacy',
   '/TOS',
-  '/sitemap.xml',
   '/manifest.json',
   '/apple-touch-icon.png',
   '/android-chrome-192x192.png',
-  '/android-chrome-512x512.png',
-  '/og-image.png'
+  '/android-chrome-512x512.png'
 ];
 const LEGACY_PAGE_ALIASES = {
   '/privacy.html': '/privacy',

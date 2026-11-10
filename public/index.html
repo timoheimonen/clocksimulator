@@ -45,7 +45,7 @@ SOFTWARE.
   <meta name="twitter:description"
     content="Free online analog clock for fullscreen display, OBS embeds and timezone dashboards. No ads, no tracking, works offline as a lightweight PWA.">
   <meta name="twitter:image" content="https://clocksimulator.com/og-image.png" />
-  <meta name="version" content="1.5.3">
+  <meta name="version" content="1.5.4">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <meta name="theme-color" content="#000000">
@@ -2921,6 +2921,8 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       const OFFSET_RECALC_MS = 60000;
       const SHADOW_THROTTLE_MS = 100;
       const TICK_BOUNCE_MS = 100;
+      const SMOOTH_FRAME_MS = 1000 / 30;
+      const SMOOTH_FRAME_TOLERANCE_MS = 4;
       const BURN_IN_INTERVAL_MS = 600000;
       const EMBED_DEBOUNCE_MS = 400;
       const COPY_FEEDBACK_MS = 1500;
@@ -3271,6 +3273,7 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
             lastMinute: -1,
             hourHand: svgClone.querySelector('.hour-hand'),
             minuteHand: svgClone.querySelector('.minute-hand'),
+            secondHand: svgClone.querySelector('.second-hand'),
             sunIcon: svgClone.querySelector('.sun-icon'),
             moonIcon: svgClone.querySelector('.moon-icon'),
             getTime: function (now) {
@@ -3299,9 +3302,12 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
       let lastAriaMinute = -1;
       let lastDayNightSecond = -1;
       const clockSvg = document.getElementById('clock');
-      const secondAngleHost = dashboardMode ? document.querySelector('.clock-grid') : secondHand;
+      const secondAngleHands = dashboardMode
+        ? clocks.map(function (c) { return c.secondHand; })
+        : [secondHand];
       let lastSecondAngle = '';
       let clockUpdateTimer = 0;
+      let lastSmoothFrame = -Infinity;
 
       function updateShadowOffset(shadow, angle) {
         if (angle === shadow.angle) return;
@@ -3339,7 +3345,14 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
         moon.setAttribute('display', isDay ? 'none' : 'inline');
       }
 
-      function updateClock() {
+      function updateClock(frameTime) {
+        if (!secondsHidden && !secondModeTick && typeof frameTime === 'number') {
+          if (frameTime - lastSmoothFrame < SMOOTH_FRAME_MS - SMOOTH_FRAME_TOLERANCE_MS) {
+            requestAnimationFrame(updateClock);
+            return;
+          }
+          lastSmoothFrame = frameTime;
+        }
         const now = new Date();
         const seconds = now.getSeconds();
         const millis = now.getMilliseconds();
@@ -3357,7 +3370,9 @@ clocksimulator.com/?tz=UTC,Europe/Helsinki,America/New_York,Asia/Tokyo&amp;rows=
           const secondAngle = globalSecondAngle + 'deg';
           if (secondAngle !== lastSecondAngle) {
             lastSecondAngle = secondAngle;
-            secondAngleHost.style.setProperty('--second-angle', secondAngle);
+            for (let i = 0; i < secondAngleHands.length; i++) {
+              secondAngleHands[i].style.setProperty('--second-angle', secondAngle);
+            }
           }
         }
 
