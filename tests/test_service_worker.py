@@ -12,12 +12,10 @@ EXPECTED_PRECACHE_PATHS = {
     "/digital/",
     "/privacy",
     "/TOS",
-    "/sitemap.xml",
     "/manifest.json",
     "/apple-touch-icon.png",
     "/android-chrome-192x192.png",
     "/android-chrome-512x512.png",
-    "/og-image.png",
 }
 
 

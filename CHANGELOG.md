@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.4 - 2026-11-10
+
+### Changed
+- Analog dashboards with a smooth second hand use noticeably less CPU: the second hand angle is now applied to each second hand instead of the whole clock grid.
+- The smooth analog second hand now updates at 30 frames per second instead of every display frame.
+- The offline cache no longer downloads the share image and the sitemap, which the clock pages never use.
+- The app icons and the share image are stored as smaller PNG files with no visible change.
+
 ## 1.5.3 - 2026-09-28
 
 ### Fixed
